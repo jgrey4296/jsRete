@@ -10,7 +10,8 @@ if(typeof define !== 'function'){
 define([],function(){
     var startingId = 0;
 
-    
+    //base WME structure.
+    //information stored in .data
     var WME = function(data){
         this.data = data;
         this.alphaMemoryItems = [];
@@ -20,6 +21,8 @@ define([],function(){
         startingId++;
     };
 
+    //base token,
+    //bindings are updated as the token progresses
     var Token = function(parentToken,wme,owningNode,bindings){
         this.parentToken = parent; //ie:owner
         this.wme = wme;
@@ -33,12 +36,15 @@ define([],function(){
             this.wme.tokens.unshift(this);
         }
 
+        //TODO: copy over bindings from parent,
+        //then copy in new bindings
         this.bindings = bindings | {};
 
         this.id = startingID;
         startingId++;        
     }
 
+    //Alpha Memory node
     var AlphaMemory = function(){
         this.items = [];
         this.childNodes = [];
@@ -48,13 +54,25 @@ define([],function(){
         startingId++;
     }
 
+    //Utility storage of wme and its alphaMemory together
+    //used in alphamemory and WME
     var ItemInAlphaMemory = function(wme,alphaMem){
         this.wme = wme;
         this.alphaMemory = alphaMem;
         this.id = startingId;
         startingId++;
     }
+    
+    //TODO:
+    //A constant test node
+    var AlphaNode = function(constantTest){
+        this.children = [];
+        this.constantTest = constantTest;
+        this.id = startingId;
+        startingId++;
+    }
 
+    //Base node for the beta network
     var ReteNode = function(parent){
         this.type = "reteNode";
         this.children = [];
@@ -63,6 +81,7 @@ define([],function(){
         startingId++;
     }
 
+    //Beta Memory Stores tokens
     var BetaMemory = function(){
         ReteNode.call(this);
         this.isMemoryNode = true;
@@ -70,6 +89,7 @@ define([],function(){
         this.children = [];
     }
 
+    //Join Node combines tokens with wmes
     var JoinNode = function(alphaMemory,tests,ancestor){
         ReteNode.call(this);
         this.type = "JoinNode";
@@ -79,14 +99,15 @@ define([],function(){
     }
 
     //ie:field1 = "first",field2 = "x"
+    //used to compare bindings, stored in joinNodes
     var TestAtJoinNode = function(field1,field2){
         this.field1 = field1;//the name of the variable in wme
         this.field2 = field2;//the bound name
         this.id = startingId;
-        this.id = startingId;
         startingId++;
     }
-    
+
+    //Storage for a token blocked by a wme
     var NegativeJoinResult = function(owner,wme){
         this.owner = owner;
         this.wme = wme;
@@ -94,6 +115,7 @@ define([],function(){
         startingId++;
     }
 
+    //Negative Node:The node that gates token progression
     var NegativeNode = function(alphaMemory,tests,ancestor){
         ReteNode.call(this);
         this.isNegativeNode = true;
@@ -103,6 +125,7 @@ define([],function(){
         this.ancestor = ancestor;
     };
 
+    //NCC : gates token progression based on a subnetwork
     var NegatedConjunctiveCondition = function(partnerNode){
         ReteNode.call(this);
         this.isAnNCCNode = true;
@@ -110,6 +133,8 @@ define([],function(){
         this.partner = partnerNode;
     };
 
+
+    //The partner of the NCC, connects to the subnetwork
     var NegConjuConPartnerNode = function(nccNode){
         this.isAnNCCPartnerNode = true;
         this.nccNode = nccNode;
@@ -121,7 +146,6 @@ define([],function(){
     };
 
     //condition:
-    
     //tests: tuples (testField,testValue,comparisonFunction?)
     //bindings: tuples (wmeVariableName,boundVariableName)
     var Condition = function(tests,bindings){
@@ -129,8 +153,14 @@ define([],function(){
         this.bindings = bindings;
     };
 
+    //The rule/production that stores conditions and
+    //associated action
+    var Rule = function(name,action,conditions){
+
+    };
     
     //--------------------
+    //DataStructures interface
     var DataStructures = {
 
 

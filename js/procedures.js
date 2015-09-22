@@ -8,6 +8,7 @@ if(typeof define !== 'function'){
 
 define(['./dataStructures'],function(DataStructures){
 
+    //Trigger an alpha memory with a new wme to store
     var alphaMemoryActivation = function(alphaMem,wme){
         var newItem = new DataStructures.itemInAlphaMemory(wme,alphaMem);
         alphaMem.items.unshift(newItem);
@@ -15,24 +16,43 @@ define(['./dataStructures'],function(DataStructures){
 
         for(var i in alphaMem.childNodes){
             var child = alphaMem.childNodes[i];
-            right-activate(child,wme);
+            rightActivate(child,wme);
         }
     };
 
-    //todo: add-wme exhausting hash version
+    //Trigger a constant test with a new wme
+    var alphaNodeActivation = function(alphaNode,wme){
+        //test the wme using the constant test in the node
 
-
-    var betaMemoryLeftActivation = function(betaMemory,token,wme){
-        var newToken = new DataStructures.Token(token,wme,betaMemory);
+        //if true, activate children
+    };
+    
+    //TODO:
+    //Assert a wme into the network
+    var addWME = function(wme,reteNet){
+        //activate the root node of the reteNet
+    };
+    
+    //trigger a beta memory to store a new token
+    //bindings are from the join node, holding results of the NEW binding tests
+    //old bindings are still in the token, the constructor of Token will combine the two
+    //sets of bindings
+    var betaMemoryLeftActivation = function(betaMemory,token,wme,bindings){
+        var newToken = new DataStructures.Token(token,wme,betaMemory,bindings);
         betaMemory.items.unshift(newToken);
         for(var i in betaMemory.children){
             var child = betaMemory.children[i];
-            left-activate(child,newToken);
+            leftActivate(child,newToken);
         }
     };
 
+    //joinNode.tests are TestAtJoinNode objects
+    //compare a token and wme, using defined bindings from a joinNode
+    //returns false if they dont match, otherwise returns a dict of the new bindings
+    //and their values
     var performJoinTests = function(joinNode,token,wme){
         var newBindings = {};
+        //TODO:copy existing bindings from token
         for(var i in joinNode.tests){
             var test = joinNode.tests[i];
             var wmeValue = wme.data[test.field1];
@@ -40,18 +60,24 @@ define(['./dataStructures'],function(DataStructures){
             if(token.bindings[test.field2]){
                 var tokenValue = token.bindings[test.field2];
                 if(wmeValue !== tokenValue){
+                    //binding doesnt match, break.
                     return false;
                 }else{
-                    //continue, they match
+                    //continue, binding exists and matches
                 }
             }else{//binding doesnt exist
+                //create the binding
                 newBindings[test.field2] = wmeValue;
             }            
         }
         return newBindings;
     };
 
+
+    //Trigger a join node with a new token
+    //will pull all wmes needed from the linked alphaMemory
     var joinNodeLeftActivation = function(node,token){
+        //If necessary, relink or unlink the parent betamemory or alphamemory
         if(node.parent.items && node.parent.items.length > 0){
             relinkToAlphaMemory(node);
             if(node.alphaMemory.items.length === 0){
@@ -60,20 +86,25 @@ define(['./dataStructures'],function(DataStructures){
                 });
             }
         }
+        //for each wme in the alpha memory, compare using join tests,
+        //and pass on successful combinations to beta memory /negative node children to be combined into tokens
         for(var i in node.alphaMemory.items){
             var currWME = node.alphaMemory.items[i].wme;
             var joinTestResult = performJoinTests(node,token,currWME);
             if(joinTestResult !== false){
                 for(var j in node.children){
                     var currChild = node.children[i];
-                    leftActivate(currChild,token,currWME,newBindings);
+                    leftActivate(currChild,token,currWME,joinTestResult);
                 }
             }
         }
         
     };
 
+    //Trigger a join node with a new wme
+    //pulling all necessary tokens from the parent as needed
     var joinNodeRightActivation = function(node,wme){
+        //relink or unlink as necessary
         if(node.alphaMemory.childNodes.length === 0){
             relinkToBetaMemory(node);
             if(node.parent.items.length === 0){
@@ -83,6 +114,8 @@ define(['./dataStructures'],function(DataStructures){
             }
         }
 
+        //For all tokens, compare to the new wme,
+        //pass on successful combinations to betamemory/negative node
         for(var i in node.parent.items){
             var currToken = node.parent.items[i];
             var joinTestResult = performJoinTests(node,currToken,wme);
@@ -94,7 +127,9 @@ define(['./dataStructures'],function(DataStructures){
             }
         }
     };
-    
+
+    //reconnect an unlinked join node to its alpha memory when there are
+    //wmes in said alpha memory
     var relinkToAlphaMemory = function(node){
         var ancestor = node.ancestor;
         while(ancestor && ancestor.ancestor){
@@ -108,10 +143,15 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
+    //relink an unlinked join node to its betamemory when there are tokens
+    //in said memory
     var relinkToBetaMemory = function(node){
         node.parent.children.unshift(node);
     }
 
+    //Trigger a negative node from a new token
+    //brings in bindings, creates a new token as necessary,
+    //combining bindings to.
     var negativeNodeLeftActivation = function(node,token,wme,bindings){
         if(node.items.length === 0){
             relinkToalphaMemory(node);
@@ -129,6 +169,7 @@ define(['./dataStructures'],function(DataStructures){
             }
         }
 
+        //if no wmes block the token, pass it on down the network
         if(newToken.negJoinResults.length === 0){
             for(var i in node.children){
                 var currChild = node.children[i];
@@ -138,6 +179,10 @@ define(['./dataStructures'],function(DataStructures){
         
     };
 
+    //trigger a negative node from a new wme,
+    //getting all tokens stored, comparing to the wme.
+    //any that the wme blocks, gets an additional negative Join result
+    //any that don't get blocked should already have been activated
     var negativeNodeRightActivation = function(node,wme){
         for(var i in node.items){
             var currToken = node.items[i];
@@ -153,16 +198,23 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
+    //from a new token, trigger the subnetwork?
     var nccNodeLeftActivation = function(nccNode,token,wme,bidings){
+        //Create and store the incoming token from prior join node
         var newToken = new DataStructures.Token(token,wme,nccNode,bindings);
         nccNode.items.unshift(newToken);
 
+        //if there are new results to process:
         while(nccNode.partner.newResultBuffer.length > 0){
             var newResult = nccNode.partner.newResultBuff.pop();
+            //add the subnetworks result as a blocking token
             newToken.nccResults.unshift(newResult);
+            //set the subnetwork result to have its parent as the new token
             newResult.parentToken = newToken;
         }
 
+        //if the new token has no blocking tokens,
+        //continue on
         if(newToken.nccResults.length === 0){
             for(var i in nccNode.children){
                 var currChild = nccNode.children[i];
@@ -171,10 +223,12 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
-
-    var nccParterNodeLeftActivation = function(partner,token,wme){
+    //the nccPartnerNode is activated by a new token from the subnetwork
+    //figure out who owns this new token from the main (positive) network
+    var nccParterNodeLeftActivation = function(partner,token,wme,bindings){
         var nccNode = partner.nccNode;
-        var newToken = new DataStructures.Token(token,wme,partner);
+        var newToken = new DataStructures.Token(token,wme,partner,bindings);
+        
         var ownersToken = token;
         var ownersWme = wme;
         for(var i = 1; i < partner.numberOfConjuncts){
@@ -184,6 +238,7 @@ define(['./dataStructures'],function(DataStructures){
 
         for(var i in nccNode.items){
             var potentialOwner = nccNode.items[i];
+            //todo: this might be better to compare ids?
             if(potentialOwner.parent === ownersToken
                && potentialOwner.wme === ownersWme){
                 potentialOwner.nccResults.unshift(newToken);
@@ -196,7 +251,8 @@ define(['./dataStructures'],function(DataStructures){
         partner.newResultbuffer.unshift(newToken);        
     };
 
-    var removeWME = function(wme){
+    //Remove/retract a wme from the network
+    var removeWME = function(wme,reteNet){
         //For all alphaMemory items
         var i = wme.alphaMemoryItems.length;
         while(i !== 0){
@@ -238,6 +294,7 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
+    //delete a token and all the tokens that rely on it
     var deleteTokenAndDescendents = function(token){
         while(token.children.length > 0){
             deleteTokenAndDescendents(token.children[0]);
@@ -310,6 +367,7 @@ define(['./dataStructures'],function(DataStructures){
         //deallocate token        
     };
 
+    //utility function to delete all descendents without deleting the token
     var deleteDescendentsOfToken = function(token){
         while(token.children.length > 0){
             deleteTokenAndDescendents(token.children[0]);
