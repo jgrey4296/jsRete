@@ -119,6 +119,16 @@ define([],function(){
         this.type = "NCCPartnerNode";
         startingId++;
     };
+
+    //condition:
+    
+    //tests: tuples (testField,testValue,comparisonFunction?)
+    //bindings: tuples (wmeVariableName,boundVariableName)
+    var Condition = function(tests,bindings){
+        this.constantTests = tests;
+        this.bindings = bindings;
+    };
+
     
     //--------------------
     var DataStructures = {

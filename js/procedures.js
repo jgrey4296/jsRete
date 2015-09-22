@@ -316,8 +316,133 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
-    var buildOrShareAlphaMemory = function(condition){
+    //--------------------
+    // Creation of Network:
+    //--------------------
+    
+    //added parameter of 'retenet' for hash table lookup
+    var buildOrShareAlphaMemory = function(condition,reteNet){
+        //see if there is an existing memory for this condition. if so, return existing alphamemory
 
+        //else: create the alpha memory
+
+        //run wmes in working memory against the alpha network
+
+        return alphamemory
+    };
+
+    var buildOrShareBetaMemoryNode = function(node){
+        //if theres an available beta memory to use,
+        //return that
+
+        //else: create a new beta memory
+        //update it with matches
+        //return new beta memory
+    };
+
+    //Return the bindings from a condition
+    var getJoinTestsFromconditions(condition){
+
+    }
+
+    //walk up from a beta node until you find a node
+    //connected to the specified alpha memory
+    var findNearestAncestorWithSameAlphaMemory(node,alphaMemory){
+
+    };
+
+
+    var buildOrShareJoinNode = function(parent,alphaMemory,tests){
+        //see if theres a join node to use already
+        //return it
+
+        //else: create a new join node
+        //increment alphamemories reference count
+        //if either parent memory is empty, unlink
+
+        //return new join node
+        
+    };
+    
+    var buildOrShareNegativeNode = function(parent,alphaMemory,tests){
+        //see if theres an existing negative node to use
+        //return it
+
+        //else: create negative node
+        //increment alphamemory reference count
+        //update with matches
+        //unlink if it has no tokens
+        //return new negative node
+    };
+
+
+    var buildOrShareNCCNodes = function(parent,conditions){
+        //build a network for the conditions
+
+        //find an existing NCCNode with partner to use
+        //return it
+
+        //else: build NCC and Partner nodes
+        //update NCC
+        //update partner
+        
+        
+    };
+
+
+    var buildOrShareNetworkForConditions = function(parent,conditions,earlierConditions){
+        //for each condition
+        //if condition is positive:
+        //build betamemory
+        //build alphamemory
+        //build join node
+        
+        //if condition is negative:
+        //build alpha memory
+        //build negative node
+                
+        //if condition is NCC:
+        //build ncc
+        
+        //return current node        
+    };
+    
+
+    var addRule = function(conditions){
+        //build network with a dummy node for the parent
+        //build new action node
+        //update node with matches
+    }
+
+    var updateNewNodeWithMatchesFromAbove = function(newNode){
+        //if parent is:
+        //a beta memory
+        //left activate
+        
+        //a join node
+        //left activate only the new node
+        
+        //a negative node
+        //left activate
+        
+        //an ncc
+        //left activate
+    };
+
+
+    var removeRule = function(rule){
+        //delete from bottom up
+    };
+
+    var deleteNodeAndAnyUnusedAncestors = function(node){
+        //if NCC, delete partner to
+
+        //clean up tokens
+
+        //clean up alphamemory
+
+        //clean up parent
+        
 
     };
     
