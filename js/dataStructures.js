@@ -24,32 +24,40 @@ define([],function(){
     //base token,
     //bindings are updated as the token progresses
     var Token = function(parentToken,wme,owningNode,bindings){
-        this.parentToken = parent; //ie:owner
+        console.log("Making a token:",bindings);
+        this.parentToken = parentToken; //ie:owner
         this.wme = wme;
         this.owningNode = owningNode;
         this.childTokens = [];
         this.negJoinResults = [];
         this.nccResults = [];
-
-        this.parent.children.unshift(this);
-        if(this.wme){
+        if(this.parent){
+            this.parentToken.children.unshift(this);
+        }
+        if(this.wme && this.wme.tokens){
             this.wme.tokens.unshift(this);
         }
 
-        //TODO: copy over bindings from parent,
+        //copy over bindings from parent,
         //then copy in new bindings
-        this.bindings = bindings || {};
+        this.bindings = {};
+        for(var i in bindings){
+            this.bindings[i] = bindings[i];
+        }
 
-        this.id = startingID;
+        console.log("Token creation, bindings:",this.bindings,bindings);
+        
+        this.id = startingId;
         startingId++;        
     }
 
     //Alpha Memory node
     var AlphaMemory = function(parent){
+        this.isAlphaMemory = true;
         this.items = [];
         this.parent = parent;
-        this.parent.outputMemory = this;
-        this.childNodes = [];
+        this.parent.children.push(this);
+        this.children = [];
         this.referenceCount = 0;
         this.isMemoryNode = true;
         this.id = startingId;
@@ -65,23 +73,32 @@ define([],function(){
         startingId++;
     }
     
-    //TODO:
     //A constant test node
     var AlphaNode = function(parent,constantTest){
-        this.parent = parent;
-        this.parent.children.unshift(this);
-        this.outputMemory = undefined;
-        this.children = [];
-        this.testField = constantTest[0];
-        this.testValue = constantTest[1];
-        this.testOperator = constantTest[2] || 'EQ';
         this.id = startingId;
+        this.isConstantTestNode = true;
+        this.parent = parent;
+        if(this.parent && this.parent.children){
+            this.parent.children.unshift(this);
+        }
+        this.children = [];
+        if(constantTest){
+            console.log("Setting constant test fields:",constantTest);
+            this.testField = constantTest['field'];
+            this.testValue = constantTest['value'];
+            if(constantTest[2]){
+                this.operator = constantTest['operator'];
+            }else{
+                this.operator = 'EQ';
+            };
+            console.log("AlphaNode ",this.id,":",this.testField,this.operator,this.testValue);
+        }
+
         startingId++;
     }
 
     //Base node for the beta network
     var ReteNode = function(parent){
-        this.type = "reteNode";
         this.children = [];
         this.parent = parent;
         this.id = startingId;
@@ -93,10 +110,9 @@ define([],function(){
         ReteNode.call(this,parent);
         this.isBetaMemory = true;
         this.isMemoryNode = true;
-        this.dummy = dummy;
         this.items = [];
         if(parent === undefined){
-            this.dummy = parent;
+            this.dummy = true;
             this.items.push(new Token());
         }
         this.children = [];
@@ -106,13 +122,14 @@ define([],function(){
     //tests are the binding tuples from a condition
     var JoinNode = function(parent,alphaMemory,tests){
         ReteNode.call(this,parent);
-        this.type = "JoinNode";
         this.isJoinNode = true;
         this.alphaMemory = alphaMemory;
         this.tests = tests;
         this.parent.children.unshift(this);
-        this.alphaMemory.children.unshift(this);
-        this.alphaMemory.referenceCount += 1;
+        if(this.alphaMemory && this.alphaMemory.children){
+            this.alphaMemory.children.unshift(this);
+            this.alphaMemory.referenceCount += 1;
+        }
         this.nearestAncestor = null;
     }
 
@@ -122,7 +139,8 @@ define([],function(){
     var TestAtJoinNode = function(field1,field2){
         this.wmeField = field1;//the name of the variable in wme
         this.boundVar = field2;//the bound name
-        //TODO : this.operator
+        //TODO : this.operator for comparisons between bindings
+        //other than equality
         this.id = startingId;
         startingId++;
     }
@@ -141,7 +159,7 @@ define([],function(){
         this.isNegativeNode = true;
         this.items = [];
         this.alphaMemory = alphaMemory;
-        this.alphaMemory.referenceCount+;
+        this.alphaMemory.referenceCount++;
         this.tests = tests;
         this.parent.children.unshift(this);
         this.alphaMemory.children.unshift(this);
@@ -166,7 +184,6 @@ define([],function(){
         this.numberOfConjuncts = num;
         this.newResultBuffer = [];
         this.id = startingId;
-        this.type = "NCCPartnerNode";
         this.parent.children.unshift(this);
 
     };
@@ -247,14 +264,32 @@ define([],function(){
         this.dummyBetaMemory = new BetaMemory();
         this.rootAlpha = new AlphaNode();
         this.actions = [];
+        this.allWMEs = [];
     };
 
     
     //--------------------
     //DataStructures interface
     var DataStructures = {
-
-
+        "WME"              : WME,
+        "Token"            : Token,
+        "AlphaMemory"      : AlphaMemory,
+        "ItemInAlphaMemory": ItemInAlphaMemory,
+        "AlphaNode"        : AlphaNode,
+        "ReteNode"         : ReteNode,
+        "BetaMemory"       : BetaMemory,
+        "JoinNode"         : JoinNode,
+        "TestAtJoinNode"   : TestAtJoinNode,
+        "NegativeJoinResult":NegativeJoinResult,
+        "NegativeNode"     : NegativeNode,
+        "NegativedConjunctiveConditionNode":NegatedConjunctiveConditionNode,
+        "NegConjuConPartnerNode":NegConjuConPartnerNode,
+        "Test"             : Test,
+        "Condition"        : Condition,
+        "NCCCCondition"    : NCCCondition,
+        "Rule"             : Rule,
+        "ActionNode"       : ActionNode,
+        "ReteNet"          : ReteNet
     };
     
     return DataStructures;
