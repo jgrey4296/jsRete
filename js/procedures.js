@@ -1,3 +1,4 @@
+
 /**
    Procedures for a rete net.
    Addition of rules, activation, etc
@@ -6,11 +7,12 @@ if(typeof define !== 'function'){
     var define = require('amdefine')(module);
 }
 
-define(['./dataStructures'],function(DataStructures){
+define(['./dataStructures','./comparisonOperators'],function(DataStructures,ConstantTestOperators){
 
+    
     //Trigger an alpha memory with a new wme to store
     var alphaMemoryActivation = function(alphaMem,wme){
-        console.log("Activating alpha memory: ",alphaMem.id);
+        console.info("Activating alpha memory: ",alphaMem.id);
         var newItem = new DataStructures.ItemInAlphaMemory(wme,alphaMem);
         alphaMem.items.unshift(newItem);
         wme.alphaMemoryItems.unshift(newItem);
@@ -23,40 +25,36 @@ define(['./dataStructures'],function(DataStructures){
 
     //Trigger a constant test with a new wme
     var constantTestNodeActivation = function(alphaNode,wme){
-        console.log("constant test node activating: ",alphaNode.id, wme.id);
         //test the wme using the constant test in the node
-        var wmeFieldValue = wme.data[alphaNode.testField];
-        var value = alphaNode.testValue;
         var testResult = false;
-        if(wmeFieldValue && value && alphaNode.operator){
-        //TODO: add more operators:
-            console.log("Operator:",alphaNode);
-            if(alphaNode.operator === 'EQ'){
-                console.log("Comparing:",wmeFieldValue,value);
-                testResult = (wmeFieldValue === value);
-            }
-        }else{
-            //no test, pass it on through
-            console.log("Passing wme through empty test node");
+        if(alphaNode.passThrough){
             testResult = true;
+        }else{
+            var wmeFieldValue = wme.data[alphaNode.testField];
+            var value = alphaNode.testValue;
+            var operator = alphaNode.operator;
+            if(ConstantTestOperators[operator]){
+                console.info("Comparing:",wmeFieldValue,value);
+                testResult = ConstantTestOperators[operator](wmeFieldValue,value);
+            }
         }
-        
         if(testResult){
-            console.log("Alpha node activating children",alphaNode.children);
+            console.info("Alpha node activating children",alphaNode.children);
             for(var i in alphaNode.children){
                 var child = alphaNode.children[i];
                 alphaNodeActivation(child,wme);
             }
         }
+        return testResult;
     };
 
     //Switchable activation function for alpha network stuff
     var alphaNodeActivation = function(alphaNode,wme){
-        console.log("alpha node activating:",alphaNode.id," on wme: ",wme);
+        console.info("alpha node activating:",alphaNode.id," on wme: ",wme);
         if(alphaNode.isAlphaMemory){
             alphaMemoryActivation(alphaNode,wme);
         }else if(alphaNode.isConstantTestNode){
-            constantTestNodeActivation(alphaNode,wme);
+            return constantTestNodeActivation(alphaNode,wme);
         }else{
             throw new Error("Unrecognised node:",alphaNode);
         }
@@ -67,7 +65,7 @@ define(['./dataStructures'],function(DataStructures){
 
         //activate the root node of the reteNet
         var wme = new DataStructures.WME(wmeData);
-        console.log("Adding wme: ",wme.id);
+        console.info("Adding wme: ",wme.id);
         reteNet.allWMEs.push(wme);
         alphaNodeActivation(reteNet.rootAlpha,wme);
         return wme.id;
@@ -78,7 +76,7 @@ define(['./dataStructures'],function(DataStructures){
     //old bindings are still in the token, the constructor of Token will combine the two
     //sets of bindings
     var betaMemoryLeftActivation = function(betaMemory,token){
-        console.log("Activating Beta Memory Left:",betaMemory.id);
+        console.info("Activating Beta Memory Left:",betaMemory.id);
         var newToken = token;
         betaMemory.items.unshift(newToken);
         for(var i in betaMemory.children){
@@ -87,38 +85,42 @@ define(['./dataStructures'],function(DataStructures){
         }
     };
 
-    //joinNode.tests are TestAtJoinNode objects
     //compare a token and wme, using defined bindings from a joinNode
     //returns false if they dont match, otherwise returns a dict of the new bindings
     //and their values
     var performJoinTests = function(joinNode,token,wme){
         var newBindings = {};
+        //Populate with current bindings from token
         for(var i in token.bindings){
             newBindings[i] = token.bindings[i];
         }
-        
+
+        //For all the bindings in this join node:
         for(var i in joinNode.tests){
+            //get the bind test
             var test = joinNode.tests[i];
+            //get the wme value it references
             var wmeValue = wme.data[test[1]];
-            //If the binding exists
-            if(token.bindings[test[0]]){
+            //If the binding exists in the token
+            if(newBindings[test[0]]){
                 var tokenValue = token.bindings[test[0]];
+                //Compare the stored binding to the potential binding
                 //TODO:Add Operators here
                 if(wmeValue !== tokenValue){
                     //binding doesnt match, break.
-                    console.log("binding testing:",wmeValue,tokenValue,"has failed");
+                    console.info("binding testing:",wmeValue,tokenValue,"has failed");
                     return false;
                 }else{
                     //continue, binding exists and matches
-                    console.log("binding testing succeeding:",wmeValue,tokenValue);
+                    console.info("binding testing succeeding:",wmeValue,tokenValue);
                 }
             }else{//binding doesnt exist
                 //create the binding
-                console.log("creating binding:",test[0],wmeValue);
+                console.info("creating binding:",test[0],wmeValue);
                 newBindings[test[0]] = wmeValue;
             }            
         }
-        console.log("Returning bindings:",newBindings);
+        console.info("Returning bindings:",newBindings);
         return newBindings;
     };
 
@@ -126,12 +128,12 @@ define(['./dataStructures'],function(DataStructures){
     //Trigger a join node with a new token
     //will pull all wmes needed from the linked alphaMemory
     var joinNodeLeftActivation = function(node,token){
-        console.log("join node left activation");
+        console.info("join node left activation");
         //If necessary, relink or unlink the parent betamemory or alphamemory
         if(node.parent.items && node.parent.items.length > 0){
             relinkToAlphaMemory(node);
             if(node.alphaMemory.items.length === 0){
-                console.log("filtering join node out of parent");
+                console.info("filtering join node out of parent");
                 node.parent.children = node.parent.children.filter(function(d){
                     return d.id !== node.id
                 });
@@ -142,7 +144,7 @@ define(['./dataStructures'],function(DataStructures){
         for(var i in node.alphaMemory.items){
             var currWME = node.alphaMemory.items[i].wme;
             var joinTestResult = performJoinTests(node,token,currWME);
-            console.log("returned jtr 1:",joinTestResult);
+            console.info("returned jtr 1:",joinTestResult);
             if(joinTestResult !== false){
                 for(var j in node.children){
                     var currChild = node.children[i];
@@ -156,12 +158,12 @@ define(['./dataStructures'],function(DataStructures){
     //Trigger a join node with a new wme
     //pulling all necessary tokens from the parent as needed
     var joinNodeRightActivation = function(node,wme){
-        console.log("join node right activation");
+        console.info("join node right activation");
         //relink or unlink as necessary
         if(node.alphaMemory.children.length === 1){
             relinkToBetaMemory(node);
             if(node.parent.items.length === 0){
-                console.log("unlinking alpha memory");
+                console.info("unlinking alpha memory");
                 var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
                 node.alphaMemory.children.splice(index,1);
             }
@@ -172,9 +174,9 @@ define(['./dataStructures'],function(DataStructures){
         for(var i in node.parent.items){
             var currToken = node.parent.items[i];
             var joinTestResult = performJoinTests(node,currToken,wme);
-            console.log("returned jtr 2:",joinTestResult);
+            console.info("returned jtr 2:",joinTestResult);
             if(joinTestResult !== false){
-                console.log("going on to left activate...");
+                console.info("going on to left activate...");
                 for(var j in node.children){
                     var currNode = node.children[i];
                     leftActivate(currNode,currToken,wme,joinTestResult);
@@ -219,7 +221,7 @@ define(['./dataStructures'],function(DataStructures){
         for(var i in node.alphaMemory.items){
             var currWme = node.alphaMemory.items[i];
             var joinTestResult = performJoinTests(node,newToken,currWme);
-            console.log("Returned jtr 3:",joinTestResult);
+            console.info("Returned jtr 3:",joinTestResult);
             if(joinTestResult){
                 var joinResult = new DataStructures.NegativeJoinResult(newToken,currWme);
                 newToken.negJoinResults.unshift(joinResult);
@@ -437,14 +439,17 @@ define(['./dataStructures'],function(DataStructures){
     //--------------------
 
     var compareNodeToTest = function(node,testTuple){
-        if(node.testField !== testTuple[0]
-           || node.testValue !== testTuple[1]){
+        console.log("Comparing:",node,' \nto: ',testTuple);
+        if(node.testField !== testTuple['field']
+           || node.testValue !== testTuple['value']){
+            console.log("fail 1");
             return false;
         }
-        if(testTuple.length === 3
-           && node.operator !== testTuple[2]){
+        if(node.operator !== testTuple['operator']){
+            console.log("fail 2");
             return false;
         }
+        console.log("true");
         return true;
     };
     
@@ -555,13 +560,13 @@ define(['./dataStructures'],function(DataStructures){
 
         //if either parent memory is empty, unlink
         if(alphaMemory.items.length === 0){
-            console.log("unlinking join node parent");
+            console.info("unlinking join node parent");
             var index = parent.children.map(function(d){
                 return d.id;
             }).indexOf(newJoinNode.id);
             parent.children.splice(index,1);
         }else if(parent.items.length === 0){
-            console.log("unlinking join node alpha memory");
+            console.info("unlinking join node alpha memory");
             var index = alphaMemory.children.map(function(d){ return d.id; }).indexOf(newJoinNode.id);
             alphaMemory.children.splice(index,1);
         }
@@ -658,7 +663,7 @@ define(['./dataStructures'],function(DataStructures){
     }
 
     var leftActivate = function(node,token,wme,joinTestResults){
-        console.log("Left Activatin:",node);
+        console.info("Left Activatin:",node);
         if(token && joinTestResults && wme){
             token = new DataStructures.Token(token,wme,node,joinTestResults);
         }
@@ -679,7 +684,7 @@ define(['./dataStructures'],function(DataStructures){
     };
 
     var rightActivate = function(node,wme){
-        console.log("Right activating:",node);
+        console.info("Right activating:",node);
         if(node.isJoinNode){
             joinNodeRightActivation(node,wme);
         }else if(node.isNegativeNode){
@@ -783,6 +788,11 @@ define(['./dataStructures'],function(DataStructures){
         "removeRule": removeRule,
         "addWME"    : addWME,
         "removeWME" : removeWME,
+
+        //For tests:
+        "constantTestNodeActivation" : constantTestNodeActivation,
+        "alphaMemoryActivation" : alphaMemoryActivation,
+        "alphaNodeActivation"   : alphaNodeActivation,
     };
 
     return interface;

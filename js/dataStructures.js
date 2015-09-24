@@ -9,13 +9,16 @@ if(typeof define !== 'function'){
 
 define([],function(){
     var startingId = 0;
-
+    
     //base WME structure.
     //information stored in .data
     var WME = function(data){
         this.data = data;
+        //Alpha memories the wme is part of
         this.alphaMemoryItems = [];
+        //Tokens the wme is part of
         this.tokens = [];
+        //Tokens this wme is blocking
         this.negJoinResults = [];
         this.id = startingId;
         startingId++;
@@ -24,14 +27,14 @@ define([],function(){
     //base token,
     //bindings are updated as the token progresses
     var Token = function(parentToken,wme,owningNode,bindings){
-        console.log("Making a token:",bindings);
+        console.info("Making a token:",bindings);
         this.parentToken = parentToken; //ie:owner
         this.wme = wme;
         this.owningNode = owningNode;
-        this.childTokens = [];
+        this.children = [];
         this.negJoinResults = [];
         this.nccResults = [];
-        if(this.parent){
+        if(this.parentToken){
             this.parentToken.children.unshift(this);
         }
         if(this.wme && this.wme.tokens){
@@ -41,11 +44,18 @@ define([],function(){
         //copy over bindings from parent,
         //then copy in new bindings
         this.bindings = {};
+
+        if(this.parentToken && this.parentToken.bindings){
+            for(var i in this.parentToken.bindings){
+                this.bindings[i] = this.parentToken.bindings[i];
+            }            
+        }
+        
         for(var i in bindings){
             this.bindings[i] = bindings[i];
         }
 
-        console.log("Token creation, bindings:",this.bindings,bindings);
+        console.info("Token creation, bindings:",this.bindings,bindings);
         
         this.id = startingId;
         startingId++;        
@@ -56,7 +66,9 @@ define([],function(){
         this.isAlphaMemory = true;
         this.items = [];
         this.parent = parent;
-        this.parent.children.push(this);
+        if(parent){
+            this.parent.children.push(this);
+        }
         this.children = [];
         this.referenceCount = 0;
         this.isMemoryNode = true;
@@ -83,27 +95,25 @@ define([],function(){
         }
         this.children = [];
         if(constantTest){
-            console.log("Setting constant test fields:",constantTest);
             this.testField = constantTest['field'];
             this.testValue = constantTest['value'];
-            if(constantTest[2]){
-                this.operator = constantTest['operator'];
-            }else{
-                this.operator = 'EQ';
-            };
-            console.log("AlphaNode ",this.id,":",this.testField,this.operator,this.testValue);
+            this.operator = constantTest['operator'];
+        }else{
+            this.passThrough = true;
         }
-
         startingId++;
-    }
+    };
 
     //Base node for the beta network
     var ReteNode = function(parent){
         this.children = [];
         this.parent = parent;
+        if(this.parent && this.parent.children){
+            this.parent.children.unshift(this);
+        }
         this.id = startingId;
         startingId++;
-    }
+    };
 
     //Beta Memory Stores tokens
     var BetaMemory = function(parent){
@@ -114,6 +124,7 @@ define([],function(){
         if(parent === undefined){
             this.dummy = true;
             this.items.push(new Token());
+            this.items[0].owningNode = this;
         }
         this.children = [];
     }
@@ -124,8 +135,11 @@ define([],function(){
         ReteNode.call(this,parent);
         this.isJoinNode = true;
         this.alphaMemory = alphaMemory;
-        this.tests = tests;
-        this.parent.children.unshift(this);
+        if(tests){
+            this.tests = tests;
+        }else{
+            this.tests = [];
+        }
         if(this.alphaMemory && this.alphaMemory.children){
             this.alphaMemory.children.unshift(this);
             this.alphaMemory.referenceCount += 1;
@@ -133,17 +147,6 @@ define([],function(){
         this.nearestAncestor = null;
     }
 
-    //ie:field1 = "first",field2 = "x"
-    //used to compare bindings, stored in joinNodes
-    
-    var TestAtJoinNode = function(field1,field2){
-        this.wmeField = field1;//the name of the variable in wme
-        this.boundVar = field2;//the bound name
-        //TODO : this.operator for comparisons between bindings
-        //other than equality
-        this.id = startingId;
-        startingId++;
-    }
 
     //Storage for a token blocked by a wme
     var NegativeJoinResult = function(owner,wme){
@@ -161,7 +164,6 @@ define([],function(){
         this.alphaMemory = alphaMemory;
         this.alphaMemory.referenceCount++;
         this.tests = tests;
-        this.parent.children.unshift(this);
         this.alphaMemory.children.unshift(this);
         this.nearestAncestor = null;
     };
@@ -172,7 +174,6 @@ define([],function(){
         this.isAnNCCNode = true;
         this.items = [];
         this.partner = null;
-        this.parent.children.unshift(this);
     };
 
 
@@ -184,12 +185,10 @@ define([],function(){
         this.numberOfConjuncts = num;
         this.newResultBuffer = [];
         this.id = startingId;
-        this.parent.children.unshift(this);
-
     };
 
     //Test: (wme.)a = 5
-    var Test = function(testWmeField,operator,testValue){
+    var ConstantTest = function(testWmeField,operator,testValue){
         this.field = testWmeField;
         this.operator = operator;
         this.value = testValue;
@@ -209,7 +208,7 @@ define([],function(){
         
         for(var i in tests){
             var v = tests[i];
-            var test = new Test(v[0],v[1],v[2]);
+            var test = new ConstantTest(v[0],v[1],v[2]);
             this.constantTests.push(test);
         }
         for(var i in bindings){
@@ -257,7 +256,6 @@ define([],function(){
         this.isActionNode = true;
         this.name = name;
         this.action = action;
-        this.parent.children.unshift(this);
     };
 
     var ReteNet = function(){
@@ -279,12 +277,12 @@ define([],function(){
         "ReteNode"         : ReteNode,
         "BetaMemory"       : BetaMemory,
         "JoinNode"         : JoinNode,
-        "TestAtJoinNode"   : TestAtJoinNode,
         "NegativeJoinResult":NegativeJoinResult,
         "NegativeNode"     : NegativeNode,
         "NegativedConjunctiveConditionNode":NegatedConjunctiveConditionNode,
         "NegConjuConPartnerNode":NegConjuConPartnerNode,
-        "Test"             : Test,
+        "Test"             : ConstantTest,
+        "ConstantTest"     : ConstantTest,
         "Condition"        : Condition,
         "NCCCCondition"    : NCCCondition,
         "Rule"             : Rule,

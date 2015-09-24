@@ -9,7 +9,8 @@ var reteNet = new ds.ReteNet();
 
 console.log("Creating WMEs");
 var wmeData = {
-    first : "bob"
+    first : "bob",
+    second : "bill",
 };
 
 console.log("Creating conditions");
@@ -17,7 +18,8 @@ console.log("Creating conditions");
 var conditions = [
     [ //Array of a single Condition
         [
-            ['first','EQ','bob']
+            ['first','EQ','bob'],
+            ['second','EQ','bob']
         ], //Array of Test Triples
         [
             ['a','first']
