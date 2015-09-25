@@ -413,20 +413,202 @@ exports.ConstructorExamples = {
     //time to deal with negated conditions:
     //--------------------
 
+    //negative condition
+    //Same as the positive condition test, just negated
+    negativeConditionTest : function(test){
+        //Create a condition of just one test,
+        //wme['first'] === 5. no bindings, but IS NEGATIVE
+        var aCondition = new ds.Condition(
+            [['first','EQ',5]],
+            [],
+            true);
+        test.ok(aCondition.isNegative === true);
+        test.ok(aCondition.constantTests.length === 1);
+        test.ok(aCondition.bindings.length === 0);
+        var theTest = aCondition.constantTests[0];
+        test.ok(theTest.field === "first");
+        test.ok(theTest.operator === "EQ");
+        test.ok(theTest.value === 5);
+        test.done();
+    },
+
+    
+    //negative join result -- a simple owning dict
+    testBasicNegativeJoinResult : function(test){
+        var aWme = new ds.WME({first:"bob"});
+        var aWmeForToken = new ds.WME({second:"bill"});
+        var aToken = new ds.Token(null,aWmeForToken,null,null);
+        test.ok(aWme.negJoinResults.length === 0);
+        test.ok(aToken.negJoinResults.length === 0);
+        var negJoinResult = new ds.NegativeJoinResult(aToken,aWme);
+
+        test.ok(negJoinResult.owner.id === aToken.id);
+        test.ok(negJoinResult.wme.id === aWme.id);
+        test.ok(aWme.negJoinResults.length === 1);
+        test.ok(aWme.negJoinResults[0].id === negJoinResult.id);
+        test.ok(aToken.negJoinResults.length === 1);
+        test.ok(aToken.negJoinResults[0].id === negJoinResult.id);
+        test.done();
+    },
+
+    
+    //negative node
+    simpleNegativeNode : function(test){
+        var dummyParent = {
+            id : "dummy",
+            children : [],
+        };
+        var am = new ds.AlphaMemory();
+        var tests = [];
+
+        test.ok(am.children.length === 0);
+        test.ok(dummyParent.children.length === 0);
+        
+        var negNode = new ds.NegativeNode(dummyParent,am,tests);
+
+        test.ok(negNode.isNegativeNode === true);
+        test.ok(negNode.parent.id === dummyParent.id);
+        test.ok(negNode.alphaMemory.id === am.id);
+        test.ok(negNode.tests.length === 0);
+        test.ok(negNode.nearestAncestor === null);
+        test.done();
+    },
+
     
     //nccCondition
+    //to construct a negated conjunctive condition,
+    //just wrap what would be a condition in an array, with
+    //a '!' as the first element
+    nccConditionCtorTest : function(test){
+        //Create a nccCondition of:
+        //NOT (wme['first'] === 5
+        var def = ['!',
+                   [//conditions
+                       [//c1
+                           [//tests
+                               //test1
+                               ['first','EQ',5]
+                           ],//end of tests
+                           //bindings?, negated?
+                           [],false
+                       ]//end of c1
+                   ]//end of conditions
+                  ];
+        var anNCCCondition = new ds.NCCCondition(def[1]);
 
-    //negative join result
+        test.ok(anNCCCondition.isNCCCondition === true);
+        test.ok(anNCCCondition.conditions.length === 1);
+        test.ok(anNCCCondition.conditions[0].isPositive === true);
+        test.ok(anNCCCondition.conditions[0].bindings.length === 0);
+        test.ok(anNCCCondition.conditions[0].constantTests.length === 1);
+        test.done();
+    },
 
+    //Rule Test with nccCondition
+    ruleCreationWithAnNCCCondition : function(test){
+        var aRule = new ds.Rule("simpleNCCRule",
+                                [//conditions
+                                    [//c1 - not ncc
+                                        [//tests
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg:
+                                        [],false
+                                    ],//end of c1
+                                    ['!',//c2 - NCC
+                                     [//NCC's conditions
+                                         [//c1 of NCC
+                                             [//tests
+                                                 ['second','EQ','bill']
+                                             ],//end of tests
+                                             //bindings and neg:
+                                             [],false
+                                         ],//end of NCC-c1
+                                     ]//end of NCC Conditions
+                                    ]//end of NCC
+                                ],//end of conditions
+                                //the action:
+                                function(){
+                                    console.log("Hello");
+                                });
 
-    //negative node
+        test.ok(aRule.name = "simpleNCCRule");
+        test.ok(aRule.action !== undefined);
+        test.ok(aRule.conditions.length === 2);
+        //test the normal condition
+        test.ok(aRule.conditions[0].isPositive === true);
+        test.ok(aRule.conditions[0].constantTests.length === 1);
+        test.ok(aRule.conditions[0].bindings.length === 0);
 
+        //test the NCCcondition
+        test.ok(aRule.conditions[1].isNCCCondition === true);
+        test.ok(aRule.conditions[1].conditions.length === 1);
+        test.ok(aRule.conditions[1].conditions[0].isPositive === true);
+        test.ok(aRule.conditions[1].conditions[0].bindings.length === 0);
+        test.ok(aRule.conditions[1].conditions[0].constantTests.length === 1);
+        test.done();
+    },
+
+    //Now that an ncc condition can be created,
+    //as part of a rule, the ncc node itself can be tested:
+    
     //nccnode
+    nccNodeTest : function(test){
+        var dummyParent = {
+            id: "dummy",
+            children : [],
+        };
+        var nccNode = new ds.NegatedConjunctiveConditionNode(dummyParent);
 
+        test.ok(nccNode.isAnNCCNode === true);
+        test.ok(nccNode.items.length === 0);
+        test.ok(nccNode.partner === null);
+        test.ok(nccNode.parent.id === dummyParent.id);
+        test.ok(dummyParent.children.length === 1);
+        test.ok(dummyParent.children[0].id === nccNode.id);
+        test.done();
+    },
+
+    
     //nccpartner node
+    nccPartnerNodeTest : function(test){
+        var dummyParent = {
+            id : "dummy",
+            children : [],
+        };
+        //using 5 as a random number of conjunctions in this
+        //made up ncc.
+        var nccPartner = new ds.NegConjuConPartnerNode(dummyParent,5);
 
+        test.ok(nccPartner.isAnNCCPartnerNode === true);
+        test.ok(nccPartner.parent.id === dummyParent.id);
+        test.ok(nccPartner.numberOfConjuncts === 5);
+        test.ok(nccPartner.newResultBuffer.length === 0);
+                
+        test.done();
+    },
 
     //--------------------
     //Rete Net main object
     //--------------------
+    mainObjectTest : function(test){
+        var rn = new ds.ReteNet();
+        test.ok(rn.dummyBetaMemory !== undefined);
+        test.ok(rn.rootAlpha !== undefined);
+        test.ok(rn.actions.length === 0);
+        test.ok(rn.allWMEs.length === 0);
+
+        test.ok(rn.dummyBetaMemory.isBetaMemory === true);
+        test.ok(rn.dummyBetaMemory.isMemoryNode === true);
+        test.ok(rn.dummyBetaMemory.items.length === 1);
+        test.ok(rn.dummyBetaMemory.items[0].owningNode.id === rn.dummyBetaMemory.id);
+
+        test.ok(rn.rootAlpha.isConstantTestNode === true);
+        test.ok(rn.rootAlpha.parent === undefined);
+        test.ok(rn.rootAlpha.children.length === 0);
+        test.ok(rn.rootAlpha.passThrough === true);
+        test.done();
+    },
+
+    
 };

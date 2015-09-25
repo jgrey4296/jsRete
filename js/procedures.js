@@ -223,9 +223,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             var joinTestResult = performJoinTests(node,newToken,currWme);
             console.info("Returned jtr 3:",joinTestResult);
             if(joinTestResult){
+                //adds itself to the token and
+                //wme as necessary
                 var joinResult = new DataStructures.NegativeJoinResult(newToken,currWme);
-                newToken.negJoinResults.unshift(joinResult);
-                currWme.negJoinResults.unshift(joinResult);
             }
         }
 
@@ -252,9 +252,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
                 if(currToken.negJoinResults.length === 0){
                     deleteDescendentsOfToken(currToken);
                 }
+                //Adds itself to the currToken and wme as
+                //necessary
                 var negJoinResult = new DataStructures.NegativeJoinResult(currToken,wme);
-                currToken.negJoinResults.unshift(negJoinResult);
-                wme.negJoinResults.unshift(negJoinresult);
             }
         }
     };

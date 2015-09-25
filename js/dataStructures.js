@@ -107,13 +107,15 @@ define([],function(){
         for(var i in conditions){
             //[[tests+], [bindings+], ncc?]
             var v = conditions[i];
-            if(v.length > 1){
-                var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
-            }else{
-                //NCC conditions are just wrapped in an array
-                var cond = new NCCCondition(conditions[0][0]);
+            if(v.length > 0){
+                if(v[0] !== '!'){
+                    var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
+                    this.conditions.push(cond);
+                }else{
+                    var cond = new NCCCondition(conditions[1][0]);
+                    this.conditions.push(cond);
+                }
             }
-            this.conditions.push(cond);
         }
     };
 
@@ -153,7 +155,7 @@ define([],function(){
         this.items = [];
         this.parent = parent;
         if(parent){
-            this.parent.children.push(this);
+            this.parent.children.unshift(this);
         }
         this.children = [];
         this.referenceCount = 0;
@@ -215,20 +217,19 @@ define([],function(){
     };
 
 
-    var NCCCondition = function(conditions){
-        this.isNCCCondition = true;
-        this.conditions = [];
-        for(var i in conditions){
-            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
-            this.conditions.push(cond);
-        }
-    };
 
     
     //Storage for a token blocked by a wme
+    //Updates the owner and wme as part of its construction
     var NegativeJoinResult = function(owner,wme){
         this.owner = owner;
+        if(this.owner){
+            this.owner.negJoinResults.unshift(this);
+        }
         this.wme = wme;
+        if(this.wme){
+            this.wme.negJoinResults.unshift(this);
+        }
         this.id = startingId;
         startingId++;
     };
@@ -239,12 +240,23 @@ define([],function(){
         this.isNegativeNode = true;
         this.items = [];
         this.alphaMemory = alphaMemory;
-        this.alphaMemory.referenceCount++;
+        if(this.alphaMemory){
+            this.alphaMemory.referenceCount++;
+            this.alphaMemory.children.unshift(this);
+        }
         this.tests = tests;
-        this.alphaMemory.children.unshift(this);
         this.nearestAncestor = null;
     };
 
+    var NCCCondition = function(conditions){
+        this.isNCCCondition = true;
+        this.conditions = [];
+        for(var i in conditions){
+            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
+            this.conditions.push(cond);
+        }
+    };
+    
     //NCC : gates token progression based on a subnetwork
     var NegatedConjunctiveConditionNode = function(parent){
         ReteNode.call(this,parent);
@@ -263,7 +275,6 @@ define([],function(){
         this.newResultBuffer = [];
         this.id = startingId;
     };
-
     
 
     var ReteNet = function(){
@@ -287,12 +298,12 @@ define([],function(){
         "JoinNode"         : JoinNode,
         "NegativeJoinResult":NegativeJoinResult,
         "NegativeNode"     : NegativeNode,
-        "NegativedConjunctiveConditionNode":NegatedConjunctiveConditionNode,
+        "NegatedConjunctiveConditionNode":NegatedConjunctiveConditionNode,
         "NegConjuConPartnerNode":NegConjuConPartnerNode,
         "Test"             : ConstantTest,
         "ConstantTest"     : ConstantTest,
         "Condition"        : Condition,
-        "NCCCCondition"    : NCCCondition,
+        "NCCCondition"    : NCCCondition,
         "Rule"             : Rule,
         "ActionNode"       : ActionNode,
         "ReteNet"          : ReteNet
