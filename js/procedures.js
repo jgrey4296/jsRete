@@ -663,7 +663,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     }
 
     var leftActivate = function(node,token,wme,joinTestResults){
-        console.info("Left Activatin:",node);
+        console.info("Left Activating:",node);
         if(token && joinTestResults && wme){
             token = new DataStructures.Token(token,wme,node,joinTestResults);
         }

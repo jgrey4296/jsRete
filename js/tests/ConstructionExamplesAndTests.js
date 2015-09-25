@@ -5,6 +5,10 @@ var ds = require('../dataStructures');
 
 exports.ConstructorExamples = {
 
+    //--------------------
+    //WMEs and Tokens
+    //--------------------
+    
     //Lets Look at the basic unit of memory: the WME
     BasicWMEExample : function(test){
         //Create a simple wme with some information in it
@@ -95,7 +99,9 @@ exports.ConstructorExamples = {
         test.done();
     },
     
-    
+    //--------------------
+    //Constant Tests -> conditions -> rules
+    //--------------------
     
     ConstantTestExample : function(test){
         //A Test for: wme["first"] === 5
@@ -220,10 +226,10 @@ exports.ConstructorExamples = {
     },
 
 
-    /********
-             Node Structure Tests
-             (ie: AlphaNode/Memory, BetaMemory, JoinNode...
-     *******/
+    //--------------------
+    //Node Structure Tests
+    //(ie: AlphaNode/Memory, BetaMemory, JoinNode...
+    //--------------------
 
     alphaNodeNoParentNoTestCtorTest : function(test){
         var an = new ds.AlphaNode();
@@ -378,6 +384,49 @@ exports.ConstructorExamples = {
     //A Join node lets use do a simple test
     //of right and left activation in procedures.
 
+    //Action node test:
+    simpleActionNodeTest : function(test){
+        var testValue = 0;
+        var dummyParent = {
+            id : "dummy",
+            children : [],
+        };
+        var action = new ds.ActionNode(dummyParent,
+                                       function(){
+                                           testValue = 5;
+                                       },"simpleAction");
+
+        test.ok(action.isActionNode === true);
+        test.ok(action.name === 'simpleAction');
+        test.ok(action !== undefined);
+        test.ok(action.parent.id === dummyParent.id);
+
+        test.ok(testValue === 0);
+        action.action();
+        test.ok(testValue === 5);
+        
+        test.done();
+    },
+
+    //--------------------
+    //Core stuff has now been constructed,
+    //time to deal with negated conditions:
+    //--------------------
+
     
-    
+    //nccCondition
+
+    //negative join result
+
+
+    //negative node
+
+    //nccnode
+
+    //nccpartner node
+
+
+    //--------------------
+    //Rete Net main object
+    //--------------------
 };

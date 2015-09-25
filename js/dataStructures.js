@@ -59,132 +59,6 @@ define([],function(){
         
         this.id = startingId;
         startingId++;        
-    }
-
-    //Alpha Memory node
-    var AlphaMemory = function(parent){
-        this.isAlphaMemory = true;
-        this.items = [];
-        this.parent = parent;
-        if(parent){
-            this.parent.children.push(this);
-        }
-        this.children = [];
-        this.referenceCount = 0;
-        this.isMemoryNode = true;
-        this.id = startingId;
-        startingId++;
-    }
-
-    //Utility storage of wme and its alphaMemory together
-    //used in alphamemory and WME
-    var ItemInAlphaMemory = function(wme,alphaMem){
-        this.wme = wme;
-        this.alphaMemory = alphaMem;
-        this.id = startingId;
-        startingId++;
-    }
-    
-    //A constant test node
-    var AlphaNode = function(parent,constantTest){
-        this.id = startingId;
-        this.isConstantTestNode = true;
-        this.parent = parent;
-        if(this.parent && this.parent.children){
-            this.parent.children.unshift(this);
-        }
-        this.children = [];
-        if(constantTest){
-            this.testField = constantTest['field'];
-            this.testValue = constantTest['value'];
-            this.operator = constantTest['operator'];
-        }else{
-            this.passThrough = true;
-        }
-        startingId++;
-    };
-
-    //Base node for the beta network
-    var ReteNode = function(parent){
-        this.children = [];
-        this.parent = parent;
-        if(this.parent && this.parent.children){
-            this.parent.children.unshift(this);
-        }
-        this.id = startingId;
-        startingId++;
-    };
-
-    //Beta Memory Stores tokens
-    var BetaMemory = function(parent){
-        ReteNode.call(this,parent);
-        this.isBetaMemory = true;
-        this.isMemoryNode = true;
-        this.items = [];
-        if(parent === undefined){
-            this.dummy = true;
-            this.items.push(new Token());
-            this.items[0].owningNode = this;
-        }
-        this.children = [];
-    }
-
-    //Join Node combines tokens with wmes
-    //tests are the binding tuples from a condition
-    var JoinNode = function(parent,alphaMemory,tests){
-        ReteNode.call(this,parent);
-        this.isJoinNode = true;
-        this.alphaMemory = alphaMemory;
-        if(tests){
-            this.tests = tests;
-        }else{
-            this.tests = [];
-        }
-        if(this.alphaMemory && this.alphaMemory.children){
-            this.alphaMemory.children.unshift(this);
-            this.alphaMemory.referenceCount += 1;
-        }
-        this.nearestAncestor = null;
-    }
-
-
-    //Storage for a token blocked by a wme
-    var NegativeJoinResult = function(owner,wme){
-        this.owner = owner;
-        this.wme = wme;
-        this.id = startingId;
-        startingId++;
-    }
-
-    //Negative Node:The node that gates token progression
-    var NegativeNode = function(parent,alphaMemory,tests){
-        ReteNode.call(this,parent);
-        this.isNegativeNode = true;
-        this.items = [];
-        this.alphaMemory = alphaMemory;
-        this.alphaMemory.referenceCount++;
-        this.tests = tests;
-        this.alphaMemory.children.unshift(this);
-        this.nearestAncestor = null;
-    };
-
-    //NCC : gates token progression based on a subnetwork
-    var NegatedConjunctiveConditionNode = function(parent){
-        ReteNode.call(this,parent);
-        this.isAnNCCNode = true;
-        this.items = [];
-        this.partner = null;
-    };
-
-
-    //The partner of the NCC, connects to the subnetwork
-    var NegConjuConPartnerNode = function(parent,num){
-        ReteNode.call(this,parent);
-        this.isAnNCCPartnerNode = true;
-        this.nccNode = null;
-        this.numberOfConjuncts = num;
-        this.newResultBuffer = [];
-        this.id = startingId;
     };
 
     //Test: (wme.)a = 5
@@ -223,15 +97,7 @@ define([],function(){
         });
     };
 
-    var NCCCondition = function(conditions){
-        this.isNCCCondition = true;
-        this.conditions = [];
-        for(var i in conditions){
-            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
-            this.conditions.push(cond);
-        }
-    }
-    
+
     //The rule/production that stores conditions and
     //associated action
     var Rule = function(name,conditions,action){
@@ -251,12 +117,154 @@ define([],function(){
         }
     };
 
+ 
+    //Utility storage of wme and its alphaMemory together
+    //used in alphamemory and WME
+    var ItemInAlphaMemory = function(wme,alphaMem){
+        this.wme = wme;
+        this.alphaMemory = alphaMem;
+        this.id = startingId;
+        startingId++;
+    };
+    
+    //A constant test node
+    var AlphaNode = function(parent,constantTest){
+        this.id = startingId;
+        this.isConstantTestNode = true;
+        this.parent = parent;
+        if(this.parent && this.parent.children){
+            this.parent.children.unshift(this);
+        }
+        this.children = [];
+        if(constantTest){
+            this.testField = constantTest['field'];
+            this.testValue = constantTest['value'];
+            this.operator = constantTest['operator'];
+        }else{
+            this.passThrough = true;
+        }
+        startingId++;
+    };
+
+   
+    //Alpha Memory node
+    var AlphaMemory = function(parent){
+        this.isAlphaMemory = true;
+        this.items = [];
+        this.parent = parent;
+        if(parent){
+            this.parent.children.push(this);
+        }
+        this.children = [];
+        this.referenceCount = 0;
+        this.isMemoryNode = true;
+        this.id = startingId;
+        startingId++;
+    };
+
+    
+    //Base node for the beta network
+    var ReteNode = function(parent){
+        this.children = [];
+        this.parent = parent;
+        if(this.parent && this.parent.children){
+            this.parent.children.unshift(this);
+        }
+        this.id = startingId;
+        startingId++;
+    };
+
+    //Beta Memory Stores tokens
+    var BetaMemory = function(parent){
+        ReteNode.call(this,parent);
+        this.isBetaMemory = true;
+        this.isMemoryNode = true;
+        this.items = [];
+        if(parent === undefined){
+            this.dummy = true;
+            this.items.push(new Token());
+            this.items[0].owningNode = this;
+        }
+        this.children = [];
+    };
+
+    //Join Node combines tokens with wmes
+    //tests are the binding tuples from a condition
+    var JoinNode = function(parent,alphaMemory,tests){
+        ReteNode.call(this,parent);
+        this.isJoinNode = true;
+        this.alphaMemory = alphaMemory;
+        if(tests){
+            this.tests = tests;
+        }else{
+            this.tests = [];
+        }
+        if(this.alphaMemory && this.alphaMemory.children){
+            this.alphaMemory.children.unshift(this);
+            this.alphaMemory.referenceCount += 1;
+        }
+        this.nearestAncestor = null;
+    };
+
+    
     var ActionNode = function(parent,action,name){
         ReteNode.call(this,parent);
         this.isActionNode = true;
         this.name = name;
         this.action = action;
     };
+
+
+    var NCCCondition = function(conditions){
+        this.isNCCCondition = true;
+        this.conditions = [];
+        for(var i in conditions){
+            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
+            this.conditions.push(cond);
+        }
+    };
+
+    
+    //Storage for a token blocked by a wme
+    var NegativeJoinResult = function(owner,wme){
+        this.owner = owner;
+        this.wme = wme;
+        this.id = startingId;
+        startingId++;
+    };
+
+    //Negative Node:The node that gates token progression
+    var NegativeNode = function(parent,alphaMemory,tests){
+        ReteNode.call(this,parent);
+        this.isNegativeNode = true;
+        this.items = [];
+        this.alphaMemory = alphaMemory;
+        this.alphaMemory.referenceCount++;
+        this.tests = tests;
+        this.alphaMemory.children.unshift(this);
+        this.nearestAncestor = null;
+    };
+
+    //NCC : gates token progression based on a subnetwork
+    var NegatedConjunctiveConditionNode = function(parent){
+        ReteNode.call(this,parent);
+        this.isAnNCCNode = true;
+        this.items = [];
+        this.partner = null;
+    };
+
+
+    //The partner of the NCC, connects to the subnetwork
+    var NegConjuConPartnerNode = function(parent,num){
+        ReteNode.call(this,parent);
+        this.isAnNCCPartnerNode = true;
+        this.nccNode = null;
+        this.numberOfConjuncts = num;
+        this.newResultBuffer = [];
+        this.id = startingId;
+    };
+
+    
 
     var ReteNet = function(){
         this.dummyBetaMemory = new BetaMemory();

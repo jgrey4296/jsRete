@@ -4,6 +4,18 @@ var p = require('../procedures');
 
 exports.procedureTests = {
 
+    //compare node to test
+
+    //get join tests from condition:
+
+
+    //--------------------
+    //Activation tests:
+    //--------------------
+
+    //action node activation
+
+    
     //using a dummy, rather than actual, alpha node,
     //see if the procedure returns correctly
     constantTestNodeActivationPassTest : function(test){
@@ -47,6 +59,8 @@ exports.procedureTests = {
         test.done();
     },
 
+    //TODO: test each operator in ../comparisonOperators
+    
     alphaMemoryTestActivation : function(test){
         var ct = new ds.ConstantTest("first","EQ","bob");
         var an = new ds.AlphaNode(null,ct);
@@ -98,5 +112,71 @@ exports.procedureTests = {
         test.done();
     },
 
+    //Beta Memory left activation
+
+    //perform join tests check
+    
+    //join node left activation
+
+    //join node right activation
+    
+    //relink to alpha test
+
+    //relink to beta test
+
+    //negative node left activation
+
+    //negative node right activation
+
+    //ncc left activation
+
+    //nccpartner left actviation
+
+    //left activate general
+
+    //right activate general
+
+    
+    //--------------------
+    //buildOrShareTests:
+    //--------------------
+
+    //constant test
+
+    //alpha memory
+    
+    //beta memory
+
+    //join node
+
+    //negative node
+
+    //nccnode
+
+    //network for conditions:
+    
+    //--------------------
+    //WME functions:
+    //--------------------
+    
+    //addWME test
+
+    //remove wme test
+
+    //deleteTokenAndDescendents
+
+    //delete descendents of token
+
+    //--------------------
+    //Other:
+    //--------------------
+
+    //findNearestAncestorWithSameAlphaMemory
+
+    //update new node with matches from above test:
+
+    //remove rule
+
+    //delete node and any unused ancestors
     
 };
