@@ -129,9 +129,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             relinkToAlphaMemory(node);
             if(node.alphaMemory.items.length === 0){
                 //unlink beta memory if alphamemory is empty
-                node.parent.children = node.parent.children.filter(function(d){
-                    return d.id !== node.id
-                });
+                var index = node.parent.children.map(function(d){return d.id;}).indexOf(node.id);
+                var unlinked = node.parent.children.splice(index,1);
+                node.parent.unlinkedChildren.push(unlinked[0]);
             }
         }
         //for each wme in the alpha memory,
@@ -159,7 +159,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             relinkToBetaMemory(node);
             if(node.parent.items.length === 0){
                 var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
-                node.alphaMemory.children.splice(index,1);
+                var unlinked = node.alphaMemory.children.splice(index,1);
+                node.alphaMemory.unlinkedChildren.push(unlinked[0]);
             }
         }
 
@@ -197,12 +198,21 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             //otherwise just add at the end
             node.alphaMemory.children.push(node);
         }
+
+        //remove from the unlinkedChildren Field
+        var index = node.alphaMemory.unlinkedChildren.map(function(d){ return d.id;}).indexOf(node.id);
+        node.alphaMemory.unlinkedChildren.splice(index,1);
+        
+        
     };
 
     //relink an unlinked join node to its betamemory when there are tokens
     //in said memory
     var relinkToBetaMemory = function(node){
         node.parent.children.unshift(node);
+        //remove from the unlinked children list
+        var index = node.parent.unlinkedChildren.map(function(d){return d.id; }).indexOf(node.id);
+        node.parent.unlinkedChildren.splice(index,1);
     }
 
     //Trigger a negative node from a new token
@@ -435,7 +445,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //--------------------
 
     //taking an alpha node and a ConstantTest
-    var compareNodeToTest = function(node,constantTest){
+    var compareConstantNodeToTest = function(node,constantTest){
         if(!constantTest.isConstantTest){
             throw new Error("constantTest should be a ConstantTest Object");
         }
@@ -455,7 +465,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     var buildOrShareConstantTestNode = function(parent,constantTest){
         for(var i in parent.children){
             var node = parent.children[i];
-            if(compareNodeToTest(node,constantTest)){
+            if(compareConstantNodeToTest(node,constantTest)){
                 return node;
             }
         }
@@ -503,7 +513,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
 
-    //walk up from a beta node until you find a node
+    //walk up from a join node until you find a node
     //connected to the specified alpha memory
     var findNearestAncestorWithSameAlphaMemory = function(node,alphaMemory){
         if(node.dummy){ return null;}
@@ -519,19 +529,25 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     var compareJoinTests = function(firstTestSet,secondTestSet){
-        var i = firstTestSet.length;
-        var j = secondTestSet.length;
-        while(i || j){
-            if(firstTestSet[i][0] === secondTestSet[j][0]
-               && firstTestSet[i][1] === secondTestSet[j][1]){
-                i--; j--;
+        var i = firstTestSet.length -1;
+        var j = secondTestSet.length -1;
+        while(i && j){
+            //console.log("comparing",i,j,"|||",firstTestSet[i][0],secondTestSet[j][0],"|||",firstTestSet[i][1],secondTestSet[j][1]);
+            if(firstTestSet[i][0] === secondTestSet[j][0]){
+                if(firstTestSet[i][1] === secondTestSet[j][1]){
+                    i--; j--;
+                }else{
+                    return false;
+                }
             }else if(firstTestSet[i][0] > secondTestSet[j][0]){
                 i--;
-            }else{
+            }else if(firstTestSet[i][0] < secondTestSet[j][0]){
                 j--;
+            }else{
+                return false;
             }
         }
-        if(i === j && i === 0){        
+        if(i === j && i === 0){
             return true;
         }
         return false;
@@ -540,9 +556,10 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     var buildOrShareJoinNode = function(parent,alphaMemory,tests){
         //see if theres a join node to use already
-        for(var i in parent.children){
-            var child = parent.children[i];
-            if(child.isJoinNode && child.alphaMemory.id === alphaMemory.id && compareTests(child.tests,tests)){
+        var allChildren = parent.children.concat(parent.unlinkedChildren);
+        for(var i in allChildren){
+            var child = allChildren[i];
+            if(child.isJoinNode && child.alphaMemory.id === alphaMemory.id && compareJoinTests(child.tests,tests)){
                 //return it
                 return child;
             }
@@ -554,14 +571,16 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         newJoinNode.nearestAncestor = findNearestAncestorWithSameAlphaMemory(parent,alphaMemory);
 
         //if either parent memory is empty, unlink
-        if(alphaMemory.items.length === 0){
+        if(parent.items.length === 0){
+            var index = alphaMemory.children.map(function(d){ return d.id; }).indexOf(newJoinNode.id);
+            var removed = alphaMemory.children.splice(index,1);
+            alphaMemory.unlinkedChildren.unshift(removed[0]);
+        }else if(alphaMemory.items.length === 0){
             var index = parent.children.map(function(d){
                 return d.id;
             }).indexOf(newJoinNode.id);
-            parent.children.splice(index,1);
-        }else if(parent.items.length === 0){
-            var index = alphaMemory.children.map(function(d){ return d.id; }).indexOf(newJoinNode.id);
-            alphaMemory.children.splice(index,1);
+            var removed = parent.children.splice(index,1);
+            parent.unlinkedChildren.unshift(removed[0]);
         }
         //return new join node
         return newJoinNode;
@@ -573,7 +592,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             var child = parent.children[i];
             if(child.isNegativeNode
                && child.alphaMemory.id === alphaMemory.id
-               && compareTests(child.tests,tests)){
+               && compareJoinTests(child.tests,tests)){
                 return child;
             }
         }
@@ -664,6 +683,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             token = new DataStructures.Token(token,wme,node,joinTestResults);
         }
         //Activate the node:
+        //Essentially a switch of:
+        //betaMemory, JoinNode, NegativeNode, NCC, PartnerNode,
+        //and Action
         if(node.isBetaMemory){
             betaMemoryActivation(node,token);
         }else if(node.isJoinNode){
@@ -690,7 +712,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             throw new Error("Tried to rightActivate Unrecognised node");
         }
     };
-        
+
+    //essentially a 4 state switch:
+    //betaMemory, joinNode, negativeNode, NCC
     var updateNewNodeWithMatchesFromAbove = function(newNode){
         var parent = newNode.parent;
         if(parent.isBetaMemory){
@@ -705,13 +729,13 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
                 rightActivate(parent,item.wme);
             }
             parent.children = savedChildren;
-            }else if(parent.isNegativeNode){
-                for(var i in parent.items){
-                    var token = parent.items;
-                    if(token.negJoinResults.length === 0){
-                        leftActivate(newNode,token);
-                    }
+        }else if(parent.isNegativeNode){
+            for(var i in parent.items){
+                var token = parent.items;
+                if(token.negJoinResults.length === 0){
+                    leftActivate(newNode,token);
                 }
+            }
         }else if(parent.isAnNCCNode){
             for(var i in parent.items){
                 var token = parent.items;
@@ -721,7 +745,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }
     };
-
+    
 
     var removeRule = function(actionNode){
         //delete from bottom up
@@ -787,7 +811,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "removeWME" : removeWME,
 
         //Comparisons:
-        "compareNodeToTest"     : compareNodeToTest,
+        "compareConstantNodeToTest"     : compareConstantNodeToTest,
+        "compareJoinTests"      : compareJoinTests,
         "performJoinTests"      : performJoinTests,
         //Activation functions::
         "constantTestNodeActivation" : constantTestNodeActivation,
@@ -795,10 +820,15 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "alphaNodeActivation"   : alphaNodeActivation,
         "activateActionNode"    : activateActionNode,
         "betaMemoryActivation":betaMemoryActivation,
+        "leftActivate"          : leftActivate,
         //Build Functions::
         "buildOrShareConstantTestNode":buildOrShareConstantTestNode,
         "buildOrShareAlphaMemory" : buildOrShareAlphaMemory,
         "buildOrShareBetaMemoryNode"  : buildOrShareBetaMemoryNode,
+        "buildOrShareJoinNode"        : buildOrShareJoinNode,
+
+        //Other:
+        "updateNewNodeWithMatchesFromAbove" : updateNewNodeWithMatchesFromAbove,
     };
 
     return interface;

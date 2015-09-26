@@ -89,7 +89,6 @@ exports.ConstructorExamples = {
         test.ok(token2.wme.id === wme2.id);
         //Second token has its bindings,
         //AND the preceding bindings
-        console.log(token2.bindings);
         test.ok(token2.bindings['a'] === "bob");
         test.ok(token2.bindings['b'] === "bill");
 

@@ -162,6 +162,7 @@ define([],function(){
             throw new Error("trying to create an alpha memory for a node that already has one");
         }
         this.children = [];
+        this.unlinkedChildren = [];
         this.referenceCount = 0;
         this.isMemoryNode = true;
         this.id = startingId;
@@ -192,6 +193,8 @@ define([],function(){
             this.items[0].owningNode = this;
         }
         this.children = [];
+        this.unlinkedChildren = [];
+
     };
 
     //Join Node combines tokens with wmes

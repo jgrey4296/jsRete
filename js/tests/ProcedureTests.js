@@ -7,26 +7,52 @@ exports.procedureTests = {
     //Comparisons:
     
     //compare node to test
-    compareNodeToTest_passCheck : function(test){
+    compareConstantNodeToTest_passCheck : function(test){
         var testTuple = new ds.ConstantTest('first','EQ','bob');
         var ct = new ds.ConstantTest("first","EQ","bob");
         var node = new ds.AlphaNode(null,ct);
-        var ret = p.compareNodeToTest(node,testTuple);
-
+        var ret = p.compareConstantNodeToTest(node,testTuple);
         test.ok(ret === true,ret);
         test.done();
     },
 
-    compareNodeToTest_failCheck : function(test){
+    compareConstantNodeToTest_failCheck : function(test){
         var testTuple = new ds.ConstantTest('first','EQ','bob');
         var ct = new ds.ConstantTest("second","EQ","bob");
         var node = new ds.AlphaNode(null,ct);
-        var ret = p.compareNodeToTest(node,testTuple);
+        var ret = p.compareConstantNodeToTest(node,testTuple);
 
         test.ok(ret === false);
         test.done();
     },
 
+    //Compare Join Test Arrays:
+    compareSameJoinTestArrays : function(test){
+        var tests1 = [["a","first"],["b","second"],["c","third"]];
+        var result = p.compareJoinTests(tests1,tests1);
+        test.ok(result === true);
+        test.done();
+    },
+
+    compareDifferentJoinTestArrays : function(test){
+        var tests1 = [["a","first"],["b","second"],["c","third"]];
+        var tests2 = [["a","first"],["b","second"],["c","fourth"]];
+        var result = p.compareJoinTests(tests1,tests2);
+        test.ok(result === false);
+        var result2 = p.compareJoinTests(tests2,tests1);
+        test.ok(result === false);
+        
+        test.done();
+    },
+    
+    compareOtherJoinTests : function(test){
+        var tests1 = [["a","first"],["b","second"]];
+        var tests2 = [["a","ablh"],["c","hello"]];
+        var result = p.compareJoinTests(tests1,tests2);
+        test.ok(result === false);
+        test.done();
+    },
+    
     //perform join test check.
     //Check: 1) bindings undefined,
     //2) bindings incorrect
@@ -110,9 +136,6 @@ exports.procedureTests = {
 
 
 
-
-
-    
     //findNearestAncestorWithSameAlphaMemory
     
 
@@ -526,9 +549,74 @@ exports.procedureTests = {
         test.done();
     },
 
-    
-    //join node
+    //With a beta memory, and an alpha memory,
+    //and some tests, you can make a simple join node:
+    initialFromDummyBetaParent_BuildJoinNodeCheck : function(test){
+        //the dummy beta parent
+        var bm = new ds.BetaMemory();
+        //the alpha memory
+        var am = new ds.AlphaMemory();
+        //the tests:
+        var tests = [["a","first"],["b","second"],["c","third"]];
 
+        //the Join Node:
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+        
+        test.ok(jn.isJoinNode === true);
+        test.ok(jn.parent.id === bm.id);
+        test.ok(jn.alphaMemory.id === am.id);
+        test.ok(jn.tests.length === 3);
+        test.ok(jn.tests[0][0] === tests[0][0]);
+        test.ok(jn.tests[0][1] === tests[0][1]);
+        test.ok(jn.tests[1][0] === tests[1][0]);
+        test.ok(jn.tests[1][1] === tests[1][1]);
+        test.ok(jn.tests[2][0] === tests[2][0]);
+        test.ok(jn.tests[2][1] === tests[2][1]);
+
+        //nearest ancestor should be null as parent is dummy
+        test.ok(jn.nearestAncestor === null);
+
+        //parent memory children should NOT have updated
+        //BECAUSE OF left UNLINKING
+        test.ok(jn.parent.children.length === 0);
+        //but alphamemory children should have updated
+        test.ok(jn.alphaMemory.children.length === 1);
+        test.ok(jn.alphaMemory.children[0].id === jn.id);
+        
+        //NOT: test.ok(jn.alphaMemory.children[0].id === jn.id);
+        test.done();
+    },
+
+    //now SHARE a join node:
+    share_join_node_check : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","first"],["b","second"],["c","third"]];
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+        var shouldBeDuplicate = p.buildOrShareJoinNode(bm,am,tests);
+        test.ok(jn.id === shouldBeDuplicate.id);
+        test.ok(jn.parent.id === bm.id);
+        test.ok(shouldBeDuplicate.alphaMemory.id === am.id);
+        test.done();
+    },
+
+    do_NOT_share_join_node : function(test){
+        var am = new ds.AlphaMemory();
+        var bm = new ds.BetaMemory();
+        var tests1 = [["a","first"],["b","second"]];
+        var tests2 = [["a","ablh"],["c","hello"]];
+        var jn1 = p.buildOrShareJoinNode(bm,am,tests1);
+        var jn2 = p.buildOrShareJoinNode(bm,am,tests2);
+
+        test.ok(jn1.id !== jn2.id);
+        test.done();
+    },
+    
+    //force test of left unlinking
+    //force test of right unlinking
+
+    //test nearestAncestor
+    
     //negative node
 
     //nccnode
@@ -551,10 +639,43 @@ exports.procedureTests = {
     //Other:
     //--------------------
 
-
-
     //update new node with matches from above test:
 
+    //Test uNNWMFA on a parent that is a beta memory.
+    //use a beta memory to store the results of the left activate
+    //to verify
+    betaNode_updateNewNodeWithMatchesFromAbove : function(test){
+        var bm1 = new ds.BetaMemory();
+        var t1 = new ds.Token();
+        var t2 = new ds.Token();
+        var t3 = new ds.Token();
+        var t4 = new ds.Token();
+
+        p.leftActivate(bm1,t1);
+        p.leftActivate(bm1,t2);
+        p.leftActivate(bm1,t3);
+        p.leftActivate(bm1,t4);
+
+        //+1 for dummy
+        test.ok(bm1.items.length === 5);
+        var bm2 = new ds.BetaMemory(bm1);
+        test.ok(bm2.items.length === 0);
+        test.ok(bm1.children.length === 1);
+        test.ok(bm1.children[0].id === bm2.id);
+        test.ok(bm2.parent.id === bm1.id);
+
+        p.updateNewNodeWithMatchesFromAbove(bm2);
+
+        test.ok(bm2.items.length === 5);
+        //they are added in reverse order
+        test.ok(bm2.items[0].id === bm1.items[4].id);
+        test.ok(bm2.items[1].id === bm1.items[3].id);
+        test.ok(bm2.items[2].id === bm1.items[2].id);
+        test.ok(bm2.items[3].id === bm1.items[1].id);
+        test.ok(bm2.items[4].id === bm1.items[0].id);
+        test.done();
+    },
+    
     //remove rule
 
     //delete node and any unused ancestors
