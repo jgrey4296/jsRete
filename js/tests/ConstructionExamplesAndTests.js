@@ -286,8 +286,9 @@ exports.ConstructorExamples = {
         test.ok(am.isAlphaMemory === true);
         test.ok(am.items.length === 0);
         test.ok(am.parent.id === an.id);
-        test.ok(an.children.length === 1);
-        test.ok(an.children[0].id === am.id);
+        test.ok(an.children.length === 0);
+        test.ok(an.outputMemory !== undefined);
+        test.ok(an.outputMemory.id === am.id);
         test.ok(am.referenceCount === 0);
         test.ok(am.isMemoryNode === true);
         test.done();

@@ -27,7 +27,6 @@ define([],function(){
     //base token,
     //bindings are updated as the token progresses
     var Token = function(parentToken,wme,owningNode,bindings){
-        console.info("Making a token:",bindings);
         this.parentToken = parentToken; //ie:owner
         this.wme = wme;
         this.owningNode = owningNode;
@@ -55,14 +54,13 @@ define([],function(){
             this.bindings[i] = bindings[i];
         }
 
-        console.info("Token creation, bindings:",this.bindings,bindings);
-        
         this.id = startingId;
         startingId++;        
     };
 
     //Test: (wme.)a = 5
     var ConstantTest = function(testWmeField,operator,testValue){
+        this.isConstantTest = true;
         this.field = testWmeField;
         this.operator = operator;
         this.value = testValue;
@@ -130,6 +128,7 @@ define([],function(){
     };
     
     //A constant test node
+    //constantTest = {field:"",value:"",operator:""};
     var AlphaNode = function(parent,constantTest){
         this.id = startingId;
         this.isConstantTestNode = true;
@@ -138,6 +137,7 @@ define([],function(){
             this.parent.children.unshift(this);
         }
         this.children = [];
+        this.outputMemory = undefined;
         if(constantTest){
             this.testField = constantTest['field'];
             this.testValue = constantTest['value'];
@@ -154,8 +154,12 @@ define([],function(){
         this.isAlphaMemory = true;
         this.items = [];
         this.parent = parent;
-        if(parent){
+        if(parent && parent.isConstantTestNode === undefined){
             this.parent.children.unshift(this);
+        }else if(this.parent && this.parent.outputMemory === undefined){
+            this.parent.outputMemory = this;
+        }else if(this.parent && this.parentOutputMemory !== undefined){
+            throw new Error("trying to create an alpha memory for a node that already has one");
         }
         this.children = [];
         this.referenceCount = 0;
