@@ -27,6 +27,7 @@ define([],function(){
     //base token,
     //bindings are updated as the token progresses
     var Token = function(parentToken,wme,owningNode,bindings){
+        this.isToken = true;
         this.parentToken = parentToken; //ie:owner
         this.wme = wme;
         this.owningNode = owningNode;

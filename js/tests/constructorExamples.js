@@ -39,6 +39,7 @@ exports.ConstructorExamples = {
         //aToken(parentToken,wme,owningNode,bindings)
         var aToken = new ds.Token(null,aWme,null,{"a":"bob"});
 
+        test.ok(aToken.isToken === true);
         test.ok(aToken.parentToken === null);
         test.ok(aToken.owningNode === null);
         test.ok(aToken.wme !== null);

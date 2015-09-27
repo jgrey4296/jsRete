@@ -155,7 +155,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //pulling all necessary tokens from the parent as needed
     var joinNodeRightActivation = function(node,wme){
         //relink or unlink as necessary
-        if(node.alphaMemory.children.length === 1){
+        if(node.alphaMemory.items.length === 1){
             relinkToBetaMemory(node);
             if(node.parent.items.length === 0){
                 var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
@@ -209,10 +209,12 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //relink an unlinked join node to its betamemory when there are tokens
     //in said memory
     var relinkToBetaMemory = function(node){
-        node.parent.children.unshift(node);
         //remove from the unlinked children list
         var index = node.parent.unlinkedChildren.map(function(d){return d.id; }).indexOf(node.id);
-        node.parent.unlinkedChildren.splice(index,1);
+        if(index > -1){
+            node.parent.unlinkedChildren.splice(index,1);
+            node.parent.children.unshift(node);
+        }
     }
 
     //Trigger a negative node from a new token
@@ -820,6 +822,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "alphaNodeActivation"   : alphaNodeActivation,
         "activateActionNode"    : activateActionNode,
         "betaMemoryActivation":betaMemoryActivation,
+        "joinNodeLeftActivation":joinNodeLeftActivation,
+        "joinNodeRightActivation":joinNodeRightActivation,
         "leftActivate"          : leftActivate,
         //Build Functions::
         "buildOrShareConstantTestNode":buildOrShareConstantTestNode,

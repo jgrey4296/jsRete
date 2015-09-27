@@ -295,13 +295,115 @@ exports.procedureTests = {
         test.done();
     },
 
+    leftActivateBetaMemory_TokenCreation_Test : function(test){
+        var bm = new ds.BetaMemory();
+        var origToken = new ds.Token();
+        var origWME = new ds.WME({first:"blah"});
+        var joinTestResults = {"a":"blah"};
+
+        //dummy token already in there
+        test.ok(bm.items.length === 1);
+        
+        p.leftActivate(bm,origToken,origWME,joinTestResults);
+
+        test.ok(bm.items.length === 2);
+        //new token is UNSHIFTED NOT PUSHED
+        test.ok(bm.items[0].isToken === true);
+        test.ok(bm.items[0].id !== origToken.id);
+        test.ok(bm.items[0].id !== bm.items[1].id);
+        test.ok(bm.items[0].parentToken.id === origToken.id);
+        test.ok(bm.items[0].owningNode.id === bm.id);
+        test.ok(bm.items[0].wme.id === origWME.id);
+        test.ok(bm.items[0].bindings['a'] === 'blah');
+        test.done();
+    },
+    
     
     //join node left activation
+    //activating a non-unlinked join node and checking
+    //that it puts a new token into its child beta memory
+    joinNodeLeftActivationTest_bypassing_unlinking : function(test){
+        var am = new ds.AlphaMemory();
+        var bm = new ds.BetaMemory();
+        var tests = [["a","first"]];
+        var testWME = new ds.WME({first:"blah"});
 
+        test.ok(bm.children.length === 0);
+        test.ok(am.children.length === 0);
 
-    
-    
+        p.alphaMemoryActivation(am,testWME);
+        
+        var jn = new ds.JoinNode(bm,am,tests);
+
+        //using constructor, without building,
+        //so no unlinking
+        test.ok(jn.parent.children.length === 1);
+        test.ok(jn.alphaMemory.children.length === 1);
+        
+        //connect a beta memory to jn output
+        //to verify results
+        var bmPostJN = new ds.BetaMemory(jn);
+
+        //create a token
+        var token = new ds.Token();
+
+        //check prior:
+        test.ok(bmPostJN.items.length === 0);
+
+        test.ok(bm.items.length === 1);
+        test.ok(am.items.length === 1);
+        
+        //and activate the jn with it:
+        p.joinNodeLeftActivation(jn,token);
+
+        //Verify:
+        test.ok(bmPostJN.items.length === 1,bmPostJN.items.length);
+        test.ok(bmPostJN.items[0].isToken === true);
+        test.ok(bmPostJN.items[0].owningNode.id === bmPostJN.id);
+        test.ok(bmPostJN.items[0].parentToken.id === token.id);
+
+        test.ok(token.children.length === 1);
+        test.ok(token.children[0].id === bmPostJN.items[0].id);
+                
+        test.done();
+    },
+
     //join node right activation
+    //simple jnra, without worrying about unlinking:
+    joinNodeRightActivation_bypassing_unlinking : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","first"]];
+        var testWME = new ds.WME({first:"blah"});
+        p.alphaMemoryActivation(am,testWME);
+
+        test.ok(bm.items.length === 1); //for dummy
+        test.ok(am.items.length === 1); //for testWME
+                
+        var jn = new ds.JoinNode(bm,am,tests);
+
+        var bmPostJN = new ds.BetaMemory(jn);
+
+        test.ok(bmPostJN.parent.id === jn.id);
+
+        //Activate from the right:
+        var newWME = new ds.WME({first:"blooo"});
+        p.joinNodeRightActivation(jn,newWME);
+
+        test.ok(bmPostJN.items.length === 1);
+        test.ok(bmPostJN.items[0].id !== bm.items[0].id);
+        test.ok(bmPostJN.items[0].owningNode.id === bmPostJN.id);
+        test.ok(bmPostJN.items[0].parentToken.id === bm.items[0].id);
+        test.ok(bmPostJN.items[0].bindings['a'] === newWME.data.first);
+        test.ok(bmPostJN.items[0].wme.id === newWME.id);
+
+        test.ok(bm.items[0].children.length === 1);
+        test.ok(bm.items[0].children[0].id === bmPostJN.items[0].id);
+
+        test.done();
+    },
+
+
     
     //relink to alpha test
 
@@ -611,6 +713,24 @@ exports.procedureTests = {
         test.ok(jn1.id !== jn2.id);
         test.done();
     },
+
+    force_no_unlinking_build_JoinNode_test : function(test){
+        var am = new ds.AlphaMemory();//currently empty
+        var bm = new ds.BetaMemory();//has dummy token
+        var tests = [["a","first"]];
+        var testWME = new ds.WME({first:"blah"});
+        p.alphaMemoryActivation(am,testWME);
+        test.ok(am.items.length === 1);//now am isnt empty
+        //create join node, shouldnt get unlinked:
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+
+        test.ok(jn.parent.children.length === 1);
+        test.ok(jn.parent.children[0].id === jn.id);
+        test.ok(jn.alphaMemory.children.length === 1);
+        test.ok(jn.alphaMemory.children[0].id === jn.id);
+        test.done();
+    },
+
     
     //force test of left unlinking
     //force test of right unlinking
