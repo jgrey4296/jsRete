@@ -6,7 +6,10 @@ exports.procedureTests = {
 
     //Comparisons:
     
-    //compare node to test
+    /** Compare a node with a constant test to an
+        actual constantTest. They should be the same.
+       @method compareConstantNodeToTest_passCheck
+     */
     compareConstantNodeToTest_passCheck : function(test){
         var testTuple = new ds.ConstantTest('first','EQ','bob');
         var ct = new ds.ConstantTest("first","EQ","bob");
@@ -16,6 +19,11 @@ exports.procedureTests = {
         test.done();
     },
 
+    /** Compare a node and a ConstantTest, where there is a 
+        point of difference between the tests. Thus, it expects
+        a value of false
+       @method compareConsantNodeToTest_failCheck
+     */
     compareConstantNodeToTest_failCheck : function(test){
         var testTuple = new ds.ConstantTest('first','EQ','bob');
         var ct = new ds.ConstantTest("second","EQ","bob");
@@ -26,7 +34,11 @@ exports.procedureTests = {
         test.done();
     },
 
-    //Compare Join Test Arrays:
+    /** join test arrays describe bindings. 
+        so ["a","first"] :: bindings['a'] = wme['first']
+        This test expects the tests to be the same, and so true
+       @method compareSameJointestArrays
+     */
     compareSameJoinTestArrays : function(test){
         var tests1 = [["a","first"],["b","second"],["c","third"]];
         var result = p.compareJoinTests(tests1,tests1);
@@ -34,6 +46,12 @@ exports.procedureTests = {
         test.done();
     },
 
+    /**
+       binding arrays 
+       ['a','first'] :: bindings['a'] = wme['first']
+       compared. Should decide they are different
+       @method comapreDifferentJoinTestArrays
+     */
     compareDifferentJoinTestArrays : function(test){
         var tests1 = [["a","first"],["b","second"],["c","third"]];
         var tests2 = [["a","first"],["b","second"],["c","fourth"]];
@@ -45,6 +63,11 @@ exports.procedureTests = {
         test.done();
     },
     
+    /**
+       Compare a pair of join tests that were failing in 
+       the real world
+       @method compareOtherJoinTests
+     */
     compareOtherJoinTests : function(test){
         var tests1 = [["a","first"],["b","second"]];
         var tests2 = [["a","ablh"],["c","hello"]];
@@ -117,7 +140,8 @@ exports.procedureTests = {
         test.done();
     },
 
-    
+    //test the bindings against the new wme,
+    //AND create a new binding in the returned object
     performJoinTest_pass_withNewBindings : function(test){
         var joinNode = new ds.JoinNode(null,null,[
             ["b","first"]
@@ -134,11 +158,52 @@ exports.procedureTests = {
         test.done();
     },
 
-
-
-    //findNearestAncestorWithSameAlphaMemory
+    //findNearestAncestorWithAlphaMemory:
+    //try arbitrary chains of join nodes and beta memories,
+    //with a variety of alpha memories in the chain,
+    //check the function selects correctly.
+    simpleNearestAncestorToDummyNode_check : function(test){
+        var am = new ds.AlphaMemory();
+        var bm = new ds.BetaMemory();
+        var nearestAncestor = p.findNearestAncestorWithAlphaMemory(bm,am);
+        test.ok(nearestAncestor === null);
+        test.done();
+    },
     
+    //go till dummy -> return null
+    nearestAncestorToJoinNode_check : function(test){
+        var am = new ds.AlphaMemory();
+        var bm = new ds.BetaMemory();
+        var tests = [];
+        var jn = new ds.JoinNode(bm,am,tests);
+        var nearestAncestor = p.findNearestAncestorWithAlphaMemory(jn,am);
+        test.ok(nearestAncestor.id === jn.id);
+        test.done();
+    },
+    
+    //get a join node in the chain
+    findNearestAncestorInAChain_check : function(test){
+        var am1 = new ds.AlphaMemory();
+        var am2 = new ds.AlphaMemory();
+        var am3 = new ds.AlphaMemory();
+        var bm1 = new ds.BetaMemory();
+        var jn1 = new ds.JoinNode(bm1,am1,[]);
+        var bm2 = new ds.BetaMemory(jn1);
+        var jn2 = new ds.JoinNode(bm2,am2,[]);
+        var bm3 = new ds.BetaMemory(jn2);
+        var jn3 = new ds.JoinNode(bm3,am3,[]);
 
+        var n1 = p.findNearestAncestorWithAlphaMemory(jn3,am1);
+        test.ok(n1.id === jn1.id);
+        var n2 = p.findNearestAncestorWithAlphaMemory(jn3,am2);
+        test.ok(n2.id === jn2.id);
+        test.done();
+    },
+
+    //test negative nodes
+
+    //test ncc clauses
+    
     //--------------------
     //Activation tests:
     //--------------------
@@ -173,6 +238,7 @@ exports.procedureTests = {
         test.done();        
     },
 
+    //check that constantTests can be failed
     constantTestNodeActivationFailTest : function(test){
         var dummyAlphaNode = {
             testField : "first",
@@ -189,6 +255,8 @@ exports.procedureTests = {
 
     },
 
+    //check that creating a constantTest using
+    //constructors works
     constantTestNodeFromCtorActivationTest : function(test){
         var ct = new ds.ConstantTest("first","EQ","bob");
         var an = new ds.AlphaNode(null,ct);
@@ -200,11 +268,11 @@ exports.procedureTests = {
     },
 
     //TODO: test each operator in ../comparisonOperators
-    
+
+    //Check that when activated, an alpha memory
+    //stores the passed in wme
     alphaMemoryTestActivation : function(test){
-        var ct = new ds.ConstantTest("first","EQ","bob");
-        var an = new ds.AlphaNode(null,ct);
-        var am = new ds.AlphaMemory(an);
+        var am = new ds.AlphaMemory();
         var aWme = new ds.WME({first:'bob'});
         test.ok(am.items.length === 0);
         test.ok(aWme.alphaMemoryItems.length === 0);
@@ -222,8 +290,11 @@ exports.procedureTests = {
         test.done();
     },
 
-    //Now test the utility function alphaNodeActivation,
-    //which will call alphaMem or constantTest activation as needed
+    //Now test the helper function alphaNodeActivation,
+    //which will call alphaMem or constantTest
+    //activation as needed
+
+    //this should call the constant test activation
     alphaNodeActivationTest_forConstantTest : function(test){
         var ct = new ds.ConstantTest("first","EQ","bob");
         var an = new ds.AlphaNode(null,ct);
@@ -238,6 +309,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //this should call the alpha memory activation
     alphaNodeActivationTest_forAlphaMemory : function(test){
         var ct = new ds.ConstantTest("first","EQ","bob");
         var an = new ds.AlphaNode(null,ct);
@@ -295,6 +367,11 @@ exports.procedureTests = {
         test.done();
     },
 
+    //simulate a beta memory being triggered by the components
+    //to form a new token.
+    //test that the components ARE bound into a new token,
+    //and that the betamemory stores that new token,
+    //owning it correctly.
     leftActivateBetaMemory_TokenCreation_Test : function(test){
         var bm = new ds.BetaMemory();
         var origToken = new ds.Token();
@@ -403,12 +480,71 @@ exports.procedureTests = {
         test.done();
     },
 
+    //relink to alpha test
+    relinkAlphaThrowsErrorOnNonJoinNode : function(test){
+        test.throws(function(){
+            p.relinkToAlphaMemory({});
+        },Error);
+        test.done();
+    },
+    
+    simpleRelinkToAlphaTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var jn = new ds.JoinNode(bm,am,[]);
+        jn.nearestAncestor = p.findNearestAncestorWithAlphaMemory(bm,am);
+
+        //unlink alpha:
+        var index = am.children.map(function(d){return d.id;}).indexOf(jn.id);
+        var removed = am.children.splice(index,1);
+        //index 0 of removed remember, as splice return an []
+        am.unlinkedChildren.push(removed[0]);
+
+        test.ok(am.children.length === 0);
+        test.ok(am.unlinkedChildren.length === 1);
+                
+        p.relinkToAlphaMemory(jn);
+
+        test.ok(am.children.length === 1);
+        test.ok(am.unlinkedChildren.length === 0);
+        test.done();
+    },
+
+    //test with multiple ancestors
+
+    //test where the ancestor !== null in later half
+
+    //test error messages if unlinkedChildren does
+    //not contain the relinking node
+    
+    
+    //relink to beta test
+    relinkToBetaMemoryTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var jn = new ds.JoinNode(bm,am,[]);
+
+        //remove the beta memory link:
+        var index = bm.children.map(function(d){return d.id;}).indexOf(bm.id);
+        var removed = bm.children.splice(index,1);
+        //index 0 of removed remember, as splice return an []
+        bm.unlinkedChildren.push(removed[0]);
+        test.ok(bm.children.length === 0);
+        p.relinkToBetaMemory(jn);
+        test.ok(bm.children.length === 1);
+        test.ok(bm.children[0].id === jn.id);
+        test.done();
+    },
 
     
-    //relink to alpha test
+    //test join node unlinking code
+    
+    //left activate general
 
-    //relink to beta test
+    //right activate general
+    
 
+    //NEGATIVE::
     //negative node left activation
 
     //negative node right activation
@@ -417,9 +553,6 @@ exports.procedureTests = {
 
     //nccpartner left actviation
 
-    //left activate general
-
-    //right activate general
 
     
     //--------------------
@@ -450,6 +583,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //don't make a new one, reuse
     shareConstantTestNode_check : function(test){
         var dummyParent = {
             id : "dummy",
@@ -472,6 +606,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //reuse the correct one when there are multiple children
     shareCTNodeWhenThereAreMultipleChildren_check : function(test){
         var dummyParent ={
             id : "dummy",
@@ -497,8 +632,11 @@ exports.procedureTests = {
     },
 
     
+    //------------
     //alpha memory
+    //------------
 
+    //build an alpha network when there isnt even an conditions
     buildZeroConditionAlphaMemory : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -515,6 +653,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //build an alpha network with a single condition
     build_alphaMemory_withSimpleCondition : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -536,6 +675,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //reuse existing alpha nodes
     simpleCondition_shareAlphaNode_check : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -553,6 +693,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //check sequences of tests can be created
     pairOfTests_buildAlphaNode_check : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -575,6 +716,7 @@ exports.procedureTests = {
     },
 
 
+    //check that pairs of tests are in a single branch
     pairOfTests_shareAlphaMemory_check : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -596,6 +738,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //check that different conditions don't share
     differentConditions_BuildAlphaMemoryCheck : function(test){
         var dummyRoot = {
             id : "dummy",
@@ -613,8 +756,38 @@ exports.procedureTests = {
         test.done();
     },
 
+
+    //Check that an alpha network will
+    //branch off existing branches
+    alphaNetworkBranchOffExisting_check : function(test){
+        var dummyRoot = {
+            id : "dummy",
+            children : [],
+        };
+        var con1 = new ds.Condition([["first","EQ","BILL"],
+                                     ["second","EQ","BOB"]],
+                                    [],false);
+        //Con 2 shares the first test, but not the second test
+        var con2 = new ds.Condition([["first","EQ","BILL"],
+                                     ["second","EQ","JILL"]],
+                                    [],false);
+        
+        var alphaMemory1 = p.buildOrShareAlphaMemory(con1,dummyRoot);
+        var alphaMemory2 = p.buildOrShareAlphaMemory(con2,dummyRoot);
+
+        test.ok(dummyRoot.children.length === 1);
+        test.ok(dummyRoot.children[0].children.length === 2);
+        //added using unshift
+        test.ok(alphaMemory1.parent.id === dummyRoot.children[0].children[1].id);
+        test.ok(alphaMemory2.parent.id === dummyRoot.children[0].children[0].id);
+        test.done();
+    },
+
+    
     //beta memory
 
+    //build a simple beta memory
+    //avoids the dummy initialisation using a parent
     build_betaMemoryTest : function(test){
         var dummyParent = {
             id : 'dummy',
@@ -631,6 +804,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //reuse existing beta memories
     share_betaMemory : function(test){
         var dummyParent = {
             id : 'dummy',
@@ -702,6 +876,8 @@ exports.procedureTests = {
         test.done();
     },
 
+    //when the join tests/ bindings are different,
+    //don't share a join node
     do_NOT_share_join_node : function(test){
         var am = new ds.AlphaMemory();
         var bm = new ds.BetaMemory();
@@ -714,6 +890,7 @@ exports.procedureTests = {
         test.done();
     },
 
+    //set up the bm and am to avoid right and left unlinking
     force_no_unlinking_build_JoinNode_test : function(test){
         var am = new ds.AlphaMemory();//currently empty
         var bm = new ds.BetaMemory();//has dummy token
@@ -751,8 +928,11 @@ exports.procedureTests = {
 
     //remove wme test
 
+    //--------------------
     //deleteTokenAndDescendents
 
+    
+    //--------------------
     //delete descendents of token
 
     //--------------------
@@ -762,8 +942,8 @@ exports.procedureTests = {
     //update new node with matches from above test:
 
     //Test uNNWMFA on a parent that is a beta memory.
-    //use a beta memory to store the results of the left activate
-    //to verify
+    //use a beta memory to store the results
+    //of the left activate to verify
     betaNode_updateNewNodeWithMatchesFromAbove : function(test){
         var bm1 = new ds.BetaMemory();
         var t1 = new ds.Token();
@@ -776,7 +956,7 @@ exports.procedureTests = {
         p.leftActivate(bm1,t3);
         p.leftActivate(bm1,t4);
 
-        //+1 for dummy
+        //+1 for dummy === 5
         test.ok(bm1.items.length === 5);
         var bm2 = new ds.BetaMemory(bm1);
         test.ok(bm2.items.length === 0);

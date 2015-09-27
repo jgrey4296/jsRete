@@ -181,14 +181,19 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //reconnect an unlinked join node to its alpha memory when there are
     //wmes in said alpha memory
     var relinkToAlphaMemory = function(node){
+        if(node.isJoinNode === undefined){
+            throw new Error("trying to relink alpha on something other than a join node");
+        }
+        
         var ancestor = node.nearestAncestor;
         var indices = node.alphaMemory.children.map(function(d){ return d.id; });
 
         //While the ancestor is a child of the alpha memory
         while(ancestor && indices.indexOf(ancestor.id) === -1){
-            //go up an ancestor
-            ancestor = findNearestAncestorWithSameAlphaMemory(ancestor,node.alphaMemory.id);
+            //go up an ancestor if it is unlinked to
+            ancestor = findNearestAncestorWithAlphaMemory(ancestor,node.alphaMemory.id);
         }
+        
         //When finished, if the ancestor exists:
         if(ancestor !== null){
             var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(ancestor.id);
@@ -210,12 +215,13 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //in said memory
     var relinkToBetaMemory = function(node){
         //remove from the unlinked children list
+        //and add it into the children
         var index = node.parent.unlinkedChildren.map(function(d){return d.id; }).indexOf(node.id);
         if(index > -1){
             node.parent.unlinkedChildren.splice(index,1);
             node.parent.children.unshift(node);
         }
-    }
+    };
 
     //Trigger a negative node from a new token
     //brings in bindings, creates a new token as necessary,
@@ -363,57 +369,85 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     //delete a token and all the tokens that rely on it
+    //a bit of a frankenstein. Deletes the token,
+    //deletes descendents, but also sets and cleans up 
+    //left unlinking of join nodes, AND
+    //activates NCC's that are no longer blocked
     var deleteTokenAndDescendents = function(token){
+        //Recursive call:
         while(token.children.length > 0){
             deleteTokenAndDescendents(token.children[0]);
         }
-        if(token.node.isAnNCCPartnerNode){
-            token.node.items = token.node.items.filter(function(d){
+
+        //Deal with if the owning node is NOT an NCC
+        if(token.owningNode.isAnNCCPartnerNode === undefined){
+            //by removing the token as an element in that node
+            token.owningNode.items = token.owningNode.items.filter(function(d){
                 return d.id !== token.id;
             });
         }
-
+        
+        //remove the token from the wme it is based on
         if(token.wme){
             token.wme.tokens = token.wme.tokens.filter(function(d){
                 return d.id !== token.id;
             });
         }
 
+        //Remove the token from it's parent's child list
         token.parentToken.children = token.parentToken.children.filter(function(d){
             return d.id !== token.id;
         });
 
-        if(token.node.isMemoryNode){
-            if(token.node.items.length === 0){
-                for(var i in token.node.children){
-                    var currChild = token.node.children[i];
+        //Now Essentially switch on: BetaMemory, NegativeNode,
+        //NCCNode, and NCCPartnerNode
+        
+        //BETAMEMORY
+        if(token.owningNode.isMemoryNode){
+            //and that betaMemory has no other items
+            if(token.owningNode.items.length === 0){
+                //for all the node's children
+                for(var i in token.owningNode.children){
+                    var currChild = token.owningNode.children[i];
+                    //remove the child from the alphamemory
                     currChild.alphaMemory.children = currChild.alphaMemory.children.filter(function(d){
                         return d.id !== currChild.id;
                     });
                 }
             }
         }
+        //THUS: The token's owning node gets unlinked as
+        //appropriate
 
-        if(token.node.isNegativeNode){
-            if(token.node.items.length > 0){
-                token.node.alphaMemory.children = token.node.alphaMemory.children.filter(function(d){
+
+        //NEGATIVE NODE
+        if(token.owningNode.isNegativeNode){
+            //with elements
+            if(token.owningNode.items.length === 0){
+                //unlink alpha memory
+                token.owningNode.alphaMemory.children = token.owningNode.alphaMemory.children.filter(function(d){
                     return d.id !== token.id;
                 });
             }
+            //remove from the wme's join result list
             for(var i in token.negJoinResults){
-                var currNJR = token.negJoinResults[i];
-                currJRN.wme.negJoinResults = currJRN.wme.negJoinResults.filter(function(d){
-                    return d.id !== currNJR.id;
+                var jr = token.negJoinResults[i];
+                jr.wme.negJoinResults = jr.wme.negJoinResults.filter(function(d){
+                    return d.id !== jr.id;
                 });
-            }
+                //deallocate memory for jr
+            };
         }
 
-        if(token.node.isAnNCCNode){
+        //NCCNODE
+        if(token.owningNode.isAnNCCNode){
             for(var i in token.nccResults){
                 var currToken = token.nccResults[i];
+                //remove from wme
                 currToken.wme.tokens = currToken.wme.tokens.filter(function(d){
                     return d.id !== currToken.id;
                 });
+                //remove from token
                 currToken.parentToken.children = currToken.parentToken.children.filter(function(d){
                     return d.id !== currToken.id;
                 });
@@ -421,13 +455,16 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }
 
-        if(token.node.isAnNCCPartnerNode){
+        //NCCPARTNERNODE
+        if(token.owningNode.isAnNCCPartnerNode){
+            //remove blocking token
             token.parentToken.nccResults = token.parentToken.nccResults.filter(function(d){
                 return d.id !== token.id;
             });
+            //activate anything not blocked
             if(token.parentToken.nccResults.length === 0){
-                for(var i in token.node.nccNode.children){
-                    var currChild = token.node.nccNode.children[i];
+                for(var i in token.owningNode.nccNode.children){
+                    var currChild = token.owningNode.nccNode.children[i];
                     leftActivate(currChild,token.parentToken);
                 }
             }
@@ -517,17 +554,20 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     //walk up from a join node until you find a node
     //connected to the specified alpha memory
-    var findNearestAncestorWithSameAlphaMemory = function(node,alphaMemory){
+    var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
+        //base conditions:
         if(node.dummy){ return null;}
         if(node.isJoinNode || node.isNegativeNode){
             if(node.alphaMemory.id === alphaMemory.id){
                 return node;
             }
         }
+        //switch recursion into the partner clause
         if(node.isAnNCCNode){
-            return findNearestAncestorWithSameAlphaMemory(node.partner.parent,alphaMemory);
+            return findNearestAncestorWithAlphaMemory(node.partner.parent,alphaMemory);
         }
-        return findNearestAncestorWithSameAlphaMemory(node.parent,alphaMemory);        
+        //recurse:
+        return findNearestAncestorWithAlphaMemory(node.parent,alphaMemory);        
     };
 
     var compareJoinTests = function(firstTestSet,secondTestSet){
@@ -570,7 +610,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         //increment alphamemories reference count in the constructor
         var newJoinNode = new DataStructures.JoinNode(parent,alphaMemory,tests);
         //set the nearest ancestor
-        newJoinNode.nearestAncestor = findNearestAncestorWithSameAlphaMemory(parent,alphaMemory);
+        newJoinNode.nearestAncestor = findNearestAncestorWithAlphaMemory(parent,alphaMemory);
 
         //if either parent memory is empty, unlink
         if(parent.items.length === 0){
@@ -833,6 +873,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         //Other:
         "updateNewNodeWithMatchesFromAbove" : updateNewNodeWithMatchesFromAbove,
+        "findNearestAncestorWithAlphaMemory":findNearestAncestorWithAlphaMemory,
+        "relinkToAlphaMemory" : relinkToAlphaMemory,
+        "relinkToBetaMemory"  : relinkToBetaMemory,
     };
 
     return interface;
