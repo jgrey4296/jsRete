@@ -98,23 +98,22 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         for(var i in joinNode.tests){
             //get the bind test
             var test = joinNode.tests[i];
+            
             //get the wme value it references
             var wmeValue = wme.data[test[1]];
+            if(wmeValue === undefined){
+                continue;
+            }
             //If the binding exists in the token
             if(newBindings[test[0]]){
-                var tokenValue = token.bindings[test[0]];
-                //Compare the stored binding to the potential binding
-                //TODO:Add Operators here
-                if(wmeValue !== tokenValue){
-                    //binding doesnt match, break.
-                    return false;
+                if(newBindings[test[0]] === wmeValue){
+                    continue;
                 }else{
-                    //continue, binding exists and matches
-                }
-            }else{//binding doesnt exist
-                //create the binding
+                    return false; //not the same, break right out
+                } 
+            }else{
                 newBindings[test[0]] = wmeValue;
-            }            
+            }
         }
         return newBindings;
     };
@@ -168,10 +167,11 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         //pass on successful combinations to betamemory/negative node
         for(var i in node.parent.items){
             var currToken = node.parent.items[i];
+            //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
             var joinTestResult = performJoinTests(node,currToken,wme);
             if(joinTestResult !== false){
                 for(var j in node.children){
-                    var currNode = node.children[i];
+                    var currNode = node.children[j];
                     leftActivate(currNode,currToken,wme,joinTestResult);
                 }
             }
@@ -571,9 +571,14 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     var compareJoinTests = function(firstTestSet,secondTestSet){
+        if(firstTestSet.length === 0 && secondTestSet.length === 0){
+            return true;
+        }
         var i = firstTestSet.length -1;
         var j = secondTestSet.length -1;
-        while(i && j){
+        while(i >= 0 && j >= 0){
+            var ts1 = firstTestSet[i];
+            var ts2 = secondTestSet[j];
             //console.log("comparing",i,j,"|||",firstTestSet[i][0],secondTestSet[j][0],"|||",firstTestSet[i][1],secondTestSet[j][1]);
             if(firstTestSet[i][0] === secondTestSet[j][0]){
                 if(firstTestSet[i][1] === secondTestSet[j][1]){
@@ -589,7 +594,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
                 return false;
             }
         }
-        if(i === j && i === 0){
+        if(i === j && i === -1){
             return true;
         }
         return false;
@@ -639,7 +644,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }
         var newNegativeNode = new DataStructures.NegativeNode(parent,alphaMemory,tests);
-        newNegativeNode.nearestAncestor = nearestAncestorWithSameAlphaMemory(parent,alphaMemory);
+        newNegativeNode.nearestAncestor = findNearestAncestorWithAlphaMemory(parent,alphaMemory);
         //update with matches
         updateNewNodeWithMatchesFromAbove(newNegativeNode);
         //unlink if it has no tokens
@@ -870,6 +875,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "buildOrShareAlphaMemory" : buildOrShareAlphaMemory,
         "buildOrShareBetaMemoryNode"  : buildOrShareBetaMemoryNode,
         "buildOrShareJoinNode"        : buildOrShareJoinNode,
+        "buildOrShareNegativeNode"    : buildOrShareNegativeNode,
 
         //Other:
         "updateNewNodeWithMatchesFromAbove" : updateNewNodeWithMatchesFromAbove,

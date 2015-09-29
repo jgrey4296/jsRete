@@ -76,11 +76,6 @@ exports.procedureTests = {
         test.done();
     },
     
-    //perform join test check.
-    //Check: 1) bindings undefined,
-    //2) bindings incorrect
-    //3) bindings correct
-
     //Test that a join will pass if theres nothing
     //to conflict. ie: there are no bindings anywhere
     performJointest_emptyPass_Check : function(test){
@@ -88,11 +83,9 @@ exports.procedureTests = {
         var joinNode = new ds.JoinNode();
         var token = new ds.Token();
         var wme = new ds.WME({first:"bob"});
-
         var ret = p.performJoinTests(joinNode,token,wme);
-
+        //there should be no bindings returned
         test.ok(_.keys(ret).length === 0);
-        
         test.done();
     },
 
@@ -117,11 +110,8 @@ exports.procedureTests = {
         ]);
         var token = new ds.Token(null,null,null,{a:"bill"});
         var wme = new ds.WME({first:"bob"});
-
         var ret = p.performJoinTests(joinNode,token,wme);
-
         test.ok(ret === false);
-        
         test.done();
     },
 
@@ -131,9 +121,7 @@ exports.procedureTests = {
         ]);
         var token = new ds.Token(null,null,null,{a:"bill"});
         var wme = new ds.WME({first:"bill"});
-
         var ret = p.performJoinTests(joinNode,token,wme);
-
         test.ok(_.keys(ret).length === 1);
         test.ok(ret['a'] === 'bill');
         
@@ -148,9 +136,7 @@ exports.procedureTests = {
         ]);
         var token = new ds.Token(null,null,null,{a:"bill"});
         var wme = new ds.WME({first:"bob"});
-
         var ret = p.performJoinTests(joinNode,token,wme);
-
         test.ok(_.keys(ret).length === 2);
         test.ok(ret['a'] === 'bill');
         test.ok(ret['b'] === 'bob');
@@ -158,6 +144,27 @@ exports.procedureTests = {
         test.done();
     },
 
+    //perform a join test where there are two bindings,
+    //with a token and a wme, one of each, of the form:
+    //Original error form:
+    //  Comparing Token:  { b: 'a token' } 
+    //  To WME:  { a: 'a wme' } 
+    //  using bindings:  [ [ 'a', 'a' ], [ 'b', 'b' ] ]
+    // (*correct*:) { a:"a wme",b:"a token"}
+    //FIXED ERROR: was not dealing with undefined wme values well
+    performDuplicateTestFor_performJoinTest : function(test){
+        var joinNode = new ds.JoinNode(null,null,
+                                       [["a","a"],["b","b"]]);
+        var token = new ds.Token(null,null,null,{b:"a token"});
+        var wme = new ds.WME({a:"a wme"});
+        var ret = p.performJoinTests(joinNode,token,wme);
+        test.ok(_.keys(ret).length === 2);
+        test.ok(ret['a'] === "a wme");
+        test.ok(ret['b'] === "a token");        
+        test.done();
+    },
+
+    
     //findNearestAncestorWithAlphaMemory:
     //try arbitrary chains of join nodes and beta memories,
     //with a variety of alpha memories in the chain,
@@ -201,7 +208,31 @@ exports.procedureTests = {
     },
 
     //test negative nodes
+    findNearestAncestorFromNegativeNode : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+        var negNode = new ds.NegativeNode(bm,am,tests);
 
+        var ancestor = p.findNearestAncestorWithAlphaMemory(negNode,am);
+
+        test.ok(ancestor.id === negNode.id);
+        test.done();
+    },
+
+    findNearestAncestorFromNodeWithNegNodeInChain : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var negNode = new ds.NegativeNode(bm,am,[]);
+        var am2 = new ds.AlphaMemory();
+        var jn = new ds.JoinNode(negNode,am2,[]);
+
+        var ancestor = p.findNearestAncestorWithAlphaMemory(jn,am);
+        test.ok(ancestor.id === negNode.id);
+        
+        test.done();
+    },
+    
     //test ncc clauses
     
     //--------------------
@@ -911,14 +942,45 @@ exports.procedureTests = {
     
     //force test of left unlinking
     //force test of right unlinking
-
-    //test nearestAncestor
     
-    //negative node
+    //(build)negative node
+    simpleBuildNegativeNodeTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+        var negNode = p.buildOrShareNegativeNode(bm,am,tests);
+        test.ok(negNode.isNegativeNode === true);
+        //should not be unlinked, as there is the dummy token
+        test.ok(negNode.items.length === 1);
+        test.ok(negNode.items[0].id === bm.items[0].id);
+        test.ok(negNode.tests.length === 0);
+        test.ok(negNode.nearestAncestor === null);
+        test.done();
+    },
+    
+    //(share) negative node
+    simpleShareNegativeNodeTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+        var negNode = p.buildOrShareNegativeNode(bm,am,tests);
+        var shouldBeDuplicate = p.buildOrShareNegativeNode(bm,am,tests);
+        test.ok(negNode.id === shouldBeDuplicate.id);
+        test.ok(negNode.nearestAncestor === null);
+        test.done();
+    },
+    
+    //(build)nccnode
 
-    //nccnode
+    //(share) nccnode
 
-    //network for conditions:
+    
+    //build entire network for conditions:
+
+    //share entire network for conditions:
+
+    //partial build partial share for network:
+
     
     //--------------------
     //WME functions:
@@ -975,6 +1037,88 @@ exports.procedureTests = {
         test.ok(bm2.items[4].id === bm1.items[0].id);
         test.done();
     },
+
+    //test on a network where the parent
+    //of the jn has multiple jn's. only the one you care about
+    //should be updated
+    joinNodeUpdateNewNodeWithMatches : function(test){
+        //priors
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","first"]];
+
+        //am and bm population:
+        p.alphaMemoryActivation(am,new ds.WME({first:"a wme"}));
+        p.alphaMemoryActivation(am,new ds.WME({first:"second wme"}));
+        p.betaMemoryActivation(bm,new ds.Token(null,null,null,{second:"a token"}));
+        p.betaMemoryActivation(bm,new ds.Token(null,null,null,{second:"b token"}));
+        
+        //check they are there:
+        test.ok(am.items.length === 2);
+        test.ok(bm.items.length === 3);
+                                       
+        //the node to pull from
+        var jn = new ds.JoinNode(bm,am,tests);
+
+        //node to update        
+        var postjnBM = new ds.BetaMemory(jn);
+        //nodes that should not be updated
+        var additionalBM = new ds.BetaMemory(jn);
+        var additionalBM2 = new ds.BetaMemory(jn);
+
+        //The actual function being tested:
+        p.updateNewNodeWithMatchesFromAbove(postjnBM);
+
+        //verify:
+        //Full combination as no join tests to limit
+        test.ok(postjnBM.items.length === (am.items.length * bm.items.length),postjnBM.items.length);
+        test.ok(additionalBM.items.length === 0);
+        test.ok(additionalBM2.items.length === 0);
+
+        //test bindings in wmes in reverse order
+        //wme newest,[token] -> wme oldest,[token]
+        //by going in this direction, newest to oldest,
+        //doesnt this push into the next memory
+        //oldest to newest?
+        //first wmes:
+        test.ok(postjnBM.items[0].bindings['a'] === "a wme");
+        test.ok(postjnBM.items[0].bindings['second'] === undefined);
+
+        test.ok(postjnBM.items[1].bindings['a'] === "a wme");
+        test.ok(postjnBM.items[1].bindings['second'] === "a token");
+
+        test.ok(postjnBM.items[2].bindings['a'] === "a wme");
+        test.ok(postjnBM.items[2].bindings['second'] === "b token");
+        //second wmes:
+        test.ok(postjnBM.items[3].bindings['a'] === "second wme");
+        test.ok(postjnBM.items[3].bindings['second'] === undefined);
+        
+        test.ok(postjnBM.items[4].bindings['a'] === "second wme");
+        test.ok(postjnBM.items[4].bindings['second'] === "a token");
+                
+        test.ok(postjnBM.items[5].bindings['a'] === "second wme");
+        test.ok(postjnBM.items[5].bindings['second'] === "b token");
+   
+     
+        test.done();
+    },
+    
+    negativeNodeUpdateNewNodeWithMatches : function(test){
+        var parent = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+        var negativeNode = new ds.NegativeNode(parent,am,tests);
+        var postNNBM = new ds.BetaMemory(negativeNode);
+
+        p.updateNewNodeWithMatchesFromAbove(postNNBM);
+        
+        
+        test.done();
+    },
+
+    //TODO:test unnwmfa on an nccnode...
+
+
     
     //remove rule
 

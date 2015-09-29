@@ -45,6 +45,7 @@ define([],function(){
         //then copy in new bindings
         this.bindings = {};
 
+        //this may not be needed
         if(this.parentToken && this.parentToken.bindings){
             for(var i in this.parentToken.bindings){
                 this.bindings[i] = this.parentToken.bindings[i];
