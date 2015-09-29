@@ -181,8 +181,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //reconnect an unlinked join node to its alpha memory when there are
     //wmes in said alpha memory
     var relinkToAlphaMemory = function(node){
-        if(node.isJoinNode === undefined){
-            throw new Error("trying to relink alpha on something other than a join node");
+        if(node.isJoinNode === undefined && node.isNegativeNode === undefined){
+            throw new Error("trying to relink alpha on something other than a join node or negative node");
         }
         
         var ancestor = node.nearestAncestor;
@@ -234,11 +234,11 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         node.items.unshift(newToken);
 
         for(var i in node.alphaMemory.items){
-            var currWme = node.alphaMemory.items[i];
+            var currWme = node.alphaMemory.items[i].wme;
             var joinTestResult = performJoinTests(node,newToken,currWme);
             if(joinTestResult){
                 //adds itself to the token and
-                //wme as necessary
+                //wme as necessary to block the token
                 var joinResult = new DataStructures.NegativeJoinResult(newToken,currWme);
             }
         }
@@ -261,7 +261,6 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         for(var i in node.items){
             var currToken = node.items[i];
             var joinTestResult = performJoinTests(node,currToken,wme);
-            conosle.log("Returned jtr4 :",joinTestResult);
             if(joinTestResult){
                 if(currToken.negJoinResults.length === 0){
                     deleteDescendentsOfToken(currToken);
@@ -778,7 +777,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             parent.children = savedChildren;
         }else if(parent.isNegativeNode){
             for(var i in parent.items){
-                var token = parent.items;
+                var token = parent.items[i];
                 if(token.negJoinResults.length === 0){
                     leftActivate(newNode,token);
                 }
@@ -869,6 +868,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "betaMemoryActivation":betaMemoryActivation,
         "joinNodeLeftActivation":joinNodeLeftActivation,
         "joinNodeRightActivation":joinNodeRightActivation,
+        "negativeNodeLeftActivation":negativeNodeLeftActivation,
+        "negativeNodeRightActivation":negativeNodeRightActivation,
         "leftActivate"          : leftActivate,
         //Build Functions::
         "buildOrShareConstantTestNode":buildOrShareConstantTestNode,

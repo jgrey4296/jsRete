@@ -575,11 +575,73 @@ exports.procedureTests = {
     //right activate general
     
 
-    //NEGATIVE::
-    //negative node left activation
+    //NEGATIVE NODE:
+    simpleNegativeNodeLeftActivationTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","a"]];
 
+        //avoid unlinking:
+        var firstWME = new ds.WME({a:"blah"});
+        var secondWME = new ds.WME({a:"zooo"});
+        p.alphaMemoryActivation(am,firstWME);
+        p.alphaMemoryActivation(am,secondWME);
+        test.ok(am.items.length === 2);
+        
+        var negNode = new ds.NegativeNode(bm,am,tests);
+        var postNNbm = new ds.BetaMemory(negNode);
+        
+        //verify unlinking is avoided
+        test.ok(am.children.length === 1);
+        //verify postNNbm is empty:
+        test.ok(postNNbm.items.length === 0);
+        
+        //now activate:
+        p.negativeNodeLeftActivation(negNode,new ds.Token(null,null,null,{a:"blah"}));
+
+        //check that the token didn't get through
+        test.ok(negNode.items.length === 1);
+        test.ok(postNNbm.items.length === 0);
+        test.ok(negNode.items[0].bindings['a'] === 'blah');
+        test.ok(negNode.items[0].negJoinResults[0].owner.id === negNode.items[0].id);
+        test.ok(negNode.items[0].negJoinResults[0].wme.id === firstWME.id);
+
+        p.negativeNodeLeftActivation(negNode,new ds.Token(null,null,null,{a:"aweg"}));
+
+        //check this token DID get through
+        test.ok(negNode.items.length === 2);
+        test.ok(postNNbm.items.length === 1);
+        test.done();
+    },
+
+    //TODO: more extensive tests
+    
     //negative node right activation
+    simpleNegativeNodeRightActivation : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
 
+        var negNode = new ds.NegativeNode(bm,am,tests);
+        //add a token to the neg node:
+        var testToken = new ds.Token(null,null,null,{a:"testToken"});
+        negNode.items.unshift(testToken);
+        
+        var postNNbm = new ds.BetaMemory(negNode);
+
+        var inputWME = new ds.WME({a:"blah"});
+        p.negativeNodeRightActivation(negNode,inputWME);
+
+        test.ok(postNNbm.items.length === 0);
+        test.ok(negNode.items.length === 1);
+        test.ok(negNode.items[0].id === testToken.id);
+        test.ok(negNode.items[0].negJoinResults[0].owner.id === testToken.id);
+        test.ok(negNode.items[0].negJoinResults[0].wme.id === inputWME.id);
+
+        test.done();
+    },
+
+    
     //ncc left activation
 
     //nccpartner left actviation
@@ -969,19 +1031,17 @@ exports.procedureTests = {
         test.ok(negNode.nearestAncestor === null);
         test.done();
     },
-    
-    //(build)nccnode
-
-    //(share) nccnode
-
-    
-    //build entire network for conditions:
+ 
+    //TODO: build entire network for conditions:
 
     //share entire network for conditions:
 
     //partial build partial share for network:
 
-    
+    //(build)nccnode
+
+    //(share) nccnode
+
     //--------------------
     //WME functions:
     //--------------------
@@ -992,7 +1052,6 @@ exports.procedureTests = {
 
     //--------------------
     //deleteTokenAndDescendents
-
     
     //--------------------
     //delete descendents of token
@@ -1098,27 +1157,35 @@ exports.procedureTests = {
                 
         test.ok(postjnBM.items[5].bindings['a'] === "second wme");
         test.ok(postjnBM.items[5].bindings['second'] === "b token");
-   
-     
         test.done();
     },
     
     negativeNodeUpdateNewNodeWithMatches : function(test){
-        var parent = new ds.BetaMemory();
-        var am = new ds.AlphaMemory();
-        var tests = [];
-        var negativeNode = new ds.NegativeNode(parent,am,tests);
+        var negativeNode = new ds.NegativeNode();
+
+        //put some join results in the negative node:
+        negativeNode.items.unshift(new ds.Token(null,null,null,{
+            a : "first token"}));
+        negativeNode.items.unshift(new ds.Token(null,null,null,{
+            a : "second token"}));
+        negativeNode.items.unshift(new ds.Token(null,null,null,{
+            a : "third token"}));
+
+        //the descendent to update:
         var postNNBM = new ds.BetaMemory(negativeNode);
 
         p.updateNewNodeWithMatchesFromAbove(postNNBM);
         
+        test.ok(postNNBM.items.length === 3);
+        test.ok(postNNBM.items[0].bindings['a'] === "first token");
+        test.ok(postNNBM.items[1].bindings['a'] === "second token");
+        test.ok(postNNBM.items[2].bindings['a'] === "third token");
+
         
         test.done();
     },
 
     //TODO:test unnwmfa on an nccnode...
-
-
     
     //remove rule
 

@@ -229,7 +229,7 @@ define([],function(){
 
     
     //Storage for a token blocked by a wme
-    //Updates the owner and wme as part of its construction
+    //Updates the owner token and wme as part of its construction
     var NegativeJoinResult = function(owner,wme){
         this.owner = owner;
         if(this.owner){
