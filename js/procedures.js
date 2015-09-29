@@ -618,10 +618,12 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         //if either parent memory is empty, unlink
         if(parent.items.length === 0){
+            //BETA IS EMPTY: UNLINK RIGHT
             var index = alphaMemory.children.map(function(d){ return d.id; }).indexOf(newJoinNode.id);
             var removed = alphaMemory.children.splice(index,1);
             alphaMemory.unlinkedChildren.unshift(removed[0]);
         }else if(alphaMemory.items.length === 0){
+            //ALPHA IS EMPTY: UNLINK LEFT
             var index = parent.children.map(function(d){
                 return d.id;
             }).indexOf(newJoinNode.id);
@@ -651,7 +653,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             var index = alphaMemory.children.map(function(d){
                 return d.id;
             }).indexOf(newNegativeNode.id);
-            alphaMemory.children.splice(index,1);
+            var removed = alphaMemory.children.splice(index,1);
+            alphaMemory.unlinkedChildren.push(removed[0]);
         }
         //return new negative node
         return newNegativeNode

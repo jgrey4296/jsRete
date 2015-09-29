@@ -567,12 +567,95 @@ exports.procedureTests = {
         test.done();
     },
 
-    
-    //test join node unlinking code
-    
-    //left activate general
 
-    //right activate general
+    //build or share join node unlink test
+    buildjoinNode_unlinkAlpha_test : function(test){
+        //dummy parent to force bm to unlink am in jn
+        var dummyParent = new ds.BetaMemory();
+        var bm = new ds.BetaMemory(dummyParent);
+        var am = new ds.AlphaMemory();
+        var tests = [];
+        test.ok(bm.items.length === 0);
+        //should unlink alpha because beta is empty
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+                test.ok(am.children.length === 0);
+        test.ok(am.unlinkedChildren.length === 1);        
+        test.done();
+    },
+
+    buildJoinNode_unlinkBeta_test : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+
+        test.ok(bm.items.length === 1);
+        test.ok(am.items.length === 0);
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+        test.ok(bm.children.length === 0);
+        test.ok(bm.unlinkedChildren.length === 1);
+        test.ok(am.children.length === 1);
+        test.done();
+    },
+
+
+    joinNodeLeftActivationUnlink_test : function(test){
+        var dummyParent = {
+            id: "dummy",
+            dummy: true,
+            children : [],
+        }
+        var bm = new ds.BetaMemory(dummyParent);
+        var am = new ds.AlphaMemory();
+        var tests = [];
+
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+        //should now be unlinked on the right:
+        test.ok(am.children.length === 0);
+
+        //put a token into the beta memory:
+        var newToken = new ds.Token(null,null,null,{a:"first token"});
+        bm.items.unshift(newToken);
+        test.ok(bm.items.length === 1);
+        //when activated, the alpha memory should be relinked
+        p.joinNodeLeftActivation(jn,newToken);
+        
+        //and the beta memory should be unlinked
+        test.ok(am.children.length === 1);
+        test.ok(bm.children.length === 0);
+        test.ok(bm.unlinkedChildren.length === 1);
+
+        test.done();
+    },
+
+    joinNodeRightActivationUnlink_test : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [];
+
+        var testWME = new ds.WME({a:"first wme"});
+        
+        var jn = p.buildOrShareJoinNode(bm,am,tests);
+
+        //beta should be unlinked:
+        test.ok(bm.children.length === 0);
+        test.ok(am.children.length === 1);
+        //now relink through activation:
+        p.alphaMemoryActivation(am,testWME);
+        test.ok(am.items.length === 1);
+
+        //through subsequence activation,
+        //beta memory should be connected now:
+        test.ok(bm.children.length === 1);
+        //while the alpha remains connected:
+        test.ok(am.children.length === 1);
+        
+        test.done();
+    },
+    
+    
+    //TODO: left activate general
+
+    //TODO: right activate general
     
 
     //NEGATIVE NODE:
@@ -641,6 +724,21 @@ exports.procedureTests = {
         test.done();
     },
 
+    simpleNegativeNodeUnlinkTest : function(test){
+        var dummyParent = new ds.BetaMemory();
+        var bm = new ds.BetaMemory(dummyParent);
+        var am = new ds.AlphaMemory();
+        var tests = [];
+
+        var negNode = p.buildOrShareNegativeNode(bm,am,tests);
+        
+        test.ok(negNode.items.length === 0);
+        test.ok(am.children.length === 0);
+        test.ok(am.unlinkedChildren.length === 1);
+        
+        test.done();
+    },
+    
     
     //ncc left activation
 
@@ -1034,6 +1132,7 @@ exports.procedureTests = {
  
     //TODO: build entire network for conditions:
 
+    
     //share entire network for conditions:
 
     //partial build partial share for network:
@@ -1051,10 +1150,10 @@ exports.procedureTests = {
     //remove wme test
 
     //--------------------
-    //deleteTokenAndDescendents
+    //TODO:deleteTokenAndDescendents
     
     //--------------------
-    //delete descendents of token
+    //TODO:delete descendents of token
 
     //--------------------
     //Other:
