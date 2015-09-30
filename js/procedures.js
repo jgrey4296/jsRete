@@ -513,7 +513,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     
     //added retenet parameter
-    //Remind: Rule{Conditions:Condition{constantTests
+    //Reminder: Rule{Conditions[]},
+    //          Condition{constantTests:[],bindings:[[]]}
     var buildOrShareAlphaMemory = function(condition,root){
         var currentNode = root;
         for(var i in condition.constantTests){
@@ -533,6 +534,13 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     var buildOrShareBetaMemoryNode = function(parent){
+        //if passed in the dummy top node, return it:
+        if(parent.isBetaMemory === true){
+            return parent;
+        }
+
+
+        
         //if theres an available beta memory to use,
         //return that
         for(var i in parent.children){
@@ -703,9 +711,10 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }else{
                 throw new Error("Unrecognised condition type");
             }
-            //return current node
-            return currentNode;
         }
+        //return current node
+        var finalBetaMemory = buildOrShareBetaMemoryNode(currentNode);
+        return finalBetaMemory;
     };
 
     var activateActionNode = function(actionNode,token){
@@ -884,7 +893,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "buildOrShareBetaMemoryNode"  : buildOrShareBetaMemoryNode,
         "buildOrShareJoinNode"        : buildOrShareJoinNode,
         "buildOrShareNegativeNode"    : buildOrShareNegativeNode,
-
+        "buildOrShareNetworkForConditions": buildOrShareNetworkForConditions,
         //Other:
         "updateNewNodeWithMatchesFromAbove" : updateNewNodeWithMatchesFromAbove,
         "findNearestAncestorWithAlphaMemory":findNearestAncestorWithAlphaMemory,

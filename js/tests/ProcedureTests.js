@@ -1280,12 +1280,87 @@ exports.procedureTests = {
         test.done();
     },
  
-    //TODO: build entire network for conditions:
+    //Build a network for the rule:
+    //if(wme.first === 5) then action
+    buildNetworkForConditionsTest : function(test){
+        var rootAlpha = {
+            id: "rootAlpha",
+            children : [],
+        };
+        var rootBeta = new ds.BetaMemory();
+        
+        //make an array of conditions
+        //this test: just a single [condition]
+        var condition_s = [new ds.Condition([["first","EQ",5]],
+                                            [],false)];
+        
+        //build the network
+        var finalNode = p.buildOrShareNetworkForConditions(rootBeta,condition_s,rootAlpha);
+
+        //rootBeta + rootAlpha -> jn -> finalBetaMemory
+        //rootBeta is unlinked as it has a dummy token,
+        //because the root alpha is empty
+        
+        //top down:
+        test.ok(rootAlpha.children.length === 1);
+        test.ok(rootAlpha.children[0].isConstantTestNode === true);
+        test.ok(rootAlpha.children[0].outputMemory !== undefined);
+        test.ok(rootAlpha.children[0].outputMemory.children.length === 1);
+        test.ok(rootAlpha.children[0].outputMemory.children[0].isJoinNode === true);
+
+        //bottom up:
+        test.ok(finalNode.isBetaMemory === true);
+        test.ok(finalNode.parent.isJoinNode === true);
+        test.done();
+    },
+
+    //clone of above, but using the ReteNet ctor
+    buildNetworkForConditionsTest_from_ReteNetObject : function(test){
+        var reteNet = new ds.ReteNet();
+        
+        //make an array of conditions
+        //this test: just a single [condition]
+        var condition_s = [new ds.Condition([["first","EQ",5]],
+                                            [],false)];
+        
+        //build the network
+        var finalNode = p.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,condition_s,reteNet.rootAlpha);
+
+        //rootBeta + rootAlpha -> jn -> finalBetaMemory
+        //rootBeta is unlinked as it has a dummy token,
+        //because the root alpha is empty
+        
+        //top down:
+        test.ok(reteNet.rootAlpha.children.length === 1);
+        test.ok(reteNet.rootAlpha.children[0].isConstantTestNode === true);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory !== undefined);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children.length === 1);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children[0].isJoinNode === true);
+
+        //bottom up:
+        test.ok(finalNode.isBetaMemory === true);
+        test.ok(finalNode.parent.isJoinNode === true);
+        test.done();
+    },
 
     
     //share entire network for conditions:
+    shareNetworkForConditionsTest : function(test){
+        //Make Roots:
 
-    //partial build partial share for network:
+        //make conditions
+
+        //build network
+
+        //make more conditions that build off originals
+
+        //build more network
+
+        //check additional network is connected with original
+        
+        
+        test.done();
+    },
 
     //(build)nccnode
 
@@ -1296,14 +1371,64 @@ exports.procedureTests = {
     //--------------------
     
     //addWME test
+    addWME_thatFiresRule_Test : function(test){
+        //build a simple network
+        
+        
+        //assert a wme
 
+        //check down the network
+
+        //check the output action was fired
+        
+        test.done();
+    },
+
+    addWME_thatDoesNotFireRule_Test : function(test){
+
+        test.done();
+    },
+    
     //remove wme test
+    removeWMETest : function(test){
+        //build network
 
+        //assert a wme
+
+        //check the output fired
+
+        //remove the wme
+
+        //check the network updated appropriately
+
+        test.done();
+    },
     //--------------------
     //TODO:deleteTokenAndDescendents
+    deleteTokenAndDescendentsTest : function(test){
+        //Create a chain of beta memories with tokens
+        //most dependent on a single token.
+
+        //delete the token
+
+        //check all related tokens were deleted
+        
+        test.done();
+    },
     
     //--------------------
     //TODO:delete descendents of token
+    deleteTokenDescendentsTest : function(test){
+        //create a chain of beta memories with tokens
+
+        //delete descendents of a token
+
+        //check the descendents were deleted
+
+        //check the token survived
+        
+        test.done();
+    },
 
     //--------------------
     //Other:
@@ -1435,9 +1560,36 @@ exports.procedureTests = {
     },
 
     //TODO:test unnwmfa on an nccnode...
+
+
+    //--------------------
+    //delete node and any unused ancestors
+    deleteNodeAndAncestorsTest : function(test){
+        //create a network of a few rules
+
+        //select a node to delete
+
+        //delete it
+
+
+        //check it was deleted, and any that were unused ancestors of it
+        
+        test.done();
+    },
+
+
     
     //remove rule
+    removeRuleTest : function(test){
+        //create a network of a few rules
 
-    //delete node and any unused ancestors
+        //delete one rule
+
+        //check the rest survived
+        
+        test.done();
+    },
+
+
     
 };

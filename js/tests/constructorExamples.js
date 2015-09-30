@@ -294,6 +294,13 @@ exports.ConstructorExamples = {
         test.done();
     },
 
+    checkAlphaNodeStoresAlphaMemory_check : function(test){
+        //alphanodes that are linked to alpha memories
+        //do not use the child link
+        test.ok(false);
+        test.done();
+    },
+    
     //Now you can test alphaMemory activation in
     //procedure tests...
 
