@@ -454,13 +454,22 @@ exports.ConstructorExamples = {
 
     
     //negative node
+    negativeNodeThrowErrorOnEmptyTests : function(test){
+
+        test.throws(function(){
+            var negNode = new ds.NegativeNode();
+        },Error);
+
+        test.done();
+    },
+    
     simpleNegativeNode : function(test){
         var dummyParent = {
             id : "dummy",
             children : [],
         };
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a","b"]];
 
         test.ok(am.children.length === 0);
         test.ok(dummyParent.children.length === 0);
@@ -470,7 +479,7 @@ exports.ConstructorExamples = {
         test.ok(negNode.isNegativeNode === true);
         test.ok(negNode.parent.id === dummyParent.id);
         test.ok(negNode.alphaMemory.id === am.id);
-        test.ok(negNode.tests.length === 0);
+        test.ok(negNode.tests.length === 1);
         test.ok(negNode.nearestAncestor === null);
         test.done();
     },

@@ -245,6 +245,9 @@ define([],function(){
 
     //Negative Node:The node that gates token progression
     var NegativeNode = function(parent,alphaMemory,tests){
+        if(tests.length === 0){
+            throw new Error("Negative Node can't handle no bindings");
+        }
         ReteNode.call(this,parent);
         this.isNegativeNode = true;
         this.items = [];

@@ -211,7 +211,7 @@ exports.procedureTests = {
     findNearestAncestorFromNegativeNode : function(test){
         var bm = new ds.BetaMemory();
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a","b"]];
         var negNode = new ds.NegativeNode(bm,am,tests);
 
         var ancestor = p.findNearestAncestorWithAlphaMemory(negNode,am);
@@ -223,7 +223,8 @@ exports.procedureTests = {
     findNearestAncestorFromNodeWithNegNodeInChain : function(test){
         var bm = new ds.BetaMemory();
         var am = new ds.AlphaMemory();
-        var negNode = new ds.NegativeNode(bm,am,[]);
+        var tests = [["a","b"]];
+        var negNode = new ds.NegativeNode(bm,am,tests);
         var am2 = new ds.AlphaMemory();
         var jn = new ds.JoinNode(negNode,am2,[]);
 
@@ -653,11 +654,7 @@ exports.procedureTests = {
     },
     
     
-    //TODO: left activate general
-
-    //TODO: right activate general
-    
-
+ 
     //NEGATIVE NODE:
     simpleNegativeNodeLeftActivationTest : function(test){
         var bm = new ds.BetaMemory();
@@ -703,7 +700,7 @@ exports.procedureTests = {
     simpleNegativeNodeRightActivation : function(test){
         var bm = new ds.BetaMemory();
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a","b"]];
 
         var negNode = new ds.NegativeNode(bm,am,tests);
         //add a token to the neg node:
@@ -728,7 +725,7 @@ exports.procedureTests = {
         var dummyParent = new ds.BetaMemory();
         var bm = new ds.BetaMemory(dummyParent);
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a","b"]];
 
         var negNode = p.buildOrShareNegativeNode(bm,am,tests);
         
@@ -745,6 +742,159 @@ exports.procedureTests = {
     //nccpartner left actviation
 
 
+   //TODO: left activate general
+    leftActivateTokenPassTest : function(test){
+        var dummyNode = {
+            __isDummy : true,
+            children : [],
+            id : "dummy"
+        };
+        var token = new ds.Token();
+        var wme = new ds.WME({a:"is a wme"});
+        var joinTestResults = {b:"a binding"};
+
+        var returnedToken = p.leftActivate(dummyNode,token,wme,joinTestResults);
+
+        test.ok(returnedToken.isToken === true);
+        test.ok(returnedToken.id !== dummyNode.id);
+        test.ok(returnedToken.id !== token.id);
+        test.ok(returnedToken.id !== wme.id);
+        test.ok(returnedToken.wme.id === wme.id);
+        test.ok(returnedToken.bindings['b'] === "a binding");
+        test.done();
+    },
+
+    leftActivateNoNewTokenPass : function(test){
+        var dummyNode = {
+            __isDummy : true,
+            children : [],
+            id : "dummy"
+        };
+        var token = new ds.Token();
+        var returnedToken = p.leftActivate(dummyNode,token);
+        test.ok(returnedToken.id === token.id);
+        test.done();
+    },
+
+    
+    leftActivateUnrecognisedNodeFail : function(test){
+        var badDummyNode = {
+            children : [],
+            id : "dummy"
+        };
+        var token = new ds.Token();
+        test.throws(function(){
+            p.leftActivate(badDummyNode,token);
+        },Error);
+        test.done();
+    },
+    
+    //left activate beta memory
+    leftActivateBetaMemoryTest : function(test){
+        var betaMemory = new ds.BetaMemory();
+        var token = new ds.Token(null,null,null,{a:"a token"});
+
+        test.ok(betaMemory.items.length === 1);
+        
+        var returnedToken = p.leftActivate(betaMemory,token);
+        test.ok(returnedToken.id === token.id);
+        test.ok(betaMemory.items.length === 2);
+        test.done();
+    },
+
+    //left activate joinnode
+    leftActivateJoinNode : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var testWME = new ds.WME({a:"a wme"});
+        p.alphaMemoryActivation(am,testWME);
+        var jn = new ds.JoinNode(bm,am,[]);//no join tests
+        var postJNbm = new ds.BetaMemory(jn);
+        
+        var testToken = new ds.Token();
+        p.leftActivate(jn,testToken);
+
+        test.ok(postJNbm.items.length === 1);
+        test.ok(postJNbm.items[0].parentToken.id === testToken.id);
+        test.ok(postJNbm.items[0].wme.id === testWME.id);
+        test.done();
+    },
+    
+    //left activate negative node
+    leftActivateNegativeNodePassThrough : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var testWME1 = new ds.WME({a:"first wme"});
+        var testWME2 = new ds.WME({a:"second wme"});
+        
+        p.alphaMemoryActivation(am,testWME1);
+        p.alphaMemoryActivation(am,testWME2);
+
+        //Neg node to test token.bindings['b'] === am.data['a']
+        var negNode = new ds.NegativeNode(bm,am,[["b","a"]]);
+        var postNNbm = new ds.BetaMemory(negNode);
+
+        var testToken = new ds.Token(null,null,null,{b:"a token"});
+        test.ok(postNNbm.items.length === 0);
+        p.leftActivate(negNode,testToken);
+
+        //token should pass to postNNbm, as there
+        //are no bindings to cause either of the
+        //wmes to block the token
+        test.ok(postNNbm.items.length === 1);
+        test.ok(postNNbm.items[0].id === testToken.id);
+        
+        test.done();
+    },
+    
+    //TODO:left activate ncc and partner
+
+    //right activate throw error
+    rightActivateThrowErrorOnUnrecognisedNode : function(test){
+        var badDummyNode = {
+            id : "dummy",
+            children : [],
+        };
+
+        test.throws(function(){
+            p.rightActivate(badDummyNode,new ds.WME({a:"a wme"}));
+        },Error);
+
+        test.done();
+    },
+    
+    //Right activate joinNode
+    rightActivateJoinNodeTest : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","b"]];
+        var jn = new ds.JoinNode(bm,am,tests);
+        var postJNbm = new ds.BetaMemory(jn);
+
+        var testWME = new ds.WME({a:"a wme"});
+
+        test.ok(postJNbm.items.length === 0);
+        
+        //right activate:
+        p.rightActivate(jn,testWME);
+
+        test.ok(postJNbm.items.length === 1);
+        test.ok(postJNbm.items[0].parentToken.id === bm.items[0].id);
+        test.ok(postJNbm.items[0].wme.id === testWME.id);
+        
+        
+        test.done();
+    },
+    
+    //right activate negative node
+    rightActivateNegativeNodeTest : function(test){
+
+        test.done();
+    },
+
+    
+
+    
     
     //--------------------
     //buildOrShareTests:
@@ -1107,13 +1257,13 @@ exports.procedureTests = {
     simpleBuildNegativeNodeTest : function(test){
         var bm = new ds.BetaMemory();
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a",'b']];
         var negNode = p.buildOrShareNegativeNode(bm,am,tests);
         test.ok(negNode.isNegativeNode === true);
         //should not be unlinked, as there is the dummy token
         test.ok(negNode.items.length === 1);
         test.ok(negNode.items[0].id === bm.items[0].id);
-        test.ok(negNode.tests.length === 0);
+        test.ok(negNode.tests.length === 1);
         test.ok(negNode.nearestAncestor === null);
         test.done();
     },
@@ -1122,7 +1272,7 @@ exports.procedureTests = {
     simpleShareNegativeNodeTest : function(test){
         var bm = new ds.BetaMemory();
         var am = new ds.AlphaMemory();
-        var tests = [];
+        var tests = [["a","b"]];
         var negNode = p.buildOrShareNegativeNode(bm,am,tests);
         var shouldBeDuplicate = p.buildOrShareNegativeNode(bm,am,tests);
         test.ok(negNode.id === shouldBeDuplicate.id);
@@ -1260,7 +1410,7 @@ exports.procedureTests = {
     },
     
     negativeNodeUpdateNewNodeWithMatches : function(test){
-        var negativeNode = new ds.NegativeNode();
+        var negativeNode = new ds.NegativeNode(null,null,[["a","b"]]);
 
         //put some join results in the negative node:
         negativeNode.items.unshift(new ds.Token(null,null,null,{

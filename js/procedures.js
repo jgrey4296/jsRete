@@ -735,7 +735,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         //Essentially a switch of:
         //betaMemory, JoinNode, NegativeNode, NCC, PartnerNode,
         //and Action
-        if(node.isBetaMemory){
+        if(node.__isDummy){
+            //pass on, because this is a test
+        }else if(node.isBetaMemory){
             betaMemoryActivation(node,token);
         }else if(node.isJoinNode){
             joinNodeLeftActivation(node,token);
@@ -749,7 +751,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             activateActionNode(node,token);
         }else{
             throw new Error("Unknown node type leftActivated");
-        }        
+        }
+        return token;
     };
 
     var rightActivate = function(node,wme){
@@ -874,6 +877,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "negativeNodeLeftActivation":negativeNodeLeftActivation,
         "negativeNodeRightActivation":negativeNodeRightActivation,
         "leftActivate"          : leftActivate,
+        "rightActivate"         : rightActivate,
         //Build Functions::
         "buildOrShareConstantTestNode":buildOrShareConstantTestNode,
         "buildOrShareAlphaMemory" : buildOrShareAlphaMemory,
