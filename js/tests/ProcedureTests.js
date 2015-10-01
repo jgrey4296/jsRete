@@ -1343,6 +1343,36 @@ exports.procedureTests = {
         test.done();
     },
 
+    //simple add Rule test
+    simpleAddRuleTest : function(test){
+        var reteNet = new ds.ReteNet();
+        var testValue = 0;
+        var aRule = new ds.Rule("simpleRule",
+                                [//conditions
+                                    [//c1
+                                        [//tests
+                                            //test1
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg?
+                                        [],false
+                                    ]//end of c1
+                                ],//end of conditions
+                                //the Action
+                                function(){
+                                    testValue += 5;
+                                });
+
+        //call the rules action. tv === 5
+        test.ok(testValue === 0);
+        aRule.action();
+        test.ok(testValue === 5);
+        var returnedActionNode = p.addRule(aRule,reteNet);
+        test.ok(returnedActionNode.isActionNode === true);
+        //call the returned action node, tv === 10
+        p.activateActionNode(returnedActionNode,new ds.Token());
+        test.done();
+    },
     
     //share entire network for conditions:
     shareNetworkForConditionsTest : function(test){
@@ -1373,34 +1403,131 @@ exports.procedureTests = {
     //addWME test
     addWME_thatFiresRule_Test : function(test){
         //build a simple network
-        
-        
-        //assert a wme
+        var reteNet = new ds.ReteNet();
+        var testValue = 0;
+        var aRule = new ds.Rule("simpleRule",
+                                [//conditions
+                                    [//c1
+                                        [//tests
+                                            //test1
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg?
+                                        [],false
+                                    ]//end of c1
+                                ],//end of conditions
+                                //the Action
+                                function(){
+                                    testValue += 5;
+                                });
 
-        //check down the network
+        //call the rules action. tv === 5
+        test.ok(testValue === 0);
+        aRule.action();
+        test.ok(testValue === 5);
+        var returnedActionNode = p.addRule(aRule,reteNet);
+        test.ok(returnedActionNode.isActionNode === true);
+        //call the returned action node, tv === 10
+        p.activateActionNode(returnedActionNode,new ds.Token());
+        //assert a wme
+        var createdWMEid = p.addWME({first:5,second:"the first wme"},reteNet);
+
+        //check up the network
+        test.ok(returnedActionNode.parent.isBetaMemory === true);
+        test.ok(returnedActionNode.parent.items.length === 1);
+        test.ok(returnedActionNode.parent.items[0].wme.id === createdWMEid);
 
         //check the output action was fired
+        //tv should === 15 now, after 3 firings
+        test.ok(testValue === 15);
         
         test.done();
     },
 
     addWME_thatDoesNotFireRule_Test : function(test){
+//build a simple network
+        var reteNet = new ds.ReteNet();
+        var testValue = 0;
+        var aRule = new ds.Rule("simpleRule",
+                                [//conditions
+                                    [//c1
+                                        [//tests
+                                            //test1
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg?
+                                        [],false
+                                    ]//end of c1
+                                ],//end of conditions
+                                //the Action
+                                function(){
+                                    testValue += 5;
+                                });
 
+        //call the rules action. tv === 5
+        test.ok(testValue === 0);
+        aRule.action();
+        test.ok(testValue === 5);
+        var returnedActionNode = p.addRule(aRule,reteNet);
+        test.ok(returnedActionNode.isActionNode === true);
+        //call the returned action node, tv === 10
+        p.activateActionNode(returnedActionNode,new ds.Token());
+        //assert a wme
+        //first = 0, not 5, so doesnt satisfy rule
+        var createdWMEid = p.addWME({first:0,second:"the second wme"},reteNet);
+
+        //check up the network
+        test.ok(returnedActionNode.parent.isBetaMemory === true);
+        test.ok(returnedActionNode.parent.items.length === 0);
+
+        //check the output action was NOT fired
+        //tv should === 10, because only two firings.
+        test.ok(testValue === 10);
+                
         test.done();
     },
     
     //remove wme test
     removeWMETest : function(test){
         //build network
+        var reteNet = new ds.ReteNet();
+        var testValue = 0;
+        var aRule = new ds.Rule("simpleRule",
+                                [//conditions
+                                    [//c1
+                                        [//tests
+                                            //test1
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg?
+                                        [],false
+                                    ]//end of c1
+                                ],//end of conditions
+                                //the Action
+                                function(){
+                                    testValue += 5;
+                                });
+        var returnedTerminalNode = p.addRule(aRule,reteNet);
+        test.ok(returnedTerminalNode.isActionNode === true);
+        
 
+        
         //assert a wme
-
+        var wmeId = p.addWME({first:5,second:"aTestWme"},reteNet);
+        
         //check the output fired
-
+        //1 activation, so 5
+        test.ok(testValue === 5);
+        test.ok(returnedTerminalNode.parent.items[0].wme.id === wmeId);
         //remove the wme
-
+        p.removeWME(reteNet.allWMEs[wmeId]);
+        
         //check the network updated appropriately
 
+        //test.ok(reteNet.allWMEs[wmeId] === undefined);
+        test.ok(reteNet.allWMEs[wmeId].alphaMemoryItems.length === 0,reteNet.allWMEs[wmeId].alphaMemoryItems.length);
+        test.ok(reteNet.allWMEs[wmeId].tokens.length === 0);
+        test.ok(reteNet.allWMEs[wmeId].negJoinResults.length === 0);
         test.done();
     },
     //--------------------

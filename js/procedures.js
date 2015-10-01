@@ -64,7 +64,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         //activate the root node of the reteNet
         var wme = new DataStructures.WME(wmeData);
-        reteNet.allWMEs.push(wme);
+        reteNet.allWMEs[wme.id] = wme;
         alphaNodeActivation(reteNet.rootAlpha,wme);
         return wme.id;
     };
@@ -325,47 +325,81 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     //Remove/retract a wme from the network
+    //has three main sections:
+    //alphaMemoryItem Cleanup, token Cleanup,
+    //and negJoinResult Cleanup
     var removeWME = function(wme,reteNet){
-        //For all alphaMemory items
-        var i = wme.alphaMemoryItems.length;
-        while(i !== 0){
-            var currItem = wme.alphaMemoryItems[i];
-            //remove from item.amem.items
-            wme.alphaMemoryItems = wme.alphaMemoryItems.filter(function(d){
-                return d.id !== currItem.id;
-            });;
-            //if the alphaMem has no items:
-            if(currItem.alphaMemory.items.length === 0){
-                //for each child
-                for(var i in currItem.alphaMemory.children){
-                    var currChild = currItem.alphaMemory.children[i];
-                    if(currChild.isJoinNode){
-                        currChild.parent.children = currChild.parent.children.filter(function(d){
-                            return d.id !== currChild.id;
-                        });
-                    }
-                }
+        for(var i = wme.alphaMemoryItems.length-1; i > 0; i--){
+            //remove from the alpha memory itemlist
+            var item = wme.alphaMemoryItems[i];
+            var index = item.alphaMemory.items.map(function(d){
+                if(d && d.id){
+                    return d.id;
+                }}).indexOf(item.id);
+            if(index != -1){
+                item.alphaMemory.items.splice(index,1);
             }
-            //delete item here
+            //clean up, and delink
+            cleanupAlphaMemory(wme.alphaMemoryItems[i].alphaMemory);
+            wme.alphaMemoryItems.splice(i,1);
         }
-        //For all tokens
+        wme.alphaMemoryItems = [];
+       //For all tokens
         while(wme.tokens.length > 0){
             deleteTokenAndDescendents(wme.tokens[0]);
         }
-        
-        //for all negative join results
-        var i = wme.negJoinResults.length;
-        while(i !== 0){
-            var currJoinResult = wme.negJoinResults[i];
-            if(currJoinResult.owner.negJoinResults.length === 0){
-                for(var j in currJoinResult.owner.node.children){
-                    var currChild = currJoinResult.owner.node.children[j];
-                    leftActivate(currChild,currJoinResult.owner);
+        //for all negative join results:
+        for(var i in wme.negJoinResults){
+            //remove from the negJoinResults list
+            var item = wme.negJoinResults[i];
+            var index = item.owner.negJoinResults.map(function(d){
+                if(d && d.id){
+                    return d.di;
+                }else{
+                    return -1;
+                }
+            }).indexOf(item.id);
+            item.owner.negJoinResults.splice(index,1);
+            if(item.owner.negJoinResults.length === 0){
+                for(var j = item.owner.owningNode.children.length-1; j > 0; j--){
+                    var child = item.owner.owningNode.children[j];
+                    leftActivate(child,item.owner);
                 }
             }
-            //delete join result
+            cleanupNegativeJoinResult(wme.negJoinResults[i]);
         }
     };
+      
+    var cleanupAlphaMemory = function(alphaMemory){
+        //if the alphaMem has no items: UNLINK
+        if(alphaMemory.items.length === 0){
+            //for each child
+            for(var i in alphaMemory.children){
+                var currChild = currItem.alphaMemory.children[i];
+                if(currChild.isJoinNode){
+                    //unlink the beta memory
+                    currChild.parent.children = currChild.parent.children.filter(function(d){
+                        return d.id !== currChild.id;
+                    });
+                    currChild.parent.unlinkedChildren.push(currChild);
+                }
+            }
+        }//end of alpha memory cleanup loop
+    };
+
+    var cleanupNegativeJoinRestults = function(nJR){
+        var currJoinResult = nJR;
+        //if the negation clears, activate it
+        if(currJoinResult.owner.negJoinResults.length === 0){
+            for(var j in currJoinResult.owner.node.children){
+                var currChild = currJoinResult.owner.node.children[j];
+                leftActivate(currChild,currJoinResult.owner);
+            }
+        }
+        //delete join result
+        lengthCount--;
+    }
+       
 
     //delete a token and all the tokens that rely on it
     //a bit of a frankenstein. Deletes the token,
@@ -406,8 +440,13 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             //and that betaMemory has no other items
             if(token.owningNode.items.length === 0){
                 //for all the node's children
-                for(var i in token.owningNode.children){
+                //TODO: what effect on match rate does this going high to low have?
+                for(var i = token.owningNode.children.length-1; i > 0; i--){
                     var currChild = token.owningNode.children[i];
+                    if(currChild === undefined){
+                        currChild--;
+                        continue;
+                    }
                     //remove the child from the alphamemory
                     currChild.alphaMemory.children = currChild.alphaMemory.children.filter(function(d){
                         return d.id !== currChild.id;

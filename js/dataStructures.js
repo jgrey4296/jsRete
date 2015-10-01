@@ -294,6 +294,7 @@ define([],function(){
         this.rootAlpha = new AlphaNode();
         this.actions = [];
         this.allWMEs = [];
+        this.allWMEs.__isAllWMEs = true;
     };
 
     
