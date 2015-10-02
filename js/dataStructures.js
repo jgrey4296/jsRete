@@ -156,9 +156,12 @@ define([],function(){
         this.isAlphaMemory = true;
         this.items = [];
         this.parent = parent;
+        //If adding to a node other than a test node,
         if(parent && parent.isConstantTestNode === undefined){
+            //add to children
             this.parent.children.unshift(this);
         }else if(this.parent && this.parent.outputMemory === undefined){
+            //if an alphanode, set the ouputmemory field
             this.parent.outputMemory = this;
         }else if(this.parent && this.parentOutputMemory !== undefined){
             throw new Error("trying to create an alpha memory for a node that already has one");

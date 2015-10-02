@@ -297,7 +297,12 @@ exports.ConstructorExamples = {
     checkAlphaNodeStoresAlphaMemory_check : function(test){
         //alphanodes that are linked to alpha memories
         //do not use the child link
-        test.ok(false);
+        var an = new ds.AlphaNode();
+        var am = new ds.AlphaMemory(an);
+
+        test.ok(am.parent.id === an.id);
+        test.ok(an.outputMemory.id === am.id);
+                
         test.done();
     },
     

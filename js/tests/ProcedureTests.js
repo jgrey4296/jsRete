@@ -359,8 +359,9 @@ exports.procedureTests = {
     //Beta Memory left activation
     //very basic, non-dummy beta memory activation
     //with no children.
-    //token is no assigned to be wonded by the bm from
-    //its activation, that happens in leftActivate
+    //token is not created in bm activation,
+    //rather tokens are constructed before node decision,
+    //in leftActivate
     childless_betaMemoryActivationTest : function(test){
         var dummyParent = {
             id : "dummy",
@@ -742,7 +743,7 @@ exports.procedureTests = {
     //nccpartner left actviation
 
 
-   //TODO: left activate general
+    //left activate general
     leftActivateTokenPassTest : function(test){
         var dummyNode = {
             __isDummy : true,
@@ -1528,6 +1529,7 @@ exports.procedureTests = {
         test.ok(reteNet.allWMEs[wmeId].alphaMemoryItems.length === 0,reteNet.allWMEs[wmeId].alphaMemoryItems.length);
         test.ok(reteNet.allWMEs[wmeId].tokens.length === 0);
         test.ok(reteNet.allWMEs[wmeId].negJoinResults.length === 0);
+        test.ok(returnedTerminalNode.parent.items.length === 0);
         test.done();
     },
     //--------------------
