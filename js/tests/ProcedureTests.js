@@ -1487,6 +1487,153 @@ exports.procedureTests = {
                 
         test.done();
     },
+
+    //REMOVE WME AND TOKEN HELPER FUNCTION TESTS:
+
+    testRemoveAlphaMemoryItemsForWME : function(test){
+        //create a wme
+        //put some various alphamemoryitems in it
+        //call
+        //check that the alphamemory has no items for the wme anymore
+        test.ok(false);
+        test.done();
+    },
+
+    // testActivateIfNegatedJRIsUnblocked : function(test){
+    //     //create a JR
+    //     //try blocking and unblocking it
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+
+    // testDeleteAllNegJoinResultsForWME : function(test){
+    //     //create a wme
+    //     //add some negative join results in
+    //     //call
+    //     //check the owning token's negJoinResults is filtered correctly
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testUnlinkAlphaMemory : function(test){
+    //     //create an alphamemory
+    //     //link it
+    //     //call
+    //     //check it is unlinked
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+
+    // testremoveTokenFromNode : function(test){
+    //     //create a token
+    //     //add it to a node
+    //     //call
+    //     //check node no longer has the token
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testRemoveTokenFromWME : function(test){
+    //     //create a token, connect it to a WME
+    //     //call
+    //     //check wme no longer linked to token
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testRemoveTokenFromParentToken : function(test){
+    //     //create a token,
+    //     //create a child token
+    //     //call
+    //     //check parent is no longer linked to child
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testIfEmptyBetaMemoryUnlink  : function(test){
+    //     //create a betamemory, link it
+    //     //call
+    //     //check memory is unlinked
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testIfEmptyNegNodeUnlink : function(test){
+    //     //create negative node
+    //     //link to alphamemory
+    //     //call
+    //     //check alphamemory is no longer linked
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testRemoveNegJoinResultsForToken : function(test){
+    //     //create a token
+    //     //add some negJoinResults
+    //     //call
+    //     //check all negJoinResults have been cleared
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testIfNCCConditionOwnsToken : function(test){
+    //     //create a token
+    //     //linked to an NCC
+    //     //call
+    //     //check all nccResults are cleared and removed
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testIfNCCPartnerNodeOwnsToken : function(test){
+    //     //create a parent token
+    //     //create an nccResult token
+    //     //linked to a partnerNode
+    //     //call
+    //     //check the main token is unblocked
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testIfNCCPartnerNodeActivateIfAppropriate : function(test){
+    //     //create a token
+    //     //linked to an nccpartnernode
+    //     //call
+    //     //check children are activated appropriately
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testDeleteTokenAndDescendents : function(test){
+    //     //create chain of tokens
+    //     //call
+    //     //check deleted
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testDeleteDescendentsOfToken : function(test){
+    //     //create chain of tokens
+    //     //call
+    //     //check deleted
+    //     //check original token remains
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    // testDeleteAllTokensForWME : function(test){
+    //     //create a wme
+    //     //link it with some tokens
+    //     //call
+    //     //check all tokens are unlinked from wme
+    //     test.ok(false);
+    //     test.done();
+    // },
+
+    
+    //END WME AND TOKEN REMOVAL HELPER FUNCTION TESTS
     
     //remove wme test
     removeWMETest : function(test){

@@ -330,6 +330,13 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //and negJoinResult Cleanup
     var removeWME = function(wme,reteNet){
 
+        removeAlphaMemoryItemsForWME(wme);
+        deleteAllTokensForWME(wme);
+        deleteAllNegJoinResultsForWME(wme);
+    };
+
+    var removeAlphaMemoryItemsForWME = function(wme){
+        //remove alpha memory items
         wme.alphaMemoryItems.forEach(function(item){
             //unlink the alphamemory from the item
             var index = item.alphaMemory.items.map(function(d){return d.id;}).indexOf(item.id);
@@ -344,12 +351,17 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         //completely clear am items:
         wme.alphaMemoryItems = [];
-        
+
+    };
+
+    var deleteAllTokensForWME = function(wme){
         //For all tokens
         while(wme.tokens.length > 0){
             deleteTokenAndDescendents(wme.tokens[0]);
         }
+    };
 
+    var deleteAllNegJoinResultsForWME = function(wme){
         //unlink the negative Join results in the owning token
         wme.negJoinResults.forEach(function(jr){
             var index = jr.owner.negJoinResults.map(function(j){
@@ -413,6 +425,20 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         ifEmptyBetaMemoryUnlink(token.owningNode)
         ifEmptyNegNodeUnlink(token.owningNode,token.id);
 
+        removeNegJoinResultsForToken(token);
+
+        ifNCCConditionOwnsToken(token);
+        ifNCCPartnerNodeOwnsToken(token);
+        ifNCCPartnerNodeActivateIfAppropriate(token);
+        
+        //dealloc token:
+        console.log("Dealloc'd Token:",token);
+    };
+    //finish of delete token.
+
+
+    //TOKEN DELETION HELPER FUNCTIONS
+    var removeNegJoinResultsForToken = function(token){
         //remove Negative join results
         token.negJoinResults.forEach(function(jr){
             var index = jr.wme.negJoinResults.map(function(d){return d.id;}).indexOf(jr.id);
@@ -424,21 +450,10 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             jr.token = undefined;
         });
         token.negJoinResults = [];
-
-        //TODO:if:
-        //ncc node
-        ifNCCConditionOwnsToken(token);
-        //
-        ifNCCPartnerNodeOwnsToken(token);
-        ifNCCPartnerNodeActivateIfAppropriate(token);
-        
-        //dealloc token:
-        console.log("Dealloc'd Token:",token);
     };
 
 
-    //finish of delete token.
-
+    
     //Now the utility functions for deleteing token:
     var removeTokenFromNode = function(token){
         //Deal with if the owning node is NOT an NCC
@@ -947,6 +962,29 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "addWME"    : addWME,
         "removeWME" : removeWME,
 
+        //removal helper functions:
+        "removeAlphaMemoryItemsForWME":removeAlphaMemoryItemsForWME,
+        "deleteAllTokensForWME":deleteAllTokensForWME,
+        "deleteAllNegJoinResultsForWME":deleteAllNegJoinResultsForWME,
+
+        "unlinkAlphaMemory":unlinkAlphaMemory,
+        "activateIfNegatedJRIsUnblocked" : activateIfNegatedJRIsUnblocked,
+
+        "removeTokenFromNode":removeTokenFromNode,
+        "removeTokenFromWME":removeTokenFromWME,
+        "removeTokenFromParentToken":removeTokenFromParentToken,
+        "ifEmptyBetaMemoryUnlink":ifEmptyBetaMemoryUnlink,
+        "ifEmptyNegNodeUnlink":ifEmptyNegNodeUnlink,
+        "removeNegJoinResultsForToken":removeNegJoinResultsForToken,
+
+        "ifNCCConditionOwnsToken":ifNCCConditionOwnsToken,
+        "ifNCCPartnerNodeOwnsToken":ifNCCPartnerNodeOwnsToken,
+        "ifNCCPartnerNodeActivateIfAppropriate":ifNCCPartnerNodeActivateIfAppropriate,        
+
+        "deleteTokenAndDescendents":deleteTokenAndDescendents,
+        "deleteDescendentsOfToken":deleteDescendentsOfToken,
+        
+        
         //Comparisons:
         "compareConstantNodeToTest"     : compareConstantNodeToTest,
         "compareJoinTests"      : compareJoinTests,
