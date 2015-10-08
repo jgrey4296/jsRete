@@ -233,8 +233,52 @@ exports.procedureTests = {
         
         test.done();
     },
+
+
+    findNearestAncestorFromNodeWithNegNodeInLongerChain : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var tests = [["a","b"]];
+        var negNode = new ds.NegativeNode(bm,am,tests);
+        var am2 = new ds.AlphaMemory();
+        var jn = new ds.JoinNode(negNode,am2,[]);
+        var am3 = new ds.AlphaMemory();
+        var postJNBM = new ds.BetaMemory(jn);
+        var jn2 = new ds.JoinNode(postJNBM,am3);
+        
+        var am_ancestor = p.findNearestAncestorWithAlphaMemory(jn2,am);
+        test.ok(am_ancestor.id === negNode.id);
+        var am2_ancestor = p.findNearestAncestorWithAlphaMemory(jn2,am2);
+        test.ok(am2_ancestor.id === jn.id);
+        
+        test.done();
+    },
     
-    //test ncc clauses
+    
+
+    findNearestAncestorWithAlphaMemory_subnetwork_test : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        var jn_earlier = new ds.JoinNode(bm,am);
+        var bm2 = new ds.BetaMemory(jn_earlier);
+        var tests = [["a","b"]];
+        var joinNode = new ds.JoinNode(bm2,am);
+        var postJNBM = new ds.BetaMemory(joinNode);
+        var nccNode = new ds.NCCNode(bm2);
+        var partner = new ds.NCCPartnerNode(postJNBM,1);
+        var postNccBM = new ds.BetaMemory(nccNode);
+        
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+
+        var ancestor = p.findNearestAncestorWithAlphaMemory(nccNode,am);
+        test.ok(ancestor.id !== jn_earlier.id);
+        test.ok(ancestor.id === joinNode.id);
+        
+
+        test.done();
+    },
+
     
     //--------------------
     //Activation tests:
@@ -543,11 +587,11 @@ exports.procedureTests = {
         test.done();
     },
 
-    //test with multiple ancestors
+    //TODO:test with multiple ancestors
 
-    //test where the ancestor !== null in later half
+    //TODO:test where the ancestor !== null in later half
 
-    //test error messages if unlinkedChildren does
+    //TODO:test error messages if unlinkedChildren does
     //not contain the relinking node
     
     
@@ -739,9 +783,128 @@ exports.procedureTests = {
     
     
     //ncc left activation
+    testNCCLeftActivation_throw_error_test : function(test){
+        test.throws(function(){
+            p.nccNodeLeftActivation({},new ds.Token());
+        },Error);
 
-    //nccpartner left actviation
+        test.throws(function(){
+            p.nccNodeLeftActivation(new ds.NegatedConjunctiveConditionNode(),{});
+        },Error);
+        
+        test.done();
+    },
+    
+    testNCCLeftActivation : function(test){
+        var parent = new ds.BetaMemory();
+        var nccNode = new ds.NCCNode(parent);
+        var childNode = new ds.BetaMemory(nccNode);
+        var newToken = new ds.Token();
 
+        test.ok(childNode.items.length === 0);
+        test.ok(nccNode.items.length === 0);
+
+        p.nccNodeLeftActivation(nccNode,newToken);
+
+        test.ok(nccNode.items.length === 1);
+        test.ok(childNode.items.length === 1);
+        test.done();
+    },
+
+    //nccleftactivation_with_blocking_wme    
+    testNCCLeftActivation_with_blocking_wme : function(test){
+        var parent = new ds.BetaMemory();
+        var nccNode = new ds.NCCNode(parent);
+        var childNode = new ds.BetaMemory(nccNode);
+        var partner = new ds.NCCPartnerNode(parent,1);
+
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+
+        var blockingToken = new ds.Token();
+        
+        partner.newResultBuffer.push(blockingToken);
+
+        var token = new ds.Token();
+
+        test.ok(childNode.items.length === 0);
+        
+        p.nccNodeLeftActivation(nccNode,token);
+
+        test.ok(childNode.items.length === 0);
+        test.ok(token.nccResults.length === 1);
+        test.ok(token.nccResults[0].id === blockingToken.id);
+        test.ok(blockingToken.parentToken.id === token.id);
+        
+        test.done();
+    },
+
+    //TODO: test nccnode with multiple
+    //results in partners newresult buffer
+    test_NCCNode_with_blocking_wmes_plural : function(test){
+        var parent = new ds.BetaMemory();
+        var nccNode = new ds.NCCNode(parent);
+        var childNode = new ds.BetaMemory(nccNode);
+        var partner = new ds.NCCPartnerNode(parent,1);
+
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+
+        var blockingToken = new ds.Token();
+        var blockingToken2 = new ds.Token(null,null,null,{a:"the other token"});
+        partner.newResultBuffer.push(blockingToken);
+        partner.newResultBuffer.push(blockingToken2);
+        
+        var token = new ds.Token();
+
+        test.ok(childNode.items.length === 0);
+        
+        p.nccNodeLeftActivation(nccNode,token);
+
+        test.ok(childNode.items.length === 0);
+        test.ok(token.nccResults.length === 2);
+        //blocking token 2 is the older, as i'm pushing
+        test.ok(token.nccResults[1].id === blockingToken2.id);
+        test.ok(token.nccResults[0].id === blockingToken.id);
+        test.ok(blockingToken.parentToken.id === token.id);
+        test.ok(blockingToken2.parentToken.id === token.id);
+        test.done();
+    },
+
+    
+    //TODO:nccpartner left actviation
+    testNccPartnerNodeLeftActivation : function(test){
+        //create parent
+        var parent = new ds.BetaMemory();
+        //create partner
+        var nccNode = new ds.NCCNode(parent);
+        var partner = new ds.NCCPartnerNode(parent,1);
+
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+
+        var parentToken = new ds.Token();
+        var testWME = new ds.WME({a:"test wme"});
+        var token = new ds.Token(parentToken,testWME);
+        var nccNodeToken = new ds.Token(parentToken,testWME);
+
+        //put the nccnodetoken in the nccnode
+        nccNode.items.unshift(nccNodeToken);
+
+        test.ok(nccNode.items.length === 1);
+        test.ok(nccNodeToken.nccResults.length === 0);
+        
+        p.nccPartnerNodeLeftActivation(partner,token);
+
+        test.ok(nccNodeToken.nccResults.length === 1);
+        test.ok(nccNodeToken.nccResults[0].id === token.id);
+        
+
+        test.done();
+    },
+
+    //todo: test nccpartnernode on variable numbers
+    
 
     //left activate general
     leftActivateTokenPassTest : function(test){
@@ -849,7 +1012,34 @@ exports.procedureTests = {
     },
     
     //TODO:left activate ncc and partner
+    leftActivateNccNodeTest : function(test){
+        var nccNode = new ds.NCCNode();
+        var testToken = new ds.Token();
 
+        test.ok(nccNode.items.length === 0);
+        
+        p.leftActivate(nccNode,testToken);
+        test.ok(nccNode.items.length === 1);
+        test.ok(nccNode.items[0].id === testToken.id);
+        
+        test.done();
+    },
+
+    leftActivateNccPartnerNodeTest : function(test){
+        var parent = new ds.BetaMemory();
+        var nccPartner = new ds.NCCPartnerNode(parent);
+        var testToken = new ds.Token();
+
+        test.ok(nccPartner.newResultBuffer.length === 0);
+                
+        p.leftActivate(nccPartner,testToken);
+        
+        test.ok(nccPartner.newResultBuffer.length === 1);
+        test.ok(nccPartner.newResultBuffer[0].id === testToken.id);
+        
+        test.done();
+    },
+    
     //right activate throw error
     rightActivateThrowErrorOnUnrecognisedNode : function(test){
         var badDummyNode = {
@@ -887,9 +1077,27 @@ exports.procedureTests = {
         test.done();
     },
     
-    //right activate negative node
+    //todo:right activate negative node
     rightActivateNegativeNodeTest : function(test){
+        var parent = new ds.BetaMemory();
+        
+        var am = new ds.AlphaMemory();
+        var tests = [["tokenBinding","wmeValue"]];
+        var negNode = new ds.NegativeNode(parent,am,tests);
+        var testToken = new ds.Token(null,null,null,{tokenBinding:"a binding"});
+        var testWME = new ds.WME({"wmeValue":"a binding"});
 
+        negNode.items.unshift(testToken);
+        
+        test.ok(negNode.items.length === 1);
+        test.ok(negNode.items[0].negJoinResults.length === 0);
+        
+        p.rightActivate(negNode,testWME);
+
+        test.ok(negNode.items.length === 1);
+        test.ok(negNode.items[0].negJoinResults.length === 1);
+        
+        
         test.done();
     },
 
@@ -1344,6 +1552,49 @@ exports.procedureTests = {
         test.done();
     },
 
+    
+    //share entire network for conditions:
+    shareNetworkForConditionsTest : function(test){
+        var reteNet = new ds.ReteNet();
+        
+        //make an array of conditions
+        //this test: just a single [condition]
+        var condition_s = [new ds.Condition([["first","EQ",5]],
+                                            [],false)];
+        
+        //build the network
+        var finalNode = p.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,condition_s,reteNet.rootAlpha);
+
+        //rootBeta + rootAlpha -> jn -> finalBetaMemory
+        //rootBeta is unlinked as it has a dummy token,
+        //because the root alpha is empty
+        
+        //top down:
+        test.ok(reteNet.rootAlpha.children.length === 1);
+        test.ok(reteNet.rootAlpha.children[0].isConstantTestNode === true);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory !== undefined);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children.length === 1);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children[0].isJoinNode === true);
+
+        //bottom up:
+        test.ok(finalNode.isBetaMemory === true);
+        test.ok(finalNode.parent.isJoinNode === true);
+
+        //now try it again
+        var condition2_s = [new ds.Condition([["first","EQ",5]],
+                                             [],false)];
+        //check its not the same:
+        test.ok(condition2_s[0].id !== condition_s[0].id);
+
+        //build it:
+        var anotherFinalNode = p.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,condition2_s,reteNet.rootAlpha);
+
+        test.ok(anotherFinalNode.id === finalNode.id);
+        
+        
+        test.done();
+    },
+
     //simple add Rule test
     simpleAddRuleTest : function(test){
         var reteNet = new ds.ReteNet();
@@ -1374,29 +1625,90 @@ exports.procedureTests = {
         p.activateActionNode(returnedActionNode,new ds.Token());
         test.done();
     },
+
     
-    //share entire network for conditions:
-    shareNetworkForConditionsTest : function(test){
-        //Make Roots:
-
-        //make conditions
-
-        //build network
-
-        //make more conditions that build off originals
-
-        //build more network
-
-        //check additional network is connected with original
+    //build a negative network node
+    buildNetworkWithNegativeCondition_test : function(test){
+        var reteNet = new ds.ReteNet();
         
+        //make an array of conditions
+        //this test: just a single [condition]
+        var condition_s = [new ds.Condition([["first","EQ",5]],
+                                            [["a","first"]],true),
+                           new ds.Condition([["second","EQ",10]],
+                                            [["b","second"]],true)];
         
+        //build the network
+        var finalNode = p.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,condition_s,reteNet.rootAlpha);
+
+        //rootBeta + rootAlpha -> jn -> finalBetaMemory
+        //rootBeta is unlinked as it has a dummy token,
+        //because the root alpha is empty
+        
+        //top down:
+        test.ok(reteNet.rootAlpha.children.length === 2);
+        test.ok(reteNet.rootAlpha.children[0].isConstantTestNode === true);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory !== undefined);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children.length === 1);
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children[0].isNegativeNode === true);
+        //console.log(reteNet.rootAlpha.children[0].outputMemory.children[0].children[0]);
+        //oldest node check
+        test.ok(reteNet.rootAlpha.children[0].outputMemory.children[0].children[0].isBetaMemory === true);
+        //newest node  check
+        test.ok(reteNet.rootAlpha.children[1].outputMemory.children[0].children[0].isNegativeNode === true);
+        
+        //bottom up:
+        test.ok(finalNode.isBetaMemory === true);
+        test.ok(finalNode.parent.isNegativeNode === true);
+        //the negative node connecting to the output memory node should be the
+        //output of the second condition, which is the newest so i=0,
+        //and it should be a negative node  connecting c1 to output
+        //nodes won't be unlinked, because negative nodes dont get unlinked
+        test.ok(reteNet.dummyBetaMemory.children[0].isNegativeNode === true);
+        test.ok(reteNet.dummyBetaMemory.children[0].children.length === 1);
+        test.ok(reteNet.dummyBetaMemory.children[0].children[0].isNegativeNode === true);
+        test.ok(reteNet.dummyBetaMemory.children[0].children[0].id === finalNode.parent.id);
+        test.done();
+
+    },
+
+
+    //todo:(build)nccnode
+    buildNCCNodeTest : function(test){
+        var reteNet = new ds.ReteNet();
+        
+        //make an array of conditions
+        //this test: just a single [condition]
+        var condition_s = [new ds.Condition([["first","EQ",5]],
+                                            [["a","first"]],false),
+                           //for NCCConditions, wrap in an array the arguments you'd pass to multiple conditions
+                           new ds.NCCCondition(
+                               [//conditions in subnetwork,in matrix form
+                                   [[["second","EQ",10]],[["b","second"]],false]
+                               ]//end of conditions in subnetwork
+                           )//end of ncccondition
+                          ];//end of conditions array
+        
+        //build the network
+        var finalNode = p.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,condition_s,reteNet.rootAlpha);
+
+        //now test the network
+        test.ok(finalNode.isBetaMemory === true);
+        test.ok(finalNode.parent.isAnNCCNode === true);
+        test.ok(finalNode.parent.partner.isAnNCCPartnerNode === true);
+        test.ok(finalNode.parent.parent.parent.id === reteNet.dummyBetaMemory.id);
+
+        test.done();
+    },
+    
+    //todo:(share) nccnode
+    shareNCCNodeTest : function(test){
+        // test.ok(false);
         test.done();
     },
 
-    //(build)nccnode
 
-    //(share) nccnode
-
+    
     //--------------------
     //WME functions:
     //--------------------
@@ -1446,7 +1758,7 @@ exports.procedureTests = {
     },
 
     addWME_thatDoesNotFireRule_Test : function(test){
-//build a simple network
+        //build a simple network
         var reteNet = new ds.ReteNet();
         var testValue = 0;
         var aRule = new ds.Rule("simpleRule",
@@ -1491,146 +1803,351 @@ exports.procedureTests = {
     //REMOVE WME AND TOKEN HELPER FUNCTION TESTS:
 
     testRemoveAlphaMemoryItemsForWME : function(test){
+        var am1 = new ds.AlphaMemory();
+        var am2 = new ds.AlphaMemory();
+        var am3 = new ds.AlphaMemory();
         //create a wme
+        var awme = new ds.WME({a:"first wme"});
+
         //put some various alphamemoryitems in it
+        p.alphaMemoryActivation(am1,awme);
+        p.alphaMemoryActivation(am2,awme);
+        p.alphaMemoryActivation(am3,awme);
+
+        test.ok(awme.alphaMemoryItems.length === 3);
+        
         //call
+        p.removeAlphaMemoryItemsForWME(awme);
+                
         //check that the alphamemory has no items for the wme anymore
+        test.ok(awme.alphaMemoryItems.length === 0);
+        test.ok(am1.items.length === 0);
+        test.ok(am2.items.length === 0);
+        test.ok(am3.items.length === 0);
+        test.done();
+    },
+
+    testActivateIfNegatedJRIsUnblocked : function(test){
+        var jn = new ds.JoinNode();
+        var bm = new ds.BetaMemory(jn);//used to verify
+        var token = new ds.Token(null,null,jn);
+        var wme = new ds.WME({a:"test wme"});
+                //create a JR
+        var njr = new ds.NegativeJoinResult(token,wme);
+
+        //check the connections:
+        test.ok(jn.children.length === 1);
+        test.ok(bm.parent !== undefined);
+        
+        //try blocking and unblocking it
+        test.ok(bm.items.length === 0);
+        p.activateIfNegatedJRIsUnblocked(njr);
+        test.ok(bm.items.length === 0);
+
+        token.negJoinResults.shift();//unblock
+        test.ok(njr.owner.negJoinResults.length === 0);
+        p.activateIfNegatedJRIsUnblocked(njr);
+        test.ok(bm.items.length === 1,bm.items.length);
+        test.done();
+    },
+
+
+    testDeleteAllNegJoinResultsForWME : function(test){
+        var jnRootOwner = new ds.JoinNode();
+        var bm = new ds.BetaMemory(jnRootOwner);
+        //create a wme
+        var aToken = new ds.Token(null,null,jnRootOwner);
+        var aToken2 = new ds.Token(null,null,jnRootOwner);
+        var awme = new ds.WME({a:"test wme"});
+        //add some negative join results in
+        var njr1 = new ds.NegativeJoinResult(aToken,awme);
+        var njr2 = new ds.NegativeJoinResult(aToken2,awme);
+
+        test.ok(bm.items.length === 0);
+        test.ok(awme.negJoinResults.length === 2);
+        
+        //call
+        p.deleteAllNegJoinResultsForWME(awme);
+        
+        //check the owning token's negJoinResults is filtered correctly
+        test.ok(awme.negJoinResults.length === 0);
+        test.ok(bm.items.length === 2);
+        test.done();
+    },
+
+    testUnlinkAlphaMemory : function(test){
+        var bm = new ds.BetaMemory();
+        //create an alphamemory
+        var am = new ds.AlphaMemory();
+        //link it:
+        var jn1 = new ds.JoinNode(bm,am);
+        var jn2 = new ds.JoinNode(bm,am);
+        var jn3 = new ds.JoinNode(bm,am);
+
+        test.ok(am.children.length === 3);
+        test.ok(bm.children.length === 3);
+
+        p.unlinkAlphaMemory(am);
+
+        test.ok(bm.children.length === 0);
+        //call
+        //check it is unlinked
+        test.done();
+    },
+
+    testUnlinkAlphaMemoryAlt : function(test){
+        var bm = new ds.BetaMemory();
+        //create an alphamemory
+        var am = new ds.AlphaMemory();
+        p.alphaMemoryActivation(am,new ds.WME({a:"a wme"}));
+        test.ok(am.items.length === 1);
+        //link it:
+        var jn1 = new ds.JoinNode(bm,am);
+        var jn2 = new ds.JoinNode(bm,am);
+        var jn3 = new ds.JoinNode(bm,am);
+
+        test.ok(am.children.length === 3);
+        test.ok(bm.children.length === 3);
+
+        p.unlinkAlphaMemory(am);
+
+        test.ok(am.children.length === 3);
+        test.ok(bm.children.length === 3);
+        
+        test.done();
+    },
+    
+
+    testremoveTokenFromNode : function(test){
+        var bm = new ds.BetaMemory();
+        //create a token
+        var token = new ds.Token(null,null,bm);
+        //add it to a node
+        p.betaMemoryActivation(bm,token);
+
+        test.ok(token.owningNode.id === bm.id);
+        test.ok(bm.items.length === 2);
+        //call
+        p.removeTokenFromNode(token);
+
+        //check node no longer has the token
+        test.ok(bm.items.length === 1);
+        test.done();
+    },
+
+    testRemoveTokenFromWME : function(test){
+        //create a token, connect it to a WME
+        var awme = new ds.WME({a:"a wme"});
+        var token = new ds.Token(null,awme);
+
+        test.ok(token.wme.id === awme.id);
+        test.ok(awme.tokens.length === 1);
+        test.ok(awme.tokens[0].id === token.id);
+        //call
+        p.removeTokenFromWME(token);
+
+        //check wme no longer linked to token
+        test.ok(awme.tokens.length === 0);
+        test.done();
+    },
+
+    testRemoveTokenFromParentToken : function(test){
+        //create a token,
+        var token = new ds.Token();
+        //create a child token
+        var cToken = new ds.Token(token);
+        test.ok(cToken.parentToken.id === token.id);
+        test.ok(token.children.length === 1);
+        test.ok(token.children[0].id === cToken.id);
+        //call
+        p.removeTokenFromParentToken(cToken);
+                
+        //check parent is no longer linked to child
+        test.ok(token.children.length === 0);
+        
+        test.done();
+    },
+
+    testIfEmptyBetaMemoryUnlinkSkip : function(test){
+        //create something that is not a beta memory
+        var am = new ds.AlphaMemory();
+        var ret = p.ifEmptyBetaMemoryUnlink(am);
+
+        test.ok(ret === false);
+        test.done();
+    },
+    
+    testIfEmptyBetaMemoryUnlink  : function(test){
+        //create a betamemory, link it
+        var bm = new ds.BetaMemory();
+        var bm2 = new ds.BetaMemory(bm);
+        var am = new ds.AlphaMemory();
+        var jn = new ds.JoinNode(bm2,am,[]);
+        //call
+        test.ok(am.children.length === 1);
+        p.ifEmptyBetaMemoryUnlink(bm2);
+        //check corresponding alpha memory is unlinked
+        test.ok(am.children.length === 0);
+                
+        test.done();
+    },
+
+    testIfEmptyNegNodeUnlink : function(test){
+        var bm = new ds.BetaMemory();
+        var am = new ds.AlphaMemory();
+        //create negative node
+        var nn = new ds.NegativeNode(bm,am,["a","b"]);
+
+        test.ok(nn.items.length === 0);
+        test.ok(am.children.length === 1);
+        test.ok(bm.children.length === 1);
+        
+        //call
+        p.ifEmptyNegNodeUnlink(nn);
+        //check alphamemory is no longer linked
+
+        test.ok(am.children.length === 0);
+        test.ok(bm.children.length === 1);
+        
+        test.done();
+    },
+
+    testRemoveNegJoinResultsForToken : function(test){
+        var awme = new ds.WME({a:"first"});
+        var wme2 = new ds.WME({a:"second"});
+        var wme3 = new ds.WME({a:"third"});
+        //create a token
+        var token = new ds.Token();
+        //create some negative join results
+        var njr1 = new ds.NegativeJoinResult(token,awme);
+        var njr2 = new ds.NegativeJoinResult(token,wme2);
+        var njr3 = new ds.NegativeJoinResult(token,wme3);
+
+        //check they have been added to the token and wmes:
+        test.ok(token.negJoinResults.length === 3);
+        test.ok(awme.negJoinResults.length === 1);
+        test.ok(wme2.negJoinResults.length === 1);
+        test.ok(wme3.negJoinResults.length === 1);
+        
+        //call
+        p.removeNegJoinResultsForToken(token);
+        
+        //check all negJoinResults have been cleared
+
+        test.ok(token.negJoinResults.length === 0);
+        test.ok(awme.negJoinResults.length === 0);
+        test.ok(wme2.negJoinResults.length === 0);
+        test.ok(wme3.negJoinResults.length === 0);
+
+        
+        test.done();
+    },
+
+    cleanupNCCOwnedToken_skip_Test : function(test){
+        var bm = new ds.BetaMemory();
+        //create a token
+        var token = new ds.Token();
+
+        token.owningNode = bm;
+
+        var ret = p.cleanupNCCResultsInToken(token);
+
+        test.ok(ret === false);
+
+        test.done();
+    },
+
+    cleanupNCCResultsInToken_proper_test : function(test){
+        var testWME1 = new ds.WME({a:"first wme"});
+        var testWME2 = new ds.WME({a:"second wme"});
+        var bm = new ds.BetaMemory();
+        var nccNode = new ds.NCCNode(bm);
+        var token = new ds.Token();
+        token.owningNode = nccNode;
+        var blockingToken = new ds.Token(null,testWME1);
+        var blockingToken2 = new ds.Token(null,testWME2);
+        token.nccResults.push(blockingToken);
+        token.nccResults.push(blockingToken2);
+
+        test.ok(token.nccResults.length === 2);
+        test.ok(testWME1.tokens.length === 1);
+        test.ok(testWME2.tokens.length === 1);
+                
+        var ret = p.cleanupNCCResultsInToken(token);
+
+        test.ok(ret === true);
+        test.ok(token.nccResults.length === 0);
+        test.ok(testWME1.tokens.length === 0);
+        test.ok(testWME2.tokens.length === 0);
+        
+        
+        test.done();
+    },
+
+    //todo: expand to test token has owningnode, which is an nccpartner
+    //and a parent token
+    cleanupNCCPartnerOwnedToken_skip_test : function(test){
+        var token = new ds.Token();
+        var ret = p.cleanupNCCPartnerOwnedToken(token);
+        test.ok(ret === false);
+        test.done();
+    },
+    
+    cleanupNCCPartnerOwnedTokenTest : function(test){
+        var bm = new ds.BetaMemory();
+        //create a parent token
+        var parToken = new ds.Token();
+        //create an nccResult token
+        var testToken = new ds.Token(parToken);
+        //linked to a partnerNode
+        var partner = new ds.NCCPartnerNode(bm);
+        testToken.owningNode = partner;
+        parToken.nccResults.push(testToken);
+
+        test.ok(parToken.nccResults.length === 1);
+        
+        var ret = p.cleanupNCCPartnerOwnedToken(testToken);
+
+        test.ok(ret === true);
+        test.ok(parToken.nccResults.length === 0);
+
+        test.done();
+    },
+
+    testIfNCCPartnerNodeActivateIfAppropriate : function(test){
+        //create a token
+        //linked to an nccpartnernode
+        //call
+        //check children are activated appropriately
         test.ok(false);
         test.done();
     },
 
-    // testActivateIfNegatedJRIsUnblocked : function(test){
-    //     //create a JR
-    //     //try blocking and unblocking it
-    //     test.ok(false);
-    //     test.done();
-    // },
+    testDeleteTokenAndDescendents : function(test){
+        //create chain of tokens
+        //call
+        //check deleted
+        test.ok(false);
+        test.done();
+    },
 
+    testDeleteDescendentsOfToken : function(test){
+        //create chain of tokens
+        //call
+        //check deleted
+        //check original token remains
+        test.ok(false);
+        test.done();
+    },
 
-    // testDeleteAllNegJoinResultsForWME : function(test){
-    //     //create a wme
-    //     //add some negative join results in
-    //     //call
-    //     //check the owning token's negJoinResults is filtered correctly
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testUnlinkAlphaMemory : function(test){
-    //     //create an alphamemory
-    //     //link it
-    //     //call
-    //     //check it is unlinked
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-
-    // testremoveTokenFromNode : function(test){
-    //     //create a token
-    //     //add it to a node
-    //     //call
-    //     //check node no longer has the token
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testRemoveTokenFromWME : function(test){
-    //     //create a token, connect it to a WME
-    //     //call
-    //     //check wme no longer linked to token
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testRemoveTokenFromParentToken : function(test){
-    //     //create a token,
-    //     //create a child token
-    //     //call
-    //     //check parent is no longer linked to child
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testIfEmptyBetaMemoryUnlink  : function(test){
-    //     //create a betamemory, link it
-    //     //call
-    //     //check memory is unlinked
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testIfEmptyNegNodeUnlink : function(test){
-    //     //create negative node
-    //     //link to alphamemory
-    //     //call
-    //     //check alphamemory is no longer linked
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testRemoveNegJoinResultsForToken : function(test){
-    //     //create a token
-    //     //add some negJoinResults
-    //     //call
-    //     //check all negJoinResults have been cleared
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testIfNCCConditionOwnsToken : function(test){
-    //     //create a token
-    //     //linked to an NCC
-    //     //call
-    //     //check all nccResults are cleared and removed
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testIfNCCPartnerNodeOwnsToken : function(test){
-    //     //create a parent token
-    //     //create an nccResult token
-    //     //linked to a partnerNode
-    //     //call
-    //     //check the main token is unblocked
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testIfNCCPartnerNodeActivateIfAppropriate : function(test){
-    //     //create a token
-    //     //linked to an nccpartnernode
-    //     //call
-    //     //check children are activated appropriately
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testDeleteTokenAndDescendents : function(test){
-    //     //create chain of tokens
-    //     //call
-    //     //check deleted
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testDeleteDescendentsOfToken : function(test){
-    //     //create chain of tokens
-    //     //call
-    //     //check deleted
-    //     //check original token remains
-    //     test.ok(false);
-    //     test.done();
-    // },
-
-    // testDeleteAllTokensForWME : function(test){
-    //     //create a wme
-    //     //link it with some tokens
-    //     //call
-    //     //check all tokens are unlinked from wme
-    //     test.ok(false);
-    //     test.done();
-    // },
+    testDeleteAllTokensForWME : function(test){
+        //create a wme
+        //link it with some tokens
+        //call
+        //check all tokens are unlinked from wme
+        test.ok(false);
+        test.done();
+    },
 
     
     //END WME AND TOKEN REMOVAL HELPER FUNCTION TESTS
@@ -1679,33 +2196,6 @@ exports.procedureTests = {
         test.ok(returnedTerminalNode.parent.items.length === 0);
         test.done();
     },
-    //--------------------
-    //TODO:deleteTokenAndDescendents
-    deleteTokenAndDescendentsTest : function(test){
-        //Create a chain of beta memories with tokens
-        //most dependent on a single token.
-
-        //delete the token
-
-        //check all related tokens were deleted
-        
-        test.done();
-    },
-    
-    //--------------------
-    //TODO:delete descendents of token
-    deleteTokenDescendentsTest : function(test){
-        //create a chain of beta memories with tokens
-
-        //delete descendents of a token
-
-        //check the descendents were deleted
-
-        //check the token survived
-        
-        test.done();
-    },
-
     //--------------------
     //Other:
     //--------------------
@@ -1836,7 +2326,11 @@ exports.procedureTests = {
     },
 
     //TODO:test unnwmfa on an nccnode...
-
+    testUNNWMFA_on_nccNode : function(test){
+        test.ok(false);
+        test.done();
+    },
+    
 
     //--------------------
     //delete node and any unused ancestors
@@ -1849,7 +2343,7 @@ exports.procedureTests = {
 
 
         //check it was deleted, and any that were unused ancestors of it
-        
+        test.ok(false);
         test.done();
     },
 
@@ -1862,7 +2356,8 @@ exports.procedureTests = {
         //delete one rule
 
         //check the rest survived
-        
+
+        test.ok(false);
         test.done();
     },
 

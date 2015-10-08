@@ -12,7 +12,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     
     //Trigger an alpha memory with a new wme to store
     var alphaMemoryActivation = function(alphaMem,wme){
-        var newItem = new DataStructures.ItemInAlphaMemory(wme,alphaMem);
+        var newItem = new DataStructures.AlphaMemoryItem(wme,alphaMem);
         alphaMem.items.unshift(newItem);
         wme.alphaMemoryItems.unshift(newItem);
 
@@ -258,6 +258,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //any that the wme blocks, gets an additional negative Join result
     //any that don't get blocked should already have been activated
     var negativeNodeRightActivation = function(node,wme){
+        //todo: this could be a map
+        
         for(var i in node.items){
             var currToken = node.items[i];
             var joinTestResult = performJoinTests(node,currToken,wme);
@@ -275,11 +277,20 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //from a new token, trigger the subnetwork?
     var nccNodeLeftActivation = function(nccNode,token){
         //Create and store the incoming token from prior join node
+        if(nccNode.isAnNCCNode === undefined){
+            throw new Error("nccNodeLeftActivation should be on an NCCNode");
+        }
+        if(token.isToken === undefined){
+            throw new Error("nccNodeLeftActivation should be on a token");
+        }
         var newToken = token
         nccNode.items.unshift(newToken);
 
+        //the partner's network MUST fire before the nccnode
+        //hence this. all the new results' in the partners new result buffer,
+        //are from the same origin as token
         //if there are new results to process:
-        while(nccNode.partner.newResultBuffer.length > 0){
+        while(nccNode.partner && nccNode.partner.newResultBuffer.length > 0){
             var newResult = nccNode.partner.newResultBuffer.pop();
             //add the subnetworks result as a blocking token
             newToken.nccResults.unshift(newResult);
@@ -299,29 +310,38 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     //the nccPartnerNode is activated by a new token from the subnetwork
     //figure out who owns this new token from the main (positive) network
-    var nccParterNodeLeftActivation = function(partner,token){
+    var nccPartnerNodeLeftActivation = function(partner,token){
+        //the partner's ncc
         var nccNode = partner.nccNode;
+        //the token created in left activate, with partner as owner
         var newToken = token;
-        
-        var ownersToken = token;
-        var ownersWme = wme;
+
+        //the prior token and wme
+        var ownersToken = token.parentToken;
+        var ownersWme = token.wme;
         for(var i = 1; i < partner.numberOfConjuncts; i++){
+            //go up the owner chain
             ownersToken = ownersToken.parentToken;
             ownersWme = ownersWme.wme;
         }
-
-        for(var i in nccNode.items){
-            var potentialOwner = nccNode.items[i];
-            if(potentialOwner.parent === ownersToken
-               && potentialOwner.wme === ownersWme){
-                potentialOwner.nccResults.unshift(newToken);
-                newToken.parentToken = potentialOwner;
-                deleteDescendentsOfToken(potentialOwner);
-                return;
-            }            
+        var possible_tokens = [];
+        if(nccNode){
+        possible_tokens = nccNode.items.map(function(d){
+            if(d.parentToken.id === ownersToken.id
+               && d.wme.id === ownersWme.id){
+                return d;
+            }}).filter(function(d){if(d) return true;});
         }
-        //else no owner:
-        partner.newResultbuffer.unshift(newToken);        
+        if(possible_tokens.length > 0){
+            //the necessary owner exists in the nccNode,
+            //so update it:
+            possible_tokens[0].nccResults.unshift(newToken);
+            newToken.parent = possible_tokens[0];
+            deleteDescendentsOfToken(possible_tokens[0]);
+        }else{        
+            //else no owner:
+            partner.newResultBuffer.unshift(newToken);
+        }
     };
 
     //Remove/retract a wme from the network
@@ -398,9 +418,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         var currJoinResult = nJR;
         //if the negation clears, activate it
         if(currJoinResult.owner.negJoinResults.length === 0){
-            currJoinResult.owner.node.children.forEach(function(child){
+            currJoinResult.owner.owningNode.children.forEach(function(child){
                 //activate the token for all its owners children
-                leftActivate(currChild,currJoinResult.owner);
+                leftActivate(child,currJoinResult.owner);
             });
         }
     };
@@ -427,12 +447,12 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         removeNegJoinResultsForToken(token);
 
-        ifNCCConditionOwnsToken(token);
-        ifNCCPartnerNodeOwnsToken(token);
+        cleanupNCCResultsInToken(token);
+        cleanupNCCPartnerOwnedToken(token);
         ifNCCPartnerNodeActivateIfAppropriate(token);
         
         //dealloc token:
-        console.log("Dealloc'd Token:",token);
+        //console.log("Dealloc'd Token:",token);
     };
     //finish of delete token.
 
@@ -481,6 +501,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     var removeTokenFromParentToken = function(token){
         //Remove the token from it's parent's child list
+        if(token.parentToken === undefined) return;
         var index = token.parentToken.children.map(function(d){return d.id;}).indexOf(token.id);
         if(index !== -1){
             token.parentToken.children.splice(index,1);
@@ -489,24 +510,27 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     
     //Now Essentially switch on: BetaMemory, NegativeNode,
     //NCCNode, and NCCPartnerNode
-
+    
     var ifEmptyBetaMemoryUnlink = function(node){
         //BETAMEMORY
-        if(node.isMemoryNode){
+        if(node.isBetaMemory){
             //and that betaMemory has no other items
             if(node.items.length === 0){
                 //for all the node's children
                 node.children.forEach(function(jn){
                     if(jn.isJoinNode === undefined){return;}
-                    var index = jn.alphaMemory.map(function(d){return d.id;}).indexOf(jn.id);
+                    var index = jn.alphaMemory.children.map(function(d){return d.id;}).indexOf(jn.id);
                     if(index !== -1){
-                        var removed = currChild.alphaMemory.children.splice(index,1);
+                        var removed = jn.alphaMemory.children.splice(index,1);
                         //push it in the unlinked children list
-                        currChild.alphaMemory.unlinkedChildren.push(removed[0]);
+                        jn.alphaMemory.unlinkedChildren.push(removed[0]);
                     }
                 });
             }
-        }
+            return true;
+        }else{
+            return false;
+        }        
     };
 
     var ifEmptyNegNodeUnlink = function(node){
@@ -514,7 +538,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             //with elements
             if(node.items.length === 0){
                 //unlink alpha memory
-                var index = node.alphaMemory.children.map(function(d){return d.id;}).indexOf(tokenId);
+                var index = node.alphaMemory.children.map(function(d){return d.id;}).indexOf(node.id);
                 var removed = node.alphaMemory.children.splice(index,1);
                 node.alphaMemory.unlinkedChildren.push(removed[0]);
             }
@@ -522,33 +546,48 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
 
-    var ifNCCConditionOwnsToken = function(token){
+    var cleanupNCCResultsInToken = function(token){
         //NCCNODE
         if(token.owningNode.isAnNCCNode){
+            //for all the nccResult tokens, delete them
             token.nccResults.forEach(function(nccR){
-                var token = nccR;
-                //remove from wme
-                var index = nccR.wme.tokens.map(function(d){return d.id;}).indexOf(token.id);
-                if(index !== -1){
-                    nccR.wme.tokens.splice(index,1);
+                //remove the nccR token from its linked wme
+                if(nccR.wme){
+                    var index = nccR.wme.tokens.map(function(d){return d.id;}).indexOf(nccR.id);
+                    if(index !== -1){
+                        nccR.wme.tokens.splice(index,1);
+                    }
                 }
-                index = nccR.parent.children.map(function(t){return t.id;}).indexOf(token.id);
-                if(index !== -1);{
-                    nccR.parent.children.splice(index,1);
+                if(nccR.parent){
+                    //remove the token from it's parent
+                    index = nccR.parent.children.map(function(t){return t.id;}).indexOf(nccR.id);
+                    if(index !== -1);{
+                        nccR.parent.children.splice(index,1);
+                    }
                 }
             });
             //clear the nccResults
             token.nccResults = [];
+            return true;
+        }else{
+            return false;
         }
     };
 
-    var ifNCCPartnerNodeOwnsToken = function(token){
+    var cleanupNCCPartnerOwnedToken = function(token){
         //NCCPARTNERNODE
-        if(token.owningNode.isAnNCCPartnerNode){
+        if(token.owningNode
+           && token.owningNode.isAnNCCPartnerNode
+           && token.parentToken){
             //remove from owner.nccResults:
             var index = token.parentToken.nccResults.map(function(d){return d.id;}).indexOf(token.id);
-            token.parentToken.nccResults.splice(index,1);
-        };
+            if(index !== -1){
+                token.parentToken.nccResults.splice(index,1);
+            }
+            return true;
+        }else{
+            return false;
+        }
     };
 
     var ifNCCPartnerNodeActivateIfAppropriate = function(token){
@@ -760,9 +799,12 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
 
-    var buildOrShareNCCNodes = function(parent,conditions,rootAlpha){
+    var buildOrShareNCCNodes = function(parent,condition,rootAlpha){
+        if(condition.isNCCCondition === undefined){
+            throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
+        }
         //build a network for the conditions
-        var bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,conditions,rootAlpha);
+        var bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,condition.conditions,rootAlpha);
         //find an existing NCCNode with partner to use
         for(var i in parent.children){
             var child = parent.children[i];
@@ -771,8 +813,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }
         //else: build NCC and Partner nodes
-        var newNCC = new DataStructures.NegatedConjunctiveConditionNode(parent);
-        var newNCCPartner = new DataStructures.NegConjuConPartnerNode(bottomOfSubNetwork,conditions.length);
+        var newNCC = new DataStructures.NCCNode(parent);
+        var newNCCPartner = new DataStructures.NCCPartnerNode(bottomOfSubNetwork,condition.conditions.length);
         newNCC.partner = newNCCPartner;
         newNCCPartner.nccNode = newNCC;
         //update NCC
@@ -800,6 +842,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }else if(condition.isNCCCondition){
                 currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha);
             }else{
+                console.error("Problematic Condition:",condition);
                 throw new Error("Unrecognised condition type");
             }
         }
@@ -830,6 +873,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         //parameters
         if(joinTestResults && wme){
             token = new DataStructures.Token(token,wme,node,joinTestResults);
+            //owning node is the node going into, rather than coming out of
         }
         //Activate the node:
         //Essentially a switch of:
@@ -977,8 +1021,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "ifEmptyNegNodeUnlink":ifEmptyNegNodeUnlink,
         "removeNegJoinResultsForToken":removeNegJoinResultsForToken,
 
-        "ifNCCConditionOwnsToken":ifNCCConditionOwnsToken,
-        "ifNCCPartnerNodeOwnsToken":ifNCCPartnerNodeOwnsToken,
+        "cleanupNCCResultsInToken": cleanupNCCResultsInToken,
+        "cleanupNCCPartnerOwnedToken":cleanupNCCPartnerOwnedToken,
         "ifNCCPartnerNodeActivateIfAppropriate":ifNCCPartnerNodeActivateIfAppropriate,        
 
         "deleteTokenAndDescendents":deleteTokenAndDescendents,
@@ -999,6 +1043,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "joinNodeRightActivation":joinNodeRightActivation,
         "negativeNodeLeftActivation":negativeNodeLeftActivation,
         "negativeNodeRightActivation":negativeNodeRightActivation,
+        "nccNodeLeftActivation" : nccNodeLeftActivation,
+        "nccPartnerNodeLeftActivation" : nccPartnerNodeLeftActivation,
         "leftActivate"          : leftActivate,
         "rightActivate"         : rightActivate,
         //Build Functions::
@@ -1008,6 +1054,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         "buildOrShareJoinNode"        : buildOrShareJoinNode,
         "buildOrShareNegativeNode"    : buildOrShareNegativeNode,
         "buildOrShareNetworkForConditions": buildOrShareNetworkForConditions,
+        "buildOrShareNCCNodes"        : buildOrShareNCCNodes,
         //Other:
         "updateNewNodeWithMatchesFromAbove" : updateNewNodeWithMatchesFromAbove,
         "findNearestAncestorWithAlphaMemory":findNearestAncestorWithAlphaMemory,

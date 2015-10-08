@@ -31,9 +31,9 @@ define([],function(){
         this.parentToken = parentToken; //ie:owner
         this.wme = wme;
         this.owningNode = owningNode;
-        this.children = [];
-        this.negJoinResults = [];
-        this.nccResults = [];
+        this.children = []; //list of nodes
+        this.negJoinResults = [];//list of NegativeJoinResults
+        this.nccResults = []; //list of Token
         if(this.parentToken){
             this.parentToken.children.unshift(this);
         }
@@ -66,6 +66,8 @@ define([],function(){
         this.field = testWmeField;
         this.operator = operator;
         this.value = testValue;
+        this.id = startingId;
+        startingId++;
     };
     
     //condition:
@@ -95,8 +97,25 @@ define([],function(){
             if(a[0] > b[0]) return 1;
             return 0;
         });
+        this.id = startingId;
+        startingId++;
     };
 
+
+    //pretty much just wraps an array of conditions
+    var NCCCondition = function(conditions){
+        this.isNCCCondition = true;
+        this.conditions = [];
+        for(var i = 0; i < conditions.length; i++){
+            //conditions should be in array form
+            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
+            this.conditions.push(cond);
+        }
+        this.id = startingId;
+        startingId++;
+    };
+    
+    
 
     //The rule/production that stores conditions and
     //associated action
@@ -117,12 +136,14 @@ define([],function(){
                 }
             }
         }
+        this.id = startingId;
+        startingId++;
     };
 
  
     //Utility storage of wme and its alphaMemory together
     //used in alphamemory and WME
-    var ItemInAlphaMemory = function(wme,alphaMem){
+    var AlphaMemoryItem = function(wme,alphaMem){
         this.wme = wme;
         this.alphaMemory = alphaMem;
         this.id = startingId;
@@ -263,17 +284,10 @@ define([],function(){
         this.nearestAncestor = null;
     };
 
-    var NCCCondition = function(conditions){
-        this.isNCCCondition = true;
-        this.conditions = [];
-        for(var i in conditions){
-            var cond = new Condition(conditions[i][0],conditions[i][1],conditions[i][2]);
-            this.conditions.push(cond);
-        }
-    };
-    
     //NCC : gates token progression based on a subnetwork
-    var NegatedConjunctiveConditionNode = function(parent){
+    //SEE ALSO: NCCCondition
+    //old: NegatedConjunctiveConditionNode
+    var NCCNode = function(parent){
         ReteNode.call(this,parent);
         this.isAnNCCNode = true;
         this.items = [];
@@ -282,7 +296,9 @@ define([],function(){
 
 
     //The partner of the NCC, connects to the subnetwork
-    var NegConjuConPartnerNode = function(parent,num){
+    //old NegConjuConPartnerNode
+    //var NCCPartner
+    var NCCPartnerNode = function(parent,num){
         ReteNode.call(this,parent);
         this.isAnNCCPartnerNode = true;
         this.nccNode = null;
@@ -307,15 +323,15 @@ define([],function(){
         "WME"              : WME,
         "Token"            : Token,
         "AlphaMemory"      : AlphaMemory,
-        "ItemInAlphaMemory": ItemInAlphaMemory,
+        "AlphaMemoryItem"  : AlphaMemoryItem,
         "AlphaNode"        : AlphaNode,
         "ReteNode"         : ReteNode,
         "BetaMemory"       : BetaMemory,
         "JoinNode"         : JoinNode,
         "NegativeJoinResult":NegativeJoinResult,
         "NegativeNode"     : NegativeNode,
-        "NegatedConjunctiveConditionNode":NegatedConjunctiveConditionNode,
-        "NegConjuConPartnerNode":NegConjuConPartnerNode,
+        "NCCNode"          : NCCNode,
+        "NCCPartnerNode"   : NCCPartnerNode ,
         "Test"             : ConstantTest,
         "ConstantTest"     : ConstantTest,
         "Condition"        : Condition,

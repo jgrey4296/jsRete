@@ -580,7 +580,7 @@ exports.ConstructorExamples = {
             id: "dummy",
             children : [],
         };
-        var nccNode = new ds.NegatedConjunctiveConditionNode(dummyParent);
+        var nccNode = new ds.NCCNode(dummyParent);
 
         test.ok(nccNode.isAnNCCNode === true);
         test.ok(nccNode.items.length === 0);
@@ -600,7 +600,7 @@ exports.ConstructorExamples = {
         };
         //using 5 as a random number of conjunctions in this
         //made up ncc.
-        var nccPartner = new ds.NegConjuConPartnerNode(dummyParent,5);
+        var nccPartner = new ds.NCCPartnerNode(dummyParent,5);
 
         test.ok(nccPartner.isAnNCCPartnerNode === true);
         test.ok(nccPartner.parent.id === dummyParent.id);
