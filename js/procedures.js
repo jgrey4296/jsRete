@@ -596,8 +596,10 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
                 token.owningNode.nccNode.children.forEach(function(d){
                     leftActivate(d,token.parentToken);
                 });
+                return true;
             }
         }
+        return false;
     };
 
 

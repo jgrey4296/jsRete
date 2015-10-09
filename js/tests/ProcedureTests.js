@@ -2114,15 +2114,44 @@ exports.procedureTests = {
         test.done();
     },
 
-    testIfNCCPartnerNodeActivateIfAppropriate : function(test){
+    testIfNCCPartnerNodeActivateIfAppropriate_skip : function(test){
+        var parent = new ds.BetaMemory();
         //create a token
+        var parentToken = new ds.Token();
+        var token = new ds.Token(parentToken);
         //linked to an nccpartnernode
+        var nccNode = new ds.NCCNode(parent);
+        var partner = new ds.NCCPartnerNode(parent,1);
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+        token.owningNode = partner;
+        token.parentToken.nccResults.push(token);
         //call
+        var ret = p.ifNCCPartnerNodeActivateIfAppropriate(token);
         //check children are activated appropriately
-        test.ok(false);
+        test.ok(ret === false);
         test.done();
     },
 
+
+    testIfNCCPartnerNodeActivateIfAppropriate : function(test){
+        var parent = new ds.BetaMemory();
+        //create a token
+        var parentToken = new ds.Token();
+        var token = new ds.Token(parentToken);
+        //linked to an nccpartnernode
+        var nccNode = new ds.NCCNode(parent);
+        var partner = new ds.NCCPartnerNode(parent,1);
+        nccNode.partner = partner;
+        partner.nccNode = nccNode;
+        token.owningNode = partner;
+        //call
+        var ret = p.ifNCCPartnerNodeActivateIfAppropriate(token);
+        //check children are activated appropriately
+        test.ok(ret === true);
+        test.done();
+    },
+    
     testDeleteTokenAndDescendents : function(test){
         //create chain of tokens
         //call
