@@ -477,8 +477,9 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     //Now the utility functions for deleteing token:
     var removeTokenFromNode = function(token){
         //Deal with if the owning node is NOT an NCC
-        if(token.owningNode.isAnNCCPartnerNode === undefined
-          && token.owningNode.isMemoryNode){
+        if(token.owningNode
+           && token.owningNode.isAnNCCPartnerNode === undefined
+           && token.owningNode.isMemoryNode){
             //by removing the token as an element in that node
             var index = token.owningNode.items.map(function(d){
                 return d.id;
@@ -501,10 +502,11 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     var removeTokenFromParentToken = function(token){
         //Remove the token from it's parent's child list
-        if(token.parentToken === undefined) return;
-        var index = token.parentToken.children.map(function(d){return d.id;}).indexOf(token.id);
-        if(index !== -1){
-            token.parentToken.children.splice(index,1);
+        if(token && token.parentToken){
+            var index = token.parentToken.children.map(function(d){return d.id;}).indexOf(token.id);
+            if(index !== -1){
+                token.parentToken.children.splice(index,1);
+            }
         }
     };
     
@@ -513,7 +515,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     
     var ifEmptyBetaMemoryUnlink = function(node){
         //BETAMEMORY
-        if(node.isBetaMemory){
+        if(node && node.isBetaMemory){
             //and that betaMemory has no other items
             if(node.items.length === 0){
                 //for all the node's children
@@ -534,7 +536,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     var ifEmptyNegNodeUnlink = function(node){
-        if(node.isNegativeNode){
+        if(node && node.isNegativeNode){
             //with elements
             if(node.items.length === 0){
                 //unlink alpha memory
@@ -548,7 +550,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
     var cleanupNCCResultsInToken = function(token){
         //NCCNODE
-        if(token.owningNode.isAnNCCNode){
+        if(token && token.owningNode && token.owningNode.isAnNCCNode){
             //for all the nccResult tokens, delete them
             token.nccResults.forEach(function(nccR){
                 //remove the nccR token from its linked wme
@@ -591,7 +593,8 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     var ifNCCPartnerNodeActivateIfAppropriate = function(token){
-        if(token.owningNode.isAnNCCPartnerNode){
+        if(token && token.owningNode
+           && token.owningNode.isAnNCCPartnerNode){
             if(token.parentToken.nccResults.length === 0){
                 token.owningNode.nccNode.children.forEach(function(d){
                     leftActivate(d,token.parentToken);
@@ -936,7 +939,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }else if(parent.isAnNCCNode){
             for(var i in parent.items){
-                var token = parent.items;
+                var token = parent.items[i];
                 if(token.nccResults.length === 0){
                     leftActivate(newNode,token);
                 }
@@ -950,10 +953,18 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
         deleteNodeAndAnyUnusedAncestors(actionNode);
     };
 
+    /*
+      Do a number of things:
+      clean up tokens stored in a node
+      remove any reference to the node from a connected alpha
+      remove any reference to the node from a parent
+
+      +: call recursively on any parent that has no children
+     */
     var deleteNodeAndAnyUnusedAncestors = function(node){
         //if NCC, delete partner to
         if(node.isAnNCCNode){
-            deleteNodeAnAnyUnusedAncestors(node.partner);
+            deleteNodeAndAnyUnusedAncestors(node.partner);
         }
         
         //clean up tokens
@@ -968,34 +979,40 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
             }
         }
 
-        //clean up alphamemory
-        if(node.isJoinNode || node.isNegativeNode){
+        //clean up any associated alphamemory
+        if(node.isJoinNode || node.isNegativeNode && node.alphaMemory){
             var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
             if(index > -1){
                 node.alphaMemory.children.splice(index,1);
+                node.alphaMemory.referenceCount--;
             }
-            node.alphaMemory.referenceCount--;
             if(node.alphaMemory.referenceCount === 0){
-                deleteAlphaMemory(node.alphaMemory);
+                //TODO: WRITE THIS:
+                //deleteAlphaMemory(node.alphaMemory);
             }
         }
         
-        //clean up parent
-        if(node.alphaMemory){
-            var index = node.parent.children.map(function(d){ return d.id; }).indexOf(node.id);
-            if(index > -1){
-                node.parent.children.splice(index,1);
-            }
-        }
-        if(node.isJoinNode){
+        //remove the node from its parent
+        if(node.parent){
+            //check the child list:
             var index = node.parent.children.map(function(d){
                 return d.id;
             }).indexOf(node.id);
-            node.parent.children.splice(index,1);
-            if(node.parent.allChildren.length === 0){
-                deleteNodeAndAnyUnusedAncestors(node.parent);
+            if(index !== -1){                            
+                node.parent.children.splice(index,1);
+            }else{
+                //check the unlinked children list:
+                index = node.parent.unlinkedChildren.map(function(d){ return d.id;}).indexOf(node.id);                 
+                if(index !== -1){
+                    node.parent.unlinkedChildren.splice(index,1);
+                }
             }
-        }else if(node.parent.children.length === 0){
+        }
+
+        //delete parent node if its got no children
+        if(node.parent && node.parent.children.length === 0
+           && node.parent.unlinkedChildren
+           && node.parent.unlinkedChildren.length === 0){
             deleteNodeAndAnyUnusedAncestors(node.parent);
         }
         //deallocate memory for none
@@ -1029,7 +1046,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
 
         "deleteTokenAndDescendents":deleteTokenAndDescendents,
         "deleteDescendentsOfToken":deleteDescendentsOfToken,
-        
+        "deleteNodeAndAnyUnusedAncestors":deleteNodeAndAnyUnusedAncestors,
         
         //Comparisons:
         "compareConstantNodeToTest"     : compareConstantNodeToTest,

@@ -2153,28 +2153,81 @@ exports.procedureTests = {
     },
     
     testDeleteTokenAndDescendents : function(test){
+        var awme = new ds.WME({a:"a wme"});
+        var aNode = new ds.BetaMemory();
         //create chain of tokens
+        var t0 = new ds.Token();
+        var t1 = new ds.Token(t0,awme,aNode);
+        p.betaMemoryActivation(aNode,t1);
+        var t2 = new ds.Token(t1);
+        var t2b = new ds.Token(t1);
+        var t3 = new ds.Token(t2);
+
+        test.ok(t1.children.length === 2);
+        test.ok(t1.owningNode.id === aNode.id);
+        test.ok(t0.children.length === 1);
+        test.ok(awme.tokens.length === 1);
+        test.ok(t1.parentToken.id === t0.id);
+        test.ok(aNode.items.length === 2);
+        
         //call
+        //delete t1. t2-3 should go,
+        //t0 should not have any children
+        p.deleteTokenAndDescendents(t1);
         //check deleted
-        test.ok(false);
+        test.ok(t0.children.length === 0);
+        test.ok(t1.children.length === 0);
+        test.ok(awme.tokens.length === 0);
+        test.ok(aNode.items.length === 1);
+        
         test.done();
     },
 
     testDeleteDescendentsOfToken : function(test){
+        var awme = new ds.WME({a:"a wme"});
+        var aNode = new ds.BetaMemory();
         //create chain of tokens
+        var t0 = new ds.Token();
+        var t1 = new ds.Token(t0,awme,aNode);
+        p.betaMemoryActivation(aNode,t1);
+        var t2 = new ds.Token(t1);
+        var t2b = new ds.Token(t1);
+        var t3 = new ds.Token(t2);
+
+        test.ok(t1.children.length === 2);
+        test.ok(t1.owningNode.id === aNode.id);
+        test.ok(t0.children.length === 1);
+        test.ok(awme.tokens.length === 1);
+        test.ok(t1.parentToken.id === t0.id);
+        test.ok(aNode.items.length === 2);
+        
         //call
+        //delete t1. t2-3 should go,
+        //t0 should not have any children
+        p.deleteDescendentsOfToken(t1);
         //check deleted
-        //check original token remains
-        test.ok(false);
+        test.ok(t0.children.length === 1);
+        test.ok(t1.children.length === 0);
+        test.ok(awme.tokens.length === 1);
+        test.ok(aNode.items.length === 2);
+        
         test.done();
     },
 
     testDeleteAllTokensForWME : function(test){
         //create a wme
+        var aWME = new ds.WME({a:"wme"});
         //link it with some tokens
+        var t1 = new ds.Token(null,aWME);
+        var t2 = new ds.Token(null,aWME);
+        var t3 = new ds.Token(null,aWME);
+
+        test.ok(aWME.tokens.length === 3);
         //call
+        p.deleteAllTokensForWME(aWME);
         //check all tokens are unlinked from wme
-        test.ok(false);
+        test.ok(aWME.tokens.length === 0);
+        
         test.done();
     },
 
@@ -2356,23 +2409,66 @@ exports.procedureTests = {
 
     //TODO:test unnwmfa on an nccnode...
     testUNNWMFA_on_nccNode : function(test){
-        test.ok(false);
+        var bm = new ds.BetaMemory();
+        //create an nccNode
+        var nccNode = new ds.NCCNode(bm);
+        var postNCCbm = new ds.BetaMemory(nccNode);
+        //store a couple of tokens
+        var t0 = new ds.Token();
+        var t1 = new ds.Token();
+        var t2 = new ds.Token();
+        nccNode.items =[t0,t1,t2];
+        
+        //block some of them
+        var blockToken = new ds.Token();
+        t1.nccResults.push(blockToken);
+
+        test.ok(nccNode.items.length === 3);
+        
+        //call the update
+        p.updateNewNodeWithMatchesFromAbove(postNCCbm);
+        
+        //check that only the unblocked tokens were activated
+        test.ok(postNCCbm.items.length === 2);
+        test.ok(postNCCbm.items[0].id === t2.id);
+        test.ok(postNCCbm.items[1].id === t0.id);
         test.done();
     },
     
 
     //--------------------
-    //delete node and any unused ancestors
+    //delete node and any unused ancestors tests:
+    //--------------------
+    
+    //nccnode with partner test
+    //beta memory / partner node token deletion
+    //join node /negative node alpha memory cleanup
+    //alpha memory cleanup
+    //join node cleanup
+    
     deleteNodeAndAncestorsTest : function(test){
-        //create a network of a few rules
+        //create a pair of nodes
+        var bm = new ds.BetaMemory();
+        var bm2 = new ds.BetaMemory(bm);
+        //add some tokens to it:
+        var t0 = new ds.Token(null,null,bm2);
+        var t1 = new ds.Token(null,null,bm2);
+        p.betaMemoryActivation(bm2,t0);
+        p.betaMemoryActivation(bm2,t1);
 
-        //select a node to delete
-
+        test.ok(bm.children.length === 1);
+        test.ok(bm2.items.length === 2);
+        test.ok(t0.owningNode.id === bm2.id);
+        test.ok(t1.owningNode.id === bm2.id);
+        
         //delete it
+        p.deleteNodeAndAnyUnusedAncestors(bm2);
+
+        //check:
+        test.ok(bm2.items.length === 0);
+        test.ok(bm.children.length === 0);
 
 
-        //check it was deleted, and any that were unused ancestors of it
-        test.ok(false);
         test.done();
     },
 
