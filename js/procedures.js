@@ -954,6 +954,7 @@ define(['./dataStructures','./comparisonOperators'],function(DataStructures,Cons
     };
 
     /*
+      Removes DOWNWARD links, but leaves UPWARD links intact
       Do a number of things:
       clean up tokens stored in a node
       remove any reference to the node from a connected alpha

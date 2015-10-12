@@ -2467,8 +2467,6 @@ exports.procedureTests = {
         //check:
         test.ok(bm2.items.length === 0);
         test.ok(bm.children.length === 0);
-
-
         test.done();
     },
 
@@ -2477,12 +2475,67 @@ exports.procedureTests = {
     //remove rule
     removeRuleTest : function(test){
         //create a network of a few rules
+        var reteNet = new ds.ReteNet();
+        var testValue = 0;
+        var aRule = new ds.Rule("simpleRule",
+                                [//conditions
+                                    [//c1
+                                        [//tests
+                                            //test1
+                                            ['first','EQ',5]
+                                        ],//end of tests
+                                        //bindings and neg?
+                                        [],false
+                                    ]//end of c1
+                                ],//end of conditions
+                                //the Action
+                                function(){
+                                    testValue += 5;
+                                });
 
+        var aSecondRule = new ds.Rule("secondRule",
+                                        [//conditions
+                                            [//c1
+                                                [//tests
+                                                    //test1
+                                                    ['first','EQ',10]
+                                                ],//end tests
+                                                [],false
+                                            ]
+                                        ],
+                                        function(){
+                                            testValue += 100;
+                                        });
+        
+        var returnedActionNode = p.addRule(aRule,reteNet);
+        var secondActionNode = p.addRule(aSecondRule,reteNet);
+        test.ok(returnedActionNode.isActionNode === true);
+        test.ok(secondActionNode.isActionNode === true);
+
+        //assert a wme
+        var wmeId1 = p.addWME({first:5,second:"the first wme"},reteNet);
+        test.ok(testValue === 5);
+        //assert a second wme
+        var wmeId2 = p.addWME({first:10,second:"the second wme"},reteNet);
+        test.ok(testValue === 105);
+
+        test.ok(wmeId1 !== wmeId2);
+        test.ok(returnedActionNode.parent.children.length === 1);
+        test.ok(secondActionNode.parent.children.length === 1);
+        
         //delete one rule
+        p.removeRule(returnedActionNode);
 
-        //check the rest survived
+        test.ok(returnedActionNode.parent.children.length === 0);
+        test.ok(secondActionNode.parent.children.length === 1);
 
-        test.ok(false);
+        //check surviving rules:
+        var wmeId3 = p.addWME({first:5,second:"third wme"},reteNet);
+        //The rule shouldnt fire:
+        test.ok(testValue !== 110);
+        //but this one should:
+        var wmeId4 = p.addWME({first:10,second:"fourth wme"},reteNet);
+        test.ok(testValue === 205);
         test.done();
     },
 
