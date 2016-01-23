@@ -103,7 +103,7 @@ define(['require','./ReteDataStructures','./ReteComparisonOperators','./ReteUtil
     var joinNodeLeftActivation = function(node,token){
         //If necessary, relink or unlink the
         //parent betamemory or alphamemory
-        if(node.parent.items && node.parent.items.length > 0){
+        if(node.parent.items && node.parent.items.length === 1){
             ReteUtil.relinkToAlphaMemory(node);
             if(node.alphaMemory.items.length === 0){
                 //unlink beta memory if alphamemory is empty
@@ -164,22 +164,23 @@ define(['require','./ReteDataStructures','./ReteComparisonOperators','./ReteUtil
        @purpose given a new token, activates any stored actions necessary
      */
     var activateActionNode = function(actionNode,token){
-        //get the action it embodies:
-        var action = actionNode.action;
-        //get the type of function its going to call:
-        if(PossibleActions[action.tags.actionType] === undefined){
-            throw new Error("Unrecognised action type");
-        }
-        //bind the context of the action
-        var func = _.bind(PossibleActions[action.tags.actionType],action);
+        //get the actions the node embodies:
+        var boundActionFunctions = actionNode.boundActions,
+            //get the individual new proposed actions
+            newProposedActions = boundActionFunctions.map(function(d){
+               return d(token,actionNode.reteNet);
+            }),
+            newProposedActionIds = newProposedActions.map(function(d){
+                return d.id;
+            });
         
-        //call the action with the token
-        var newProposedAction = func(token,actionNode.reteNet);
-        
-        //store the newQueuedAction in the reteNet.activatedRules
+        //store the proposed actions in the reteNet.potential actions
+        //and also tie all the actions that fire together by their ids
         //ie: {action:"assert",payload:wme}
-        actionNode.reteNet.potentialActions[newProposedAction.id] = newProposedAction;
-
+        newProposedActions.forEach(function(d){
+            d.parallelActions = newProposedActionIds;
+            actionNode.reteNet.potentialActions[d.id] = d;
+        });
     };
 
     

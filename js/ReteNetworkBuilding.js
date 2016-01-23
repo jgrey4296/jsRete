@@ -137,7 +137,7 @@ define(['./ReteDataStructures','./ReteUtilities','./ReteActivations','underscore
         
         //see if theres a join node to use already
         var allChildren = parent.children.concat(parent.unlinkedChildren);
-        for(var i in allChildren){
+        for(var i = 0; i < allChildren.length; i++){
             var child = allChildren[i];
             if(child.isJoinNode && child.alphaMemory.id === alphaMemory.id && ReteUtil.compareJoinTests(child.tests,tests)){
                 //return it

@@ -186,22 +186,16 @@ define(imports,function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO
             //build network with a dummy node for the parent
             finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,conditions,reteNet.rootAlpha,allNodes,reteNet),
             //Build the actions that are triggered by the rule:
-            actionNodes = _.keys(rule.actions).map(function(actionId){
+            actionDescriptions = _.keys(rule.actions).map(function(actionId){
                 console.log("Adding action for:",actionId);
                 //todo: protect against duplicates here?
-                var actionDescription = allNodes[actionId];
-                return new RDS.ActionNode(finalBetaMemory,actionDescription,rule.name,reteNet);
-            });
+                return allNodes[actionId];
+            }),
+            ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,rule.name,reteNet);
 
-        //initialise the action storage for this rule
-        if(reteNet.actions[rule.id] === undefined){
-            reteNet.actions[rule.id] = [];
-        }
-        //update node with matches
-        actionNodes.forEach(function(d){
-            reteNet.actions[rule.id].push(d);
-        });
-        return actionNodes;
+        reteNet.actions[rule.id] = ruleAction;
+
+        return ruleAction;
     };
 
     /**

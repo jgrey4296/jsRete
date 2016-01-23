@@ -2,7 +2,7 @@ if(typeof define !== 'function'){
     var define = require('amdefine')(module);
 }
 
-define(['./ReteDataStructures','underscore','./ReteUtilities'],function(RDS,_,ReteUtil){
+define(['./ReteDataStructures','underscore','./ReteUtilities','./ReteComparisonOperators'],function(RDS,_,ReteUtil,ReteComparisonOps){
     "use strict";
     /**
        @function performJoinTests
@@ -18,27 +18,44 @@ define(['./ReteDataStructures','underscore','./ReteUtilities'],function(RDS,_,Re
         });
 
         var successState = true;
-        
-        //add new bindings:
-        joinNode.tests.forEach(function(test){
-            var newValue = null;
-            if(test[1] === "#id"){
-                newValue = wme.id;
+
+        try{
+            //add new bindings:
+            joinNode.tests.forEach(function(test){
+                var newValue = null;
+                //retrieve the value
+                if(test[1] === "#id"){
+                    newValue = wme.id;
+                }else{
+                    newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1][0]);
+                }
+                
+                //compare the value for each specified binding test
+                var bindingComparisons = test[1][1];
+                
+                //Compare using any defined binding tests
+                bindingComparisons.forEach(function(d){
+                    var comparator = ReteComparisonOps[d[0]];
+                    //if it fails, fail the test
+                    if(!comparator(newValue,newBindings[d[1]])){
+                        throw new Error("Test failed");
+                    }
+                });
+                
+                if(newBindings[test[0]] === undefined){
+                    newBindings[test[0]] = newValue;
+                }
+                if(newBindings[test[0]] !== newValue){
+                    throw new Error("Test failed");
+                }
+            });
+            
+            if(successState){
+                return newBindings;
             }else{
-                newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1]);
+                throw new Error("Test failed");
             }
-
-            if(newBindings[test[0]] === undefined){
-                newBindings[test[0]] = newValue;
-            }
-            if(newBindings[test[0]] !== newValue){
-                successState = false;
-            }
-        });
-
-        if(successState){
-            return newBindings;
-        }else{
+        }catch(e){
             return false;
         }
     };

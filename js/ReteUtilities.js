@@ -2,8 +2,10 @@ if(typeof define !== 'function'){
     var define = require('amdefine')(module);
 }
 
-define(['./ReteDataStructures','underscore'],function(RDS,_){
+define(['require','underscore'],function(require,_){
     "use strict";
+
+
     
     /**
        @function relinkToAlphaMemory
@@ -181,6 +183,34 @@ define(['./ReteDataStructures','underscore'],function(RDS,_){
         return false;
     };
 
+
+    var altCompareJoinTests = function(firstTestSet,secondTestSet){
+        try{
+            //compare lengths
+            if(firstTestSet.length !== secondTestSet.length) throw "unequal lengths";
+            for(var i = 0; i < firstTestSet.length; i++){
+                var fTest = firstTestSet[i],
+                    sTest = secondTestSet[i];
+                //compare the bound names
+                if(fTest[0] !== sTest[0]) throw "different bound names";
+            
+                //compare the source names
+                if(fTest[1][0] !== sTest[1][0]) throw "different source names";
+            
+                //compare the bind tests
+                if(fTest[1][1].length !== sTest[1][1].length) throw "different binding tests length";
+                for(var j = 0; fTest[1][1].length; j++){
+                    if(fTest[1][1][j][0] !== sTest[1][1][j][0]) throw "different comp operator";
+                    if(fTest[1][1][j][1] !== sTest[1][1][j][1]) throw "different comp value";
+                }
+            }
+        }catch(e){
+            return false;
+        }
+        return true;
+    };
+
+    
     /**
        @function findNearestAncestorWithAlphaMemory
        @recursive
@@ -287,7 +317,8 @@ define(['./ReteDataStructures','underscore'],function(RDS,_){
         "ifEmptyBetaMemoryUnlink" : ifEmptyBetaMemoryUnlink,
         "ifEmptyNegNodeUnlink" : ifEmptyNegNodeUnlink,
         "relinkToBetaMemory" : relinkToBetaMemory,
-        "compareJoinTests" : compareJoinTests,
+        "compareJoinTests" : altCompareJoinTests,
+        //"compareJoinTests" : compareJoinTests,
         "compareConstantNodeToTest" : compareConstantNodeToTest,
         "findNearestAncestorWithAlphaMemory" : findNearestAncestorWithAlphaMemory,
         "retrieveWMEValueFromDotString" : retrieveWMEValueFromDotString,

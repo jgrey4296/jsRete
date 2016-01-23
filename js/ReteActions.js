@@ -6,8 +6,9 @@ if(typeof define !== 'function'){
     var define = require('amdefine')(module);
 }
 
-define(['./ReteArithmeticActions','./ReteDataStructures','underscore','./ReteUtilities'],function(ArithmeticActions,RDS,_,ReteUtil){
+define(['require','./ReteArithmeticActions','underscore','./ReteUtilities'],function(require,ArithmeticActions,_,ReteUtil){
     "use strict";
+    var RDS;
     
     if(ArithmeticActions === undefined){
         throw new Error("Arithmetic Actions missing");
@@ -43,7 +44,8 @@ define(['./ReteArithmeticActions','./ReteDataStructures','underscore','./ReteUti
             if(v[0] === "#" || v[0] === "$"){
                 //cut off the #
                 memo[key] = token.bindings[v.slice(1)];
-            }else{
+            }
+            if(memo[key] === undefined || memo[key] === null){
                 memo[key] = v;
             }
             return memo;
@@ -66,6 +68,11 @@ define(['./ReteArithmeticActions','./ReteDataStructures','underscore','./ReteUti
 
         //Actually, DONT create the wme, just store the data for it
         //To be returned to activateActionNode
+        if(RDS === undefined){
+            console.log("Requiring RDS");
+            RDS = require('./ReteDataStructures');
+        }
+        
         var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
                                                 reteNet.currentTime+2,
@@ -95,6 +102,9 @@ define(['./ReteArithmeticActions','./ReteDataStructures','underscore','./ReteUti
             return _.contains(wmeIDs,wme.id);
         });
 
+        if(RDS === undefined){
+            RDS = require('./ReteDataStructures');
+        }
         //return the list of all retracted wmes:
         var proposedAction = new RDS.ProposedAction(reteNet,"retract", toRetract, token,
                                                 reteNet.currentTime,
@@ -111,6 +121,7 @@ define(['./ReteArithmeticActions','./ReteDataStructures','underscore','./ReteUti
     //propose action...
     //note: an actual proposed action will set action.tag.character to the char.id of
     //who is to do it
+
     
     return actions;
 });
