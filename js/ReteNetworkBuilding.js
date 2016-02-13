@@ -52,8 +52,9 @@ define(['./ReteDataStructures','./ReteUtilities','./ReteActivations','underscore
     var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
         
         //Todo: write this as a functional select/find
-        for(var i in parent.children){
-            var node = parent.children[i];
+        var children = _.values(parent.children);
+        for(var i = 0; i < children.length; i++){
+            var node = children[i];
             if(ReteUtil.compareConstantNodeToTest(node,constantTestSpec)){
                 return node;
             }
@@ -104,8 +105,9 @@ define(['./ReteDataStructures','./ReteUtilities','./ReteActivations','underscore
                 
         //if theres an available beta memory to use,
         //return that
-        for(var i in parent.children){
-            var child = parent.children[i];
+        var children = _.values(parent.children);
+        for(var i = 0; i < children.length; i++){
+            var child = children[i];
             if(child.isBetaMemory){
                 return child;
             }
@@ -175,10 +177,11 @@ define(['./ReteDataStructures','./ReteUtilities','./ReteActivations','underscore
        @purpose To reuse, or build a new, negative node
      */
     var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
-        if(!(tests instanceof Array)) tests = _.pairs(tests);
+        if(!(tests instanceof Array)) { tests = _.pairs(tests); }
         //see if theres an existing negative node to use
-        for(var i in parent.children){
-            var child = parent.children[i];
+        var children = _.values(parent.children);
+        for(var i = 0; i < children.length; i ++){
+            var child = children[i];
             if(child.isNegativeNode
                && child.alphaMemory.id === alphaMemory.id
                && ReteUtil.compareJoinTests(child.tests,tests)){
@@ -257,22 +260,25 @@ define(['./ReteDataStructures','./ReteUtilities','./ReteActivations','underscore
                 ReteActivations.leftActivate(newNode,parent.items[i]);
             }
         }else if(parent.isJoinNode){
-            var savedChildren = parent.children;
+            var savedChildren = parent.children,
+                items = _.values(parent.alphaMemory.items);
             parent.children = [newNode];
-            for(i in parent.alphaMemory.items){
-                var item = parent.alphaMemory.items[i];
+            for(i = 0; i < items.length; i++){
+                var item = items[i];
                 ReteActivations.rightActivate(parent,item.wme);
             }
             parent.children = savedChildren;
         }else if(parent.isNegativeNode){
-            for(i in parent.items){
-                token = parent.items[i];
+            var items = _.values(parent.items);
+            for(i = 0; i < items.length; i++){
+                token = items[i];
                 if(token.negJoinResults.length === 0){
                     ReteActivations.leftActivate(newNode,token);
                 }
             }
         }else if(parent.isAnNCCNode){
-            for(i in parent.items){
+            var items = _.values(parent.items);
+            for(i = 0; i < items.length; i++){
                 token = parent.items[i];
                 if(token.nccResults.length === 0){
                     ReteActivations.leftActivate(newNode,token);

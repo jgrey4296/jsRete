@@ -2,23 +2,13 @@
    @file ReteInterface
    @purpose Provides functions for operating on a retenet object
  */
-var imports = ["ReteDataStructures","ReteDeletion","ReteActivations","ReteNetworkBuilding","ReteComparisonOperators","ReteUtilities"];
 
 if(typeof define !== 'function'){
+    "use strict";
     var define = require('amdefine')(module);
-    imports = imports.map(function(d){
-        return "./"+d;
-    });
-    imports.push("underscore");
-}else{
-    imports = imports.map(function(d){
-        return "Rete/"+d;
-    });
-    imports.push("underscore");
 }
 
-//** @requires ReteDataStructures
-define(imports,function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO,ReteUtil,_){
+define(['./ReteDataStructures','./ReteDeletion','./ReteActivations','./ReteNetworkBuilding','./ReteComparisonOperators','./ReteUtilities','underscore'],function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO,ReteUtil,_){
     "use strict";
 
     
@@ -33,7 +23,7 @@ define(imports,function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO
     //Assert a wme RIGHT NOW
     var assertWME_Immediately = function(data,reteNet,retractionTime){
         console.log("ASSERTING:",data);
-        if(retractionTime === undefined) retractionTime = 0;
+        if(retractionTime === undefined) { retractionTime = 0; }
         if(data.isWME === undefined || data.id === undefined){
             data = new RDS.WME(data,reteNet.currentTime,retractionTime);
             addToRetractionList(reteNet,data,data.lifeTime[1]);
@@ -86,17 +76,17 @@ define(imports,function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO
     //Assert a wme into the network
     var assertWME_Later = function(wmeData,reteNet,assertionTime,retractionTime){
         //Create the wme:
-        if(assertionTime === undefined) assertionTime = reteNet.currentTime;
-        if(retractionTime === undefined) retractionTime = 0;
+        if(assertionTime === undefined) { assertionTime = reteNet.currentTime; }
+        if(retractionTime === undefined) { retractionTime = 0; }
         if(wmeData.isWME === undefined || wmeData.id === undefined){
             wmeData = new RDS.WME(wmeData,assertionTime,retractionTime);
-            reteNet.allWMEs[wme.id] = wme;
+            reteNet.allWMEs[wme.id] = wmeData;
         }
         //Add it to the input WME Buffer:
-        addToAssertionList(reteNet,wme);
-        addToRetractionList(reteNet,wme);
+        addToAssertionList(reteNet,wmeData);
+        addToRetractionList(reteNet,wmeData);
         //Store it as part of allWMEs:
-        return wme.id;
+        return wmeDataRete.id;
     };
     
     /**
@@ -207,8 +197,6 @@ define(imports,function(RDS,ReteDeletion,ReteActivations,ReteNetworkBuilding,RCO
         var invalidatedActions = ReteDeletion.deleteNodeAndAnyUnusedAncestors(actionNode);
         ReteUtil.cleanupInvalidatedActions(invalidatedActions);
     };
-
-
     
     var moduleInterface = {
         "ReteNet" : RDS.ReteNet,

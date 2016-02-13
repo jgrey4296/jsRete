@@ -120,8 +120,8 @@ define(['underscore','./ReteActions'],function(_,PossibleActions){
         this.data = data;
         //The lifetime of the wme. Asserted at time lifeTime[0],
         //retracted at time lifeTime[1]:
-        if(assertTime === undefined) assertTime = 0;
-        if(retractTime === undefined) retractTime = 0;
+        if(assertTime === undefined) { assertTime = 0; }
+        if(retractTime === undefined) { retractTime = 0; }
         this.lifeTime = [assertTime,retractTime];
         //Alpha memories the wme is part of
         this.alphaMemoryItems = [];
@@ -159,16 +159,14 @@ define(['underscore','./ReteActions'],function(_,PossibleActions){
         //then copy in new bindings
         this.bindings = {};
 
-        //this may not be needed
         if(this.parentToken && this.parentToken.bindings){
-            for(var i in this.parentToken.bindings){
-                this.bindings[i] = this.parentToken.bindings[i];
-            }            
+            _.keys(this.parentToken.bindings).forEach(function(d){
+                this.bindings[d] = this.parentToken.bindings[d];
+            },this);
         }
-        
-        for(var j in bindings){
-            this.bindings[j] = bindings[j];
-        }
+        _.keys(bindings).forEach(function(d){
+            this.bindings[d] = bindings[d];
+        },this);
 
         this.id = nextId;
         nextId++;        

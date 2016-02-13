@@ -4,8 +4,6 @@ if(typeof define !== 'function'){
 
 define(['require','./ReteDataStructures','./ReteUtilities','./ReteActivations'],function(require,RDS,ReteUtil,ReteActivations){
     "use strict";
-    //workaround for circular dependency
-    
     
     /**
        @function removeAlphaMemoryItemsForWME
@@ -216,7 +214,7 @@ define(['require','./ReteDataStructures','./ReteUtilities','./ReteActivations'],
     };
 
 
-        /**
+    /**
        @function deleteDescendentsOfToken
        @purpose simplification of removing children of a token, but not the token itself
        @utility

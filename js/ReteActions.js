@@ -42,7 +42,7 @@ define(['require','./ReteArithmeticActions','underscore','./ReteUtilities'],func
             var v = this.values[key];
             //if the value starts with # or $, look it up in the token list
             if(v[0] === "#" || v[0] === "$"){
-                //cut off the #
+                //cut off the # or $
                 memo[key] = token.bindings[v.slice(1)];
             }
             if(memo[key] === undefined || memo[key] === null){
@@ -50,23 +50,43 @@ define(['require','./ReteArithmeticActions','underscore','./ReteUtilities'],func
             }
             return memo;
         },{},this);
-
+        //If there are no 'values', create it:
+        if(newWMEData.values === undefined){
+            newWMEData.bindings = {};
+        }
+        
+        //Then copy in the bindings:
+        var newDataPlusBindings = _.reduce(_.keys(token.bindings),function(memo,key){
+            memo.bindings[key] = token.bindings[key];            
+            return memo;
+        },newWMEData);
+        
         //perform arithmetic:
         _.keys(this.arithmeticActions).forEach(function(key){
-            var newVal = Number(newWMEData[key]);
-            if(isNaN(newVal)) throw new Error("Arithmetic value should be convertable to a number");
+            var newVal = Number(newDataPlusBindings[key]);
+            if(isNaN(newVal)) { throw new Error("Arithmetic value should be convertable to a number"); }
             //look up the function:
             //because the representation form is: a : ["+", 5]
             var action = ArithmeticActions[this.arithmeticActions[key][0]];
-            newWMEData[key] = action(newVal,Number(this.arithmeticActions[key][1]));
+            newDataPlusBindings[key] = action(newVal,Number(this.arithmeticActions[key][1]));
         },this);
 
+        //todo: allow for importing of other vars as the replacement values?
+        _.keys(this.regexActions).forEach(function(key){
+            var pair = this.regexActions[key],
+                regex = new RegExp(pair[0],pair[1]),
+                replaceValue = pair[2].match(/\$/) ? newDataPlusBindings[pair[2].slice(1)] : pair[2];
+            newDataPlusBindings[key] = newDataPlusBindings[key].replace(regex,replaceValue);
+        },this);
+
+
         
+        //Expand out to object structure
         //ie: {values.a:5, tags.type: rule} -> {values:{a:5},tags:{type:rule}}
         var complexFormData = ReteUtil.objDescToObject(newWMEData);
         console.log("new wme data:",complexFormData);        
 
-        //Actually, DONT create the wme, just store the data for it
+        //DONT create the wme, just store the data for it
         //To be returned to activateActionNode
         if(RDS === undefined){
             console.log("Requiring RDS");

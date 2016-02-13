@@ -10,21 +10,22 @@ define(['./ReteDataStructures','underscore','./ReteUtilities','./ReteComparisonO
        @return False if no match, dict of all updated bindings otherwise
      */
     var performJoinTests = function(joinNode,token,wme){
-        var newBindings = {};
-        
+        var newBindings = {},
+            successState = true,
+            varRegex = new RegExp(/^\$/);
         //Populate with current bindings from token
         _.keys(token.bindings).forEach(function(key){
             newBindings[key] = token.bindings[key];
         });
 
-        var successState = true;
 
+        
         try{
             //add new bindings:
             joinNode.tests.forEach(function(test){
                 var newValue = null;
                 //retrieve the value
-                if(test[1] === "#id"){
+                if(test[1] === "#id" || test[1] === '$id'){
                     newValue = wme.id;
                 }else{
                     newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1][0]);
@@ -35,9 +36,13 @@ define(['./ReteDataStructures','underscore','./ReteUtilities','./ReteComparisonO
                 
                 //Compare using any defined binding tests
                 bindingComparisons.forEach(function(d){
-                    var comparator = ReteComparisonOps[d[0]];
+                    var comparator = ReteComparisonOps[d[0]],
+                        varName = d[1];
                     //if it fails, fail the test
-                    if(!comparator(newValue,newBindings[d[1]])){
+                    //use the value in the test, minus the $ at the beginning:
+                    if(!varRegex.test(varName)) { throw new Error("Non-bound var name"); }
+                                   
+                    if(!comparator(newValue,newBindings[varName.slice(1)])){
                         throw new Error("Test failed");
                     }
                 });

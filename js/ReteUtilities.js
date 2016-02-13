@@ -160,8 +160,8 @@ define(['require','underscore'],function(require,_){
         var i = firstTestSet.length -1;
         var j = secondTestSet.length -1;
         while(i >= 0 && j >= 0){
-            var ts1 = firstTestSet[i];
-            var ts2 = secondTestSet[j];
+            var ts1 = firstTestSet[i],
+                ts2 = secondTestSet[j];
             //console.log("comparing",i,j,"|||",firstTestSet[i][0],secondTestSet[j][0],"|||",firstTestSet[i][1],secondTestSet[j][1]);
             if(firstTestSet[i][0] === secondTestSet[j][0]){
                 if(firstTestSet[i][1] === secondTestSet[j][1]){
@@ -187,21 +187,21 @@ define(['require','underscore'],function(require,_){
     var altCompareJoinTests = function(firstTestSet,secondTestSet){
         try{
             //compare lengths
-            if(firstTestSet.length !== secondTestSet.length) throw "unequal lengths";
+            if(firstTestSet.length !== secondTestSet.length) { throw "unequal lengths"; }
             for(var i = 0; i < firstTestSet.length; i++){
                 var fTest = firstTestSet[i],
                     sTest = secondTestSet[i];
                 //compare the bound names
-                if(fTest[0] !== sTest[0]) throw "different bound names";
+                if(fTest[0] !== sTest[0]) { throw "different bound names"; }
             
                 //compare the source names
-                if(fTest[1][0] !== sTest[1][0]) throw "different source names";
+                if(fTest[1][0] !== sTest[1][0]) { throw "different source names"; }
             
                 //compare the bind tests
-                if(fTest[1][1].length !== sTest[1][1].length) throw "different binding tests length";
+                if(fTest[1][1].length !== sTest[1][1].length) { throw "different binding tests length"; }
                 for(var j = 0; fTest[1][1].length; j++){
-                    if(fTest[1][1][j][0] !== sTest[1][1][j][0]) throw "different comp operator";
-                    if(fTest[1][1][j][1] !== sTest[1][1][j][1]) throw "different comp value";
+                    if(fTest[1][1][j][0] !== sTest[1][1][j][0]) { throw "different comp operator"; }
+                    if(fTest[1][1][j][1] !== sTest[1][1][j][1]) { throw "different comp value"; }
                 }
             }
         }catch(e){
@@ -243,7 +243,7 @@ define(['require','underscore'],function(require,_){
             if(currLocation[curr] !== undefined){
                 currLocation = currLocation[curr];
             }
-        };
+        }
 
         //return the final location arrived at
         return currLocation;
@@ -263,8 +263,8 @@ define(['require','underscore'],function(require,_){
         //filter out the ids from the potentialActions list
         //also removing them from the owning tokens
         potentialActions = _.reject(potentialActions,function(d){
-            if(d === undefined) return false;
-            return idList.indexOf(d.id) != -1;
+            if(d === undefined) { return false; }
+            return idList.indexOf(d.id) !== -1;
         }).filter(function(d){ return d === undefined; });
         reteNet.potentialActions = potentialActions;
     };

@@ -1,0 +1,13 @@
+var allNodes = {};
+var reteNet = new ReteNet();
+
+var rules = [];
+var facts = [];
+//Load the rules in
+rules.forEach(function(d){
+    d.actionNodes = Rete.addRule(d,reteNet,allNodes);
+});
+
+facts.forEach(function(d){
+    Rete.assertWME(d,reteNet);
+});

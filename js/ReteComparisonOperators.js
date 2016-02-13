@@ -11,6 +11,7 @@ if(typeof define !== 'function'){
 define([],function(){
     "use strict";
     //See general utils file for converting to string
+    //TODO: These can be changed to their actual representations, similar to reteArithActions
     var ConstantTestOperators = {
         "EQ" : function(a,b){
             return a===b;
