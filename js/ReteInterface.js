@@ -80,13 +80,13 @@ define(['./ReteDataStructures','./ReteDeletion','./ReteActivations','./ReteNetwo
         if(retractionTime === undefined) { retractionTime = 0; }
         if(wmeData.isWME === undefined || wmeData.id === undefined){
             wmeData = new RDS.WME(wmeData,assertionTime,retractionTime);
-            reteNet.allWMEs[wme.id] = wmeData;
+            reteNet.allWMEs[wmeData.id] = wmeData;
         }
         //Add it to the input WME Buffer:
         addToAssertionList(reteNet,wmeData);
         addToRetractionList(reteNet,wmeData);
         //Store it as part of allWMEs:
-        return wmeDataRete.id;
+        return wmeData.id;
     };
     
     /**
@@ -123,6 +123,11 @@ define(['./ReteDataStructures','./ReteDeletion','./ReteActivations','./ReteNetwo
                 throw new Error("Trying to register an invalid wme");
             }
             wme = reteNet.allWMEs[wme];
+        }
+        if(time === undefined){
+            time = wme.lifeTime[1];
+        }else{
+            wme.lifeTime[1] = time;
         }
         if(reteNet.wmeLifeTimes.retractions[time] === undefined){
             reteNet.wmeLifeTimes.retractions[time] = [];
