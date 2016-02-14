@@ -1,8 +1,4 @@
-if(typeof define !== 'function'){
-    var define = require('amdefine')(module);
-}
-
-define(['require','underscore'],function(require,_){
+var _ = require('underscore');
     "use strict";
 
 
@@ -325,5 +321,5 @@ define(['require','underscore'],function(require,_){
         "cleanupInvalidatedActions" : cleanupInvalidatedActions,
         "objDescToObject" : objDescToObject
     };
-    return moduleInterface;    
-});
+module.exports = moduleInterface;    
+

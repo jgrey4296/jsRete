@@ -2,11 +2,8 @@
    @file ReteArithmeticActions
    @purpose to define the arithmetic that an action can perform on a value
 */
-if(typeof define !== 'function'){
-    var define = require('amdefine')(module);
-}
+var _ = require('underscore');
 
-define(['underscore'],function(_){
     "use strict";
     var ArithmeticActions = {
         "+" : function(a,b){
@@ -24,6 +21,6 @@ define(['underscore'],function(_){
         },
     };
 
-    return ArithmeticActions;
+module.exports = ArithmeticActions;
     
-});
+
