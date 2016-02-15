@@ -7,6 +7,7 @@ var RDS = require('./ReteDataStructures'),
 /**
    @function removeAlphaMemoryItemsForWME
    @purpose to remove a wme from all alpha memories it is stored in
+   @postCondition wme.alphaMemoryItems is empty
 */
 var removeAlphaMemoryItemsForWME = function(wme){
     //remove alpha memory items

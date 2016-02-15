@@ -2,8 +2,8 @@
    @file ReteDataStructures
    @purpose to define the data structures required for rete
 */
-var _ = require('underscore'),
-    PossibleActions = require('./ReteActions');
+var _ = require('underscore');
+    //PossibleActions = require('./ReteActions');
 
 "use strict";
 var nextId = 0;
@@ -303,19 +303,20 @@ var JoinNode = function(parent,alphaMemory,tests){
 var ActionNode = function(parent,actionDescriptions,ruleName,reteNet){
     ReteNode.call(this,parent);
     this.isActionNode = true;
-    this.name = name;
+    this.name = ruleName;
     this.actionDescriptions = actionDescriptions;
-    try{
-        this.boundActions = actionDescriptions.map(function(d){
-            if(PossibleActions[d.tags.actionType] === undefined){
-                throw new Error("Unrecognised action type");
-            }
-            return _.bind(PossibleActions[d.tags.actionType],d);
-        });
-    }catch(e){
-        this.boundActions = [];
-        throw e;
-    }
+    this.boundActions = [];
+    // try{
+    //     this.boundActions = actionDescriptions.map(function(d){
+    //         if(PossibleActions[d.tags.actionType] === undefined){
+    //             throw new Error("Unrecognised action type");
+    //         }
+    //         return _.bind(PossibleActions[d.tags.actionType],d);
+    //     });
+    // }catch(e){
+    //     this.boundActions = [];
+    //     throw e;
+    // }
     //reference to retenet, to allow storage of results of firing:
     this.reteNet = reteNet;
 };
@@ -419,7 +420,7 @@ var DataStructures = {
     "NCCPartnerNode"   : NCCPartnerNode,
     "ActionNode"       : ActionNode,
     "ReteNet"          : ReteNet,
-    "ProposedAction"     : ProposedAction
+    "ProposedAction"   : ProposedAction
 };
 
 module.exports = DataStructures;

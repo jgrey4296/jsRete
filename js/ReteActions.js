@@ -32,7 +32,7 @@ var actions = {};
 //not in place, returns a wme to be dealt with elsewhere
 //** @action assert
 actions.assert = function(token,reteNet){
-    console.log("Asserting with action:",[this,token,reteNet]);
+    //console.log("Asserting with action:",[this,token,reteNet]);
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
@@ -86,7 +86,6 @@ actions.assert = function(token,reteNet){
 
     //DONT create the wme, just store the data for it
     //To be returned to activateActionNode
-    
     var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
                                                 reteNet.currentTime+2,

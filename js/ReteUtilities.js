@@ -255,7 +255,7 @@ var _ = require('underscore');
             idList = invalidatedActions.map(function(d){
                 return d.id;
             });
-        console.log("Cleaning up:",[idList,invalidatedActions,potentialActions]);
+        //console.log("Cleaning up:",[idList,invalidatedActions,potentialActions]);
         //filter out the ids from the potentialActions list
         //also removing them from the owning tokens
         potentialActions = _.reject(potentialActions,function(d){

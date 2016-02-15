@@ -8,7 +8,9 @@ var RDS = require('./ReteDataStructures'),
     ReteNetworkBuilding = require('./ReteNetworkBuilding'),
     RCO = require('./ReteComparisonOperators'),
     ReteUtil = require('./ReteUtilities'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    RuleCtors = require('./RuleCtors'),
+    PossibleActions = require('./ReteActions');
 
 "use strict";
 
@@ -37,7 +39,7 @@ var assertWME_Immediately = function(data,reteNet,retractionTime){
 
 //Retract a wme RIGHT NOW, clean up its tokens, and any potential actions
 var retractWME_Immediately = function(wme,reteNet){
-    console.log("retracting immediately:",wme);
+    //console.log("retracting immediately:",wme);
     //if not given the wme directly
     if(wme.isWME === undefined){
         //if given a wme id
@@ -53,11 +55,12 @@ var retractWME_Immediately = function(wme,reteNet){
             throw new Error("Unknown wme to retract");
         }
     }
-    console.log("Retracting:",wme);
+    //console.log("Retracting:",wme);
     ReteDeletion.removeAlphaMemoryItemsForWME(wme);
     var invalidatedActions = ReteDeletion.deleteAllTokensForWME(wme);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
     ReteDeletion.deleteAllNegJoinResultsForWME(wme);
+    return wme;
 };
 
 var modifyWME_Immediately = function(wme,reteNet,modifyFunction){
@@ -167,27 +170,38 @@ var incrementTime = function(reteNet){
 /**
    @function addRule
    @purpose to build a network for a given rule
-   @note Assumes the rule's actions and conditions are objects, not id's,
-   @note and allNodes store all relevant objects
+   @note Assumes the rule's actions and conditions are objects themselves
+   @note allNodes store all relevant objects
    @note see TotalShell::compileRete
 */
-var addRule = function(ruleId,reteNet,allNodes){
-    if(!Number.isInteger(ruleId) || allNodes[ruleId] === undefined){
+var addRule = function(ruleId,reteNet,components){
+    if(!Number.isInteger(ruleId) || components[ruleId] === undefined){
         throw new Error("Unrecognised rule id specified");
     }
-    var rule = allNodes[ruleId],        
+    var rule = components[ruleId],
         conditions = _.keys(rule.conditions).map(function(d){
             return this[d];
-        },allNodes),                
+        },components),                
         //build network with a dummy node for the parent
-        finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,conditions,reteNet.rootAlpha,allNodes,reteNet),
+        finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,conditions,reteNet.rootAlpha,components,reteNet),
         //Build the actions that are triggered by the rule:
         actionDescriptions = _.keys(rule.actions).map(function(actionId){
-            console.log("Adding action for:",actionId);
+            //console.log("Adding action id:",actionId);
             //todo: protect against duplicates here?
-            return allNodes[actionId];
-        }),
-        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,rule.name,reteNet);
+            return components[actionId];
+        }),        
+        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,rule.name,reteNet),
+        //Bind actions with descriptions and store in the rule Action:
+        boundActionDescriptions = actionDescriptions.map(function(d){
+            if(PossibleActions[d.tags.actionType] === undefined){
+                throw new Error("Unrecognised action type");
+            }
+            return _.bind(PossibleActions[d.tags.actionType],d);
+        });
+
+    //Add the bound actions into the action node:
+    ruleAction.boundActions = boundActionDescriptions;
+    
 
     reteNet.actions[rule.id] = ruleAction;
 
@@ -204,18 +218,46 @@ var removeRule = function(actionNode,reteNet){
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 };
 
+
+/**
+   convert rules to map of components
+ */
+var convertRulesToComponents = function(rules){
+    if(!(rules instanceof Array)){
+        rules = [rules];
+    }
+    var actions = _.flatten(rules.map(function(d){
+            return _.values(d.actions);
+        })),
+        conditions = _.flatten(rules.map(function(d){
+            return _.values(d.conditions);
+        })),
+        all = actions.concat(conditions).concat(rules),
+        components = all.reduce(function(m,v){
+            m[v.id] = v;
+            return m;
+        },{});
+    return components;
+};
+
+
 var moduleInterface = {
-    "ReteNet" : RDS.ReteNet,
-    "ConstantTest" : RDS.ConstantTest,
     "CompOperators" : RCO,
+    "ConstantTest" : RDS.ConstantTest,
+    "ReteNet" : RDS.ReteNet,
+    "addRule" : addRule,
+    "assertWME_Immediately" : assertWME_Immediately,
+    "assertWME_Later" : assertWME_Later,
     "clearHistory" : clearHistory,
     "clearPotentialActions" : clearPotentialActions,
-    "assertWME_Immediately" : assertWME_Immediately,
-    "retractWME_Immediately" : retractWME_Immediately,
-    "assertWME_Later" : assertWME_Later,
+    "convertRulesToComponents" : convertRulesToComponents,
     "incrementTime" : incrementTime,
-    "addRule" : addRule,
     "removeRule" : removeRule,
+    "retractWME_Immediately" : retractWME_Immediately,
+    "Rule" : RuleCtors.Rule,
+    "Condition" : RuleCtors.Condition,
+    "Action" : RuleCtors.Action,
+    "RDS" : RDS
 };
 module.exports = moduleInterface;    
 
