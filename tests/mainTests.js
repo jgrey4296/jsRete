@@ -273,6 +273,50 @@ exports.ReteTests = {
         
         test.done();
     },
+
+
+
+    ruleFire_negative_node_test : function(test){
+        var rn = makeRete(),
+            aRule = new Rete.Rule(),
+            aCondition = new Rete.Condition(),
+            negCondition = new Rete.Condition("negCondition"),
+            anAction = new Rete.Action(),
+            data = {
+                "first" : 5,
+                "second" : 10,
+                "blah" : "blah"
+            },
+            components;
+        aCondition.addTest("first","EQ",5)
+            .addTest("second","EQ",10)
+            .addBinding("blah","first",[]);
+        //Add a negative condition
+        negCondition.addTest("first","EQ",5)
+            .addBinding("blah","first",[]);
+            //action:
+        anAction.addValue("output","$blah")
+            .addArithmetic("output","+",5);
+        aRule.addCondition(aCondition)
+            .addCondition(negCondition)
+            .addAction(anAction);
+        //convert to components:
+        components = Rete.convertRulesToComponents(aRule);
+        //Add the rule
+        Rete.addRule(aRule.id,rn,components);
+        var wmeId = Rete.assertWME_Immediately(data,rn,0),
+            wme = rn.allWMEs[wmeId];
+        test.ok(wme.negJoinResults.length === 1);
+        //Inspect the resulting proposed action:
+        test.ok(_.values(rn.potentialActions).length === 1);
+        var proposedAction = _.values(rn.potentialActions)[0];
+        test.ok(proposedAction !== undefined);
+        //console.log(proposedAction);
+        test.ok(proposedAction.payload.output !== undefined);
+        test.ok(proposedAction.payload.output === 10);
+        
+        test.done();
+    },
     
     
 };

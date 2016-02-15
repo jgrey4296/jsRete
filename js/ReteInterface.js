@@ -3,8 +3,7 @@
    @purpose Provides functions for operating on a retenet object
 */
 var RDS = require('./ReteDataStructures'),
-    ReteDeletion = require('./ReteDeletion'),
-    ReteActivations = require('./ReteActivations'),
+    ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
     ReteNetworkBuilding = require('./ReteNetworkBuilding'),
     RCO = require('./ReteComparisonOperators'),
     ReteUtil = require('./ReteUtilities'),
@@ -33,7 +32,7 @@ var assertWME_Immediately = function(data,reteNet,retractionTime){
         reteNet.allWMEs[data.id] = data;
     }
     //Actually push the wme into the net
-    ReteActivations.alphaNodeActivation(reteNet.rootAlpha,data);
+    ReteActivationsAndDeletion.alphaNodeActivation(reteNet.rootAlpha,data);
     return data.id;
 };
 
@@ -56,8 +55,8 @@ var retractWME_Immediately = function(wme,reteNet){
         }
     }
     //console.log("Retracting:",wme);
-    ReteDeletion.removeAlphaMemoryItemsForWME(wme);
-    var invalidatedActions = ReteDeletion.deleteAllTokensForWME(wme);
+    ReteActivationsAndDeletion.removeAlphaMemoryItemsForWME(wme);
+    var invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
     ReteDeletion.deleteAllNegJoinResultsForWME(wme);
     return wme;

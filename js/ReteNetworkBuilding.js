@@ -1,6 +1,6 @@
 var RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),
-    ReteActivations = require('./ReteActivations'),
+    ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
     _ = require('underscore');
 "use strict";
 
@@ -256,7 +256,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
     var parent = newNode.parent;
     if(parent.isBetaMemory){
         for(i in parent.items){
-            ReteActivations.leftActivate(newNode,parent.items[i]);
+            ReteActivationsAndDeletion.leftActivate(newNode,parent.items[i]);
         }
     }else if(parent.isJoinNode){
         var savedChildren = parent.children,
@@ -264,7 +264,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
         parent.children = [newNode];
         for(i = 0; i < items.length; i++){
             var item = items[i];
-            ReteActivations.rightActivate(parent,item.wme);
+            ReteActivationsAndDeletion.rightActivate(parent,item.wme);
         }
         parent.children = savedChildren;
     }else if(parent.isNegativeNode){
@@ -272,7 +272,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
         for(i = 0; i < items.length; i++){
             token = items[i];
             if(token.negJoinResults.length === 0){
-                ReteActivations.leftActivate(newNode,token);
+                ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
     }else if(parent.isAnNCCNode){
@@ -280,7 +280,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
         for(i = 0; i < items.length; i++){
             token = parent.items[i];
             if(token.nccResults.length === 0){
-                ReteActivations.leftActivate(newNode,token);
+                ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
     }

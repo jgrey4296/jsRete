@@ -1,8 +1,6 @@
 var _ = require('underscore');
     "use strict";
 
-
-    
     /**
        @function relinkToAlphaMemory
        @utility
