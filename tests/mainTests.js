@@ -308,12 +308,8 @@ exports.ReteTests = {
             wme = rn.allWMEs[wmeId];
         test.ok(wme.negJoinResults.length === 1);
         //Inspect the resulting proposed action:
-        test.ok(_.values(rn.potentialActions).length === 1);
-        var proposedAction = _.values(rn.potentialActions)[0];
-        test.ok(proposedAction !== undefined);
-        //console.log(proposedAction);
-        test.ok(proposedAction.payload.output !== undefined);
-        test.ok(proposedAction.payload.output === 10);
+        var potentialActions = _.values(rn.potentialActions).filter(function(d){return d !== undefined; });
+        test.ok(potentialActions.length === 0);
         
         test.done();
     },

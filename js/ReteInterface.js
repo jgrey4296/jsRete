@@ -58,7 +58,7 @@ var retractWME_Immediately = function(wme,reteNet){
     ReteActivationsAndDeletion.removeAlphaMemoryItemsForWME(wme);
     var invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
-    ReteDeletion.deleteAllNegJoinResultsForWME(wme);
+    ReteActivationsAndDeletion.deleteAllNegJoinResultsForWME(wme);
     return wme;
 };
 
@@ -213,7 +213,7 @@ var addRule = function(ruleId,reteNet,components){
 */
 var removeRule = function(actionNode,reteNet){
     //delete from bottom up
-    var invalidatedActions = ReteDeletion.deleteNodeAndAnyUnusedAncestors(actionNode);
+    var invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(actionNode);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 };
 
