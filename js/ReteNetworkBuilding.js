@@ -18,28 +18,32 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
             throw new Error("Inappropriate condition format");
         }
         //get the binding tests for join nodes
-        var tests = _.pairs(condition.bindings);            
+        var tests = _.pairs(condition.bindings);
+        
         if(condition.tags.isPositive !== undefined){
+            //Build a positive condition:
             currentNode = buildOrShareBetaMemoryNode(currentNode,reteNet);
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareJoinNode(currentNode,alphaMemory,tests,reteNet);
         }else if(condition.tags.isNegative !== undefined){
+            //Build a negative condition:
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareNegativeNode(currentNode,alphaMemory,tests,reteNet);
         }else if(condition.tags.isNCCCondition !== undefined){
+            //Build a Negated Conjunctive Condition
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
         }else if(condition.tags.type === 'rule'){
             //for using other rules as composable conditions
-            var ruleConditions = _.keys(condition.conditions).map(function(d){
-                return this[d];
-            },allNodes);                
+            var ruleConditions = _.keys(condition.conditions).map(d=>allNodes[d]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
         }else{
             console.error("Problematic Condition:",condition);
             throw new Error("Unrecognised condition type");
         }
     });
-    //return current node
+    
+    //Everything is build, tack on a final memory and return that
+    //to have action connected to.
     var finalBetaMemory = buildOrShareBetaMemoryNode(currentNode,reteNet);
     return finalBetaMemory;
 };
@@ -49,8 +53,6 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
    @purpose Reuse, or create a new, constant test node, for the given test
 */
 var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
-    
-    //Todo: write this as a functional select/find
     var children = _.values(parent.children);
     for(var i = 0; i < children.length; i++){
         var node = children[i];
@@ -58,10 +60,9 @@ var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
             return node;
         }
     }
+    //No existing, create a new node:
     var newAlphaNode = new RDS.AlphaNode(parent,constantTestSpec);
-
     reteNet.storeNode(newAlphaNode);
-
     return newAlphaNode;
 };
 
@@ -116,9 +117,7 @@ var buildOrShareBetaMemoryNode = function(parent,reteNet){
     var newBetaMemory = new RDS.BetaMemory(parent);
     //update it with matches
     updateNewNodeWithMatchesFromAbove(newBetaMemory);
-
     reteNet.storeNode(newBetaMemory);
-    
     //return new beta memory
     return newBetaMemory;
 };
@@ -154,15 +153,13 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     //if either parent memory is empty, unlink
     if(parent.items.length === 0){
         //BETA IS EMPTY: UNLINK RIGHT
-        var index = alphaMemory.children.map(function(d){ return d.id; }).indexOf(newJoinNode.id);
-        var removed = alphaMemory.children.splice(index,1);
+        var index = alphaMemory.children.map(d=>d.id).indexOf(newJoinNode.id),
+            removed = alphaMemory.children.splice(index,1);
         alphaMemory.unlinkedChildren.unshift(removed[0]);
     }else if(alphaMemory.items.length === 0){
         //ALPHA IS EMPTY: UNLINK LEFT
-        var newNodeIndex = parent.children.map(function(d){
-            return d.id;
-        }).indexOf(newJoinNode.id);
-        var removedNode = parent.children.splice(newNodeIndex,1);
+        var newNodeIndex = parent.children.map(d=>d.id).indexOf(newJoinNode.id),
+            removedNode = parent.children.splice(newNodeIndex,1);
         parent.unlinkedChildren.unshift(removedNode[0]);
     }
     //return new join node
@@ -193,10 +190,8 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
     updateNewNodeWithMatchesFromAbove(newNegativeNode);
     //unlink if it has no tokens
     if(newNegativeNode.items.length === 0){
-        var index = alphaMemory.children.map(function(d){
-            return d.id;
-        }).indexOf(newNegativeNode.id);
-        var removed = alphaMemory.children.splice(index,1);
+        var index = alphaMemory.children.map(d=>d.id).indexOf(newNegativeNode.id),
+            removed = alphaMemory.children.splice(index,1);
         alphaMemory.unlinkedChildren.push(removed[0]);
     }
     //return new negative node
@@ -214,9 +209,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
         throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
     }
     //build a network for the conditions
-    var conditions = _.keys(condition.conditions).map(function(d){
-        return this[d];
-    },allNodes),
+    var conditions = _.keys(condition.conditions).map(d=>allNodes[d]),
         //build the subnetwork
         bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,conditions,rootAlpha,allNodes,reteNet);
     //find an existing NCCNode with partner to use

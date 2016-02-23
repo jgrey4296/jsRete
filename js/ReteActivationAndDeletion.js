@@ -18,9 +18,7 @@ var alphaMemoryActivation = function(alphaMem,wme){
     alphaMem.items.unshift(newItem);
     wme.alphaMemoryItems.unshift(newItem);
     //console.log("AlphaMemory activated:",alphaMem,wme);
-    alphaMem.children.forEach(function(child){
-        rightActivate(child,wme);
-    });
+    alphaMem.children.forEach(child=>rightActivate(child,wme));
 };
 
 /**
@@ -49,9 +47,7 @@ var constantTestNodeActivation = function(alphaNode,wme){
     }
     if(testResult){
         //console.log("successful constant test result",testResult,wme,alphaNode);
-        alphaNode.children.forEach(function(child){
-            alphaNodeActivation(child,wme);
-        });
+        alphaNode.children.forEach(child=>alphaNodeActivation(child,wme));
         if(alphaNode.outputMemory){
             alphaNodeActivation(alphaNode.outputMemory,wme);
         }
@@ -87,9 +83,7 @@ var alphaNodeActivation = function(alphaNode,wme){
 var betaMemoryActivation = function(betaMemory,token){
     var newToken = token;
     betaMemory.items.unshift(newToken);
-    betaMemory.children.forEach(function(child){
-        leftActivate(child,newToken);
-    });
+    betaMemory.children.forEach(child=>leftActivate(child,newToken));
 };
 
 
@@ -106,7 +100,7 @@ var joinNodeLeftActivation = function(node,token){
         ReteUtil.relinkToAlphaMemory(node);
         if(node.alphaMemory.items.length === 0){
             //unlink beta memory if alphamemory is empty
-            var index = node.parent.children.map(function(d){return d.id;}).indexOf(node.id);
+            var index = node.parent.children.map(d=>d.id).indexOf(node.id);
             var unlinked = node.parent.children.splice(index,1);
             node.parent.unlinkedChildren.push(unlinked[0]);
         }
@@ -120,9 +114,8 @@ var joinNodeLeftActivation = function(node,token){
         var currWME = item.wme;
         var joinTestResult = ReteTestExecution.performJoinTests(node,token,currWME);
         if(joinTestResult !== undefined && joinTestResult !== false){
-            node.children.forEach(function(child){
-                leftActivate(child,token,currWME,joinTestResult);
-            });//end of loop activating all children
+            node.children.forEach(child=>leftActivate(child,token,currWME,joinTestResult));
+            
         }
     });//end of looping all wmes in alphamemory
 };
@@ -138,7 +131,7 @@ var joinNodeRightActivation = function(node,wme){
     if(node.alphaMemory.items.length === 1){
         ReteUtil.relinkToBetaMemory(node);
         if(node.parent.items.length === 0){
-            var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
+            var index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
             var unlinked = node.alphaMemory.children.splice(index,1);
             node.alphaMemory.unlinkedChildren.push(unlinked[0]);
         }
@@ -150,9 +143,7 @@ var joinNodeRightActivation = function(node,wme){
         //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
         var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
         if(joinTestResult !== undefined && joinTestResult !== false){
-            node.children.forEach(function(currNode){
-                leftActivate(currNode,currToken,wme,joinTestResult);
-            });
+            node.children.forEach(currNode=>leftActivate(currNode,currToken,wme,joinTestResult));
         }
     });
 };
@@ -166,12 +157,8 @@ var activateActionNode = function(actionNode,token){
     //get the actions the node embodies:
     var boundActionFunctions = actionNode.boundActions,
         //get the individual new proposed actions
-        newProposedActions = boundActionFunctions.map(function(d){
-            return d(token,actionNode.reteNet);
-        }),
-        newProposedActionIds = newProposedActions.map(function(d){
-            return d.id;
-        });
+        newProposedActions = boundActionFunctions.map(d=>d(token,actionNode.reteNet)),
+        newProposedActionIds = newProposedActions.map(d=>d.id);
     
     //store the proposed actions in the reteNet.potential actions
     //and also tie all the actions that fire together by their ids
@@ -260,9 +247,7 @@ var negativeNodeLeftActivation = function(node,newToken){
 
     //if no wmes block the token, pass it on down the network
     if(newToken.negJoinResults.length === 0){
-        node.children.forEach(function(child){
-            leftActivate(child,newToken);
-        });
+        node.children.forEach(child=>leftActivate(child,newToken));
     }
     
 };
@@ -320,9 +305,7 @@ var nccNodeLeftActivation = function(nccNode,token){
     //if the new token has no blocking tokens,
     //continue on
     if(newToken.nccResults.length === 0){
-        nccNode.children.forEach(function(child){
-            leftActivate(child,newToken);
-        });
+        nccNode.children.forEach(child=>leftActivate(child,newToken));
     }
 };
 
@@ -352,7 +335,7 @@ var nccPartnerNodeLeftActivation = function(partner,token){
         var possible_tokens = nccNode.items.map(function(d){
             if(d.parentToken.id === ownersToken.id && d.wme.id === ownersWme.id){
                 return d;
-            }}).filter(function(d){return d !== undefined;});
+            }}).filter(d=> d !== undefined);
         owner = possible_tokens[0];
     }
 
@@ -378,28 +361,10 @@ var activateIfNegatedJRIsUnblocked = function(nJR){
     var currJoinResult = nJR;
     //if the negation clears, activate it
     if(currJoinResult.owner.negJoinResults.length === 0){
-        currJoinResult.owner.owningNode.children.forEach(function(child){
-            //activate the token for all its owners children
-            leftActivate(child,currJoinResult.owner);
-        });
+        currJoinResult.owner.owningNode.children.forEach(child=>leftActivate(child,currJoinResult.owner));
     }
 };
 
-
-//** @deprecated ifNCCPartnerNodeActivateIfAppropriate
-//** @note is displaced into methods above to stop circular dependencies with retedeletion
-// var ifNCCPartnerNodeActivateIfAppropriate = function(token){
-//     if(token && token.owningNode
-//        && token.owningNode.isAnNCCPartnerNode){
-//         if(token.parentToken.nccResults.length === 0){
-//             token.owningNode.nccNode.children.forEach(function(d){
-//                 leftActivate(d,token.parentToken);
-//             });
-//             return true;
-//         }
-//     }
-//     return false;
-// };
 
 /**
    @function removeAlphaMemoryItemsForWME
@@ -410,7 +375,7 @@ var removeAlphaMemoryItemsForWME = function(wme){
     //remove alpha memory items
     wme.alphaMemoryItems.forEach(function(item){
         //unlink the alphamemory from the item
-        var index = item.alphaMemory.items.map(function(d){return d.id;}).indexOf(item.id);
+        var index = item.alphaMemory.items.map(d=>d.id).indexOf(item.id);
         if(index !== -1){ item.alphaMemory.items.splice(index,1);}
         //unlink the alphaMemory itself if it is now empty
         //will unlink if am.items.length === 0
@@ -445,9 +410,7 @@ var deleteAllTokensForWME = function(wme){
 var deleteAllNegJoinResultsForWME = function(wme){
     //unlink the negative Join results in the owning token
     wme.negJoinResults.forEach(function(jr){
-        var index = jr.owner.negJoinResults.map(function(j){
-            return j.id;
-        }).indexOf(jr.id);
+        var index = jr.owner.negJoinResults.map(j=>j.id).indexOf(jr.id);
         if(index !== -1){
             jr.owner.negJoinResults.splice(index,1);
         }
@@ -468,7 +431,7 @@ var deleteAllNegJoinResultsForWME = function(wme){
 var removeNegJoinResultsForToken = function(token){
     //remove Negative join results
     token.negJoinResults.forEach(function(jr){
-        var index = jr.wme.negJoinResults.map(function(d){return d.id;}).indexOf(jr.id);
+        var index = jr.wme.negJoinResults.map(d=>d.id).indexOf(jr.id);
         if(index !== -1){
             jr.wme.negJoinResults.splice(index,1);
         }
@@ -491,9 +454,7 @@ var removeTokenFromNode = function(token){
        && token.owningNode.isAnNCCPartnerNode === undefined
        && token.owningNode.isMemoryNode){
         //by removing the token as an element in that node
-        var index = token.owningNode.items.map(function(d){
-            return d.id;
-        }).indexOf(token.id);
+        var index = token.owningNode.items.map(d=>d.id).indexOf(token.id);
         if(index !== -1){
             token.owningNode.items.splice(index,1);
         }
@@ -507,7 +468,7 @@ var removeTokenFromNode = function(token){
 var removeTokenFromWME = function(token){
     //remove the token from the wme it is based on
     if(token.wme && token.wme.tokens){
-        var index = token.wme.tokens.map(function(d){return d.id;}).indexOf(token.id);
+        var index = token.wme.tokens.map(d=>d.id).indexOf(token.id);
         if(index !== -1){
             token.wme.tokens.splice(index,1);
         }
@@ -521,7 +482,7 @@ var removeTokenFromWME = function(token){
 var removeTokenFromParentToken = function(token){
     //Remove the token from it's parent's child list
     if(token && token.parentToken){
-        var index = token.parentToken.children.map(function(d){return d.id;}).indexOf(token.id);
+        var index = token.parentToken.children.map(d=>d.id).indexOf(token.id);
         if(index !== -1){
             token.parentToken.children.splice(index,1);
         }
@@ -567,7 +528,7 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
 
     //clean up any associated alphamemory
     if(node.isJoinNode || node.isNegativeNode && node.alphaMemory){
-        index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(node.id);
+        index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
         if(index > -1){
             node.alphaMemory.children.splice(index,1);
             node.alphaMemory.referenceCount--;
@@ -581,14 +542,12 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
     //remove the node from its parent
     if(node.parent){
         //check the child list:
-        index = node.parent.children.map(function(d){
-            return d.id;
-        }).indexOf(node.id);
+        index = node.parent.children.map(d=>d.id).indexOf(node.id);
         if(index !== -1){                            
             node.parent.children.splice(index,1);
         }else{
             //check the unlinked children list:
-            index = node.parent.unlinkedChildren.map(function(d){ return d.id;}).indexOf(node.id);
+            index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
             if(index !== -1){
                 node.parent.unlinkedChildren.splice(index,1);
             }
@@ -660,9 +619,7 @@ var deleteTokenAndDescendents = function(token){
        && token.parentToken.nccResults.length === 0){
         //Activate newly unblocked Token
         //todo: should this be nccnode AND/OR negNode?
-        token.owningNode.nccNode.children.forEach(function(d){
-            leftActivate(d,token.parentToken);
-        });
+        token.owningNode.nccNode.children.forEach(d=>leftActivate(d,token.parentToken));
     }
 
     //get the queued actions linked with the token, and return them for cleanup
@@ -681,14 +638,14 @@ var cleanupNCCResultsInToken = function(token){
         token.nccResults.forEach(function(nccR){
             //remove the nccR token from its linked wme
             if(nccR.wme){
-                var index = nccR.wme.tokens.map(function(d){return d.id;}).indexOf(nccR.id);
+                var index = nccR.wme.tokens.map(d=>d.id).indexOf(nccR.id);
                 if(index !== -1){
                     nccR.wme.tokens.splice(index,1);
                 }
             }
             if(nccR.parent){
                 //remove the token from it's parent
-                var nccRindex = nccR.parent.children.map(function(t){return t.id;}).indexOf(nccR.id);
+                var nccRindex = nccR.parent.children.map(d=>d.id).indexOf(nccR.id);
                 if(nccRindex !== -1){
                     nccR.parent.children.splice(nccRindex,1);
                 }
@@ -711,7 +668,7 @@ var cleanupNCCPartnerOwnedToken = function(token){
        && token.owningNode.isAnNCCPartnerNode
        && token.parentToken){
         //remove from owner.nccResults:
-        var index = token.parentToken.nccResults.map(function(d){return d.id;}).indexOf(token.id);
+        var index = token.parentToken.nccResults.map(d=>d.id).indexOf(token.id);
         if(index !== -1){
             token.parentToken.nccResults.splice(index,1);
         }

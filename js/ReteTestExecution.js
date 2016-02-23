@@ -18,8 +18,6 @@ var performJoinTests = function(joinNode,token,wme){
         newBindings[key] = token.bindings[key];
     });
 
-
-    
     try{
         //add new bindings:
         joinNode.tests.forEach(function(test){

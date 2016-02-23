@@ -22,7 +22,13 @@ var clearPotentialActions = function(reteNet){
     reteNet.potentialActions = [];
 };
 
-//Assert a wme RIGHT NOW
+/**
+   @function assertWME_Immediately
+   @purpose Takes a wme and actually activates the retenet with it
+   @param data : Either a WME({}) or converts {} to a WME
+   @param reteNet : the main ReteNet object
+   @param retractionTime : Absolute time to retract the wme, will default to 0 (never retract)
+*/
 var assertWME_Immediately = function(data,reteNet,retractionTime){
     console.log("ASSERTING:",data);
     if(retractionTime === undefined) { retractionTime = 0; }
@@ -36,7 +42,12 @@ var assertWME_Immediately = function(data,reteNet,retractionTime){
     return data.id;
 };
 
-//Retract a wme RIGHT NOW, clean up its tokens, and any potential actions
+/**
+   @function retractWME_Immediately
+   @purpose Remove the wme from the net
+   @param wme : The wme object to remove, or gets the wme if its an ID
+   @param reteNet : the retenet to remove from
+*/
 var retractWME_Immediately = function(wme,reteNet){
     //console.log("retracting immediately:",wme);
     //if not given the wme directly
@@ -62,19 +73,32 @@ var retractWME_Immediately = function(wme,reteNet){
     return wme;
 };
 
+/**
+   @function modifyWME_Immeditately
+   @purpose retracts a wme, applies a function to it, asserts the new wme
+   @param wme : A WME id, or an actual wme
+   @param reteNet : the retenet to modify
+   @param modifyFunction of form : {} function({}){ return {}; }
+   @return the replacement wmeid
+ */
 var modifyWME_Immediately = function(wme,reteNet,modifyFunction){
-    retractWME_Immediately(wme,reteNet);
-    var data = wme.data;
-    //apply the modify function to the data:
-    modifyFunction(data);
-    assertWME_Immediately(data,reteNet);
+    var retractedWME = retractWME_Immediately(wme,reteNet),
+        data = retractedWME.data,
+        modifiedData = modifyFunction(data);
+    if(modifiedData === undefined || modifiedData === null) {
+        throw new Error("Modify function must return the new data");
+    }
+    return assertWME_Immediately(modifiedData,reteNet);
 };
 
 
 /**
-   @function addWME
-   @purpose Creates a wme from the passed in data, schedules it for assertion
-   @note There is a difference between ADDING to the net and the initial ACTIVATION of the root
+   @function assertWME_Later
+   @purpose creates a WME from the passed in data, schedules it for assertion/retraction
+   @param wmeData : Either a WME, or {} to be used to construct a wme
+   @param assertionTime : Absolute time to assert the wme, defaults to current time
+   @param 
+   
 */
 //Assert a wme into the network
 var assertWME_Later = function(wmeData,reteNet,assertionTime,retractionTime){
@@ -94,8 +118,10 @@ var assertWME_Later = function(wmeData,reteNet,assertionTime,retractionTime){
 
 /**
    @function addToAssertionList
-   @purpose to record when a wme needs to be asserted
-   @note increment time will use this information
+   @purpose schedules a time for assertion or retraction
+   @param retenet
+   @param wme
+   @param time
 */
 var addToAssertionList = function(reteNet,wme,time){
     if(wme.isWME === undefined){
@@ -117,8 +143,7 @@ var addToAssertionList = function(reteNet,wme,time){
 
 /**
    @function addToRetractionList
-   @purpose to record when a wme needs to be retracted
-   @note increment time will use this information
+   @purpose schedules when to retract a wme
 */
 var addToRetractionList = function(reteNet,wme,time){
     if(wme.isWME === undefined){
@@ -140,21 +165,22 @@ var addToRetractionList = function(reteNet,wme,time){
 
 /**
    @function incrementTime
-   @purpose steps the retenet forwards by one step. retracts then asserts new wmes,
+   @purpose RETRACTS then ASSERTS then INCREMENTS
    @TODO figure out if this is in the correct order. should it be the otherway around
 */
 var incrementTime = function(reteNet){
+    console.log("Performing schedule for step:",reteNet.currentTime);
     //retract everything scheduled
-    console.log("Incrementing time for step:",reteNet.currentTime);
-    if(reteNet.wmeLifeTimes.retractions.length > reteNet.currentTime && reteNet.wmeLifeTimes.retractions[reteNet.currentTime] !== undefined){
+    if(reteNet.currentTime < reteNet.wmeLifeTimes.retractions.length
+       && reteNet.wmeLifeTimes.retractions[reteNet.currentTime] !== undefined){
         reteNet.wmeLifeTimes.retractions[reteNet.currentTime].forEach(function(wme){ retractWME_Immediately(wme,reteNet); });
     }
-    console.log("Retractions finished for timeStep:",reteNet.currentTime);
+
     //assert everything schdeuled
-    if(reteNet.wmeLifeTimes.assertions.length > reteNet.currentTime && reteNet.wmeLifeTimes.assertions[reteNet.currentTime] !== undefined){
+    if( reteNet.currentTime < reteNet.wmeLifeTimes.assertions.length  && reteNet.wmeLifeTimes.assertions[reteNet.currentTime] !== undefined){
         reteNet.wmeLifeTimes.assertions[reteNet.currentTime].forEach(function(wme){  assertWME_Immediately(reteNet.rootAlpha,wme,wme.lifeTime[1]); });
     }
-    console.log("Assertions finished for timeStep:",reteNet.currentTime);
+
     
     //At this point: newly activated action instructions are in
     //reteNet.potentialActions,
@@ -163,32 +189,32 @@ var incrementTime = function(reteNet){
     
     //increment the time
     reteNet.currentTime++;
-
 };
 
 /**
-   @function addRule
-   @purpose to build a network for a given rule
-   @note Assumes the rule's actions and conditions are objects themselves
-   @note allNodes store all relevant objects
-   @note see TotalShell::compileRete
+ @function addRule
+ @purpose to build a network for a given rule
+ @param ruleID the access point in components to start from
+ @param component stores all relevant objects
+ @note see TotalShell::compileRete
+ @returns actionnode for the rule
 */
 var addRule = function(ruleId,reteNet,components){
+    //Add a list of rules
+    if(ruleId instanceof Array){
+        return ruleId.map(d=>addRule(d,reteNet,components));
+    }
+    //-----------------
+    //Add a single rule:
     if(!Number.isInteger(ruleId) || components[ruleId] === undefined){
         throw new Error("Unrecognised rule id specified");
     }
     var rule = components[ruleId],
-        conditions = _.keys(rule.conditions).map(function(d){
-            return this[d];
-        },components),                
+        conditions = _.keys(rule.conditions).map(d=>components[d]),
         //build network with a dummy node for the parent
         finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,conditions,reteNet.rootAlpha,components,reteNet),
         //Build the actions that are triggered by the rule:
-        actionDescriptions = _.keys(rule.actions).map(function(actionId){
-            //console.log("Adding action id:",actionId);
-            //todo: protect against duplicates here?
-            return components[actionId];
-        }),        
+        actionDescriptions = _.keys(rule.actions).map(d=>components[d]),
         ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,rule.name,reteNet),
         //Bind actions with descriptions and store in the rule Action:
         boundActionDescriptions = actionDescriptions.map(function(d){
@@ -200,18 +226,20 @@ var addRule = function(ruleId,reteNet,components){
 
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;
-    
-
     reteNet.actions[rule.id] = ruleAction;
-
     return ruleAction;
 };
 
 /**
    @function removeRule
-   @purpose to remove a rule from the network
+   @purpose removes a rule from the bottom up of the network
+ @note cleans up invalidated potential actions
 */
 var removeRule = function(actionNode,reteNet){
+    if(actionNode instanceof Array){
+        actionNode.forEach(d=>removeRule(d));
+        return;
+    }
     //delete from bottom up
     var invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(actionNode);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
@@ -219,18 +247,15 @@ var removeRule = function(actionNode,reteNet){
 
 
 /**
-   convert rules to map of components
+ @convertRulesToComponents
+ @purpose convert rules to map of components
  */
 var convertRulesToComponents = function(rules){
     if(!(rules instanceof Array)){
         rules = [rules];
     }
-    var actions = _.flatten(rules.map(function(d){
-            return _.values(d.actions);
-        })),
-        conditions = _.flatten(rules.map(function(d){
-            return _.values(d.conditions);
-        })),
+    var actions = _.flatten(rules.map(d=>_.values(d.actions))),
+        conditions = _.flatten(rules.map(d=>_.values(d.conditions))),
         all = actions.concat(conditions).concat(rules),
         components = all.reduce(function(m,v){
             m[v.id] = v;

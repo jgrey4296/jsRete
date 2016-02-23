@@ -36,19 +36,13 @@ actions.assert = function(token,reteNet){
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
-        memo[key] = null;
         var v = this.values[key];
         //if the value starts with # or $, look it up in the token list
-        if(v[0] === "#" || v[0] === "$"){
-            //cut off the # or $
-            memo[key] = token.bindings[v.slice(1)];
-        }
-        if(memo[key] === undefined || memo[key] === null){
-            memo[key] = v;
-        }
+        memo[key] = v.match(/^[\$#]/) === null ? v : token.bindings[v.slice(1)];
         return memo;
     },{},this);
-    //If there are no 'values', create it:
+
+    //If there are no 'values', create them:
     if(newWMEData.values === undefined){
         newWMEData.bindings = {};
     }
@@ -76,8 +70,6 @@ actions.assert = function(token,reteNet){
             replaceValue = pair[2].match(/\$/) ? newDataPlusBindings[pair[2].slice(1)] : pair[2];
         newDataPlusBindings[key] = newDataPlusBindings[key].replace(regex,replaceValue);
     },this);
-
-
     
     //Expand out to object structure
     //ie: {values.a:5, tags.type: rule} -> {values:{a:5},tags:{type:rule}}
@@ -91,12 +83,10 @@ actions.assert = function(token,reteNet){
                                                 reteNet.currentTime+2,
                                                 reteNet.currentTime+1,
                                                 0);
-    
     return proposedAction;        
 };
 
 
-//In place retraction. ie: current cycle
 //** @action retract
 actions.retract = function(token,reteNet){
     //get all wmes the token touches:
@@ -132,6 +122,8 @@ actions.retract = function(token,reteNet){
 //note: an actual proposed action will set action.tag.character to the char.id of
 //who is to do it
 
+//performance would be taking the data provided, and an id of a grammar node,
+//combining the two, and tracing
 
 module.exports = actions;
 

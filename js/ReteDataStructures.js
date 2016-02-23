@@ -2,11 +2,9 @@
    @file ReteDataStructures
    @purpose to define the data structures required for rete
 */
-var _ = require('underscore');
-    //PossibleActions = require('./ReteActions');
-
 "use strict";
-var nextId = 0;
+var _ = require('underscore'),
+    nextId = 0;
 
 /**
    @data ReteNet

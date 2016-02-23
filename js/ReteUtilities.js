@@ -14,7 +14,7 @@ var _ = require('underscore');
         }
         
         var ancestor = node.nearestAncestor;
-        var indices = node.alphaMemory.children.map(function(d){ return d.id; });
+        var indices = node.alphaMemory.children.map(d=>d.id);
 
         //While the ancestor is a child of the alpha memory
         while(ancestor && indices.indexOf(ancestor.id) === -1){
@@ -24,7 +24,7 @@ var _ = require('underscore');
         
         //When finished, if the ancestor exists:
         if(ancestor !== null){
-            var index = node.alphaMemory.children.map(function(d){ return d.id; }).indexOf(ancestor.id);
+            var index = node.alphaMemory.children.map(d=>d.id).indexOf(ancestor.id);
             //add the node into the child list in front of the ancestor
             node.alphaMemory.children.splice(index,0,node);
         }else{
@@ -33,7 +33,7 @@ var _ = require('underscore');
         }
 
         //remove from the unlinkedChildren Field
-        var nodeIndex = node.alphaMemory.unlinkedChildren.map(function(d){ return d.id;}).indexOf(node.id);
+        var nodeIndex = node.alphaMemory.unlinkedChildren.map(d=>d.id).indexOf(node.id);
         node.alphaMemory.unlinkedChildren.splice(nodeIndex,1);
         
         
@@ -49,7 +49,7 @@ var _ = require('underscore');
     var relinkToBetaMemory = function(node){
         //remove from the unlinked children list
         //and add it into the children
-        var index = node.parent.unlinkedChildren.map(function(d){return d.id; }).indexOf(node.id);
+        var index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
         if(index > -1){
             node.parent.unlinkedChildren.splice(index,1);
             node.parent.children.unshift(node);
@@ -66,7 +66,7 @@ var _ = require('underscore');
         if(alphaMemory.items.length === 0){
             alphaMemory.children.forEach(function(amChild){
                 if(amChild.isJoinNode){
-                    var index = amChild.parent.children.map(function(parentChild){return parentChild.id;}).indexOf(amChild.id);
+                    var index = amChild.parent.children.map(d=>d.id).indexOf(amChild.id);
                     //splice out
                     var removed = amChild.parent.children.splice(index,1);
                     //and store
@@ -91,7 +91,7 @@ var _ = require('underscore');
                 //for all the node's children
                 node.children.forEach(function(jn){
                     if(jn.isJoinNode === undefined){return;}
-                    var index = jn.alphaMemory.children.map(function(d){return d.id;}).indexOf(jn.id);
+                    var index = jn.alphaMemory.children.map(d=>d.id).indexOf(jn.id);
                     if(index !== -1){
                         var removed = jn.alphaMemory.children.splice(index,1);
                         //push it in the unlinked children list
@@ -114,7 +114,7 @@ var _ = require('underscore');
             //with elements
             if(node.items.length === 0){
                 //unlink alpha memory
-                var index = node.alphaMemory.children.map(function(d){return d.id;}).indexOf(node.id);
+                var index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
                 var removed = node.alphaMemory.children.splice(index,1);
                 node.alphaMemory.unlinkedChildren.push(removed[0]);
             }
@@ -250,16 +250,14 @@ var _ = require('underscore');
         }
         var reteNet = invalidatedActions[0].reteNet,
             potentialActions = reteNet.potentialActions,
-            idList = invalidatedActions.map(function(d){
-                return d.id;
-            });
+            idList = invalidatedActions.map(d=>d.id);
         //console.log("Cleaning up:",[idList,invalidatedActions,potentialActions]);
         //filter out the ids from the potentialActions list
         //also removing them from the owning tokens
         potentialActions = _.reject(potentialActions,function(d){
-            if(d === undefined) { return false; }
+            if(d === undefined) { return true; }
             return idList.indexOf(d.id) !== -1;
-        }).filter(function(d){ return d === undefined; });
+        });
         reteNet.potentialActions = potentialActions;
     };
 
