@@ -1,6 +1,6 @@
 /**
    @file ReteActions
-   @purpose To define the functions that a triggered action can call
+   @purpose Defines action proposals
 */
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
@@ -33,6 +33,7 @@ var actions = {};
 //** @action assert
 actions.assert = function(token,reteNet){
     //console.log("Asserting with action:",[this,token,reteNet]);
+    
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
@@ -78,11 +79,13 @@ actions.assert = function(token,reteNet){
 
     //DONT create the wme, just store the data for it
     //To be returned to activateActionNode
+    var retractTime = this.timing.retract === 0 ? 0 : reteNet.currentTime+this.timing.retract;
     var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
-                                                reteNet.currentTime+2,
-                                                reteNet.currentTime+1,
-                                                0);
+                                                reteNet.currentTime+this.timing.invalidate,
+                                                reteNet.currentTime+this.timing.assert,
+                                                retractTime;
+                                                );
     return proposedAction;        
 };
 
@@ -105,12 +108,13 @@ actions.retract = function(token,reteNet){
         return _.contains(wmeIDs,wme.id);
     });
 
+    var retractTime = this.timing.retract === 0 ? 0 : reteNet.currentTime+this.timing.retract;
     //return the list of all retracted wmes:
     var proposedAction = new RDS.ProposedAction(reteNet,"retract", toRetract, token,
                                                 reteNet.currentTime,
-                                                reteNet.currentTime+2,
-                                                reteNet.currentTime+1,
-                                                0);
+                                                reteNet.currentTime+this.timing.invalidate,
+                                                reteNet.currentTime+this.timing.assert,
+                                                retractTime);
     return proposedAction;
 };
 

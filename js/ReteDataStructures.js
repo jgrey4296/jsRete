@@ -13,6 +13,11 @@ var _ = require('underscore'),
 var ReteNet = function(){
     this.dummyBetaMemory = new BetaMemory();
     this.rootAlpha = new AlphaNode();
+
+    //registered Action proposal functions
+    this.actionProposalFunctions = {};
+    //registered action performance actions
+    this.actionPerformanceFunctions = {};
     
     //Actions indexed by rule node id:
     this.actions = [];
@@ -94,9 +99,7 @@ var ProposedAction = function(reteNet,type,payload,token,queueTime,invalidateTim
     this.retractTime = retractTime; //Time to remove the
 
     //todo: possibly include metrics for selection of actions?
-    
     //todo: check for circular reference cleanup
-
     //update Token:
     //todo: update the name of this
 
@@ -298,23 +301,12 @@ var JoinNode = function(parent,alphaMemory,tests){
    @purpose A Node which, when activated, will cause the effects a rule describes
 */
 //Container object for a general graphnode action description    
-var ActionNode = function(parent,actionDescriptions,ruleName,reteNet){
+var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNet){
     ReteNode.call(this,parent);
     this.isActionNode = true;
     this.name = ruleName;
     this.actionDescriptions = actionDescriptions;
-    this.boundActions = [];
-    // try{
-    //     this.boundActions = actionDescriptions.map(function(d){
-    //         if(PossibleActions[d.tags.actionType] === undefined){
-    //             throw new Error("Unrecognised action type");
-    //         }
-    //         return _.bind(PossibleActions[d.tags.actionType],d);
-    //     });
-    // }catch(e){
-    //     this.boundActions = [];
-    //     throw e;
-    // }
+    this.boundActions = boundActions;
     //reference to retenet, to allow storage of results of firing:
     this.reteNet = reteNet;
 };

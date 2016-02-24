@@ -215,14 +215,16 @@ var addRule = function(ruleId,reteNet,components){
         finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(reteNet.dummyBetaMemory,conditions,reteNet.rootAlpha,components,reteNet),
         //Build the actions that are triggered by the rule:
         actionDescriptions = _.keys(rule.actions).map(d=>components[d]),
-        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,rule.name,reteNet),
         //Bind actions with descriptions and store in the rule Action:
         boundActionDescriptions = actionDescriptions.map(function(d){
+            //TODO:if(reteNet.actionProposalFunctions[d.tags.actionType]...
             if(PossibleActions[d.tags.actionType] === undefined){
                 throw new Error("Unrecognised action type");
             }
             return _.bind(PossibleActions[d.tags.actionType],d);
-        });
+        }),
+        //Create the action
+        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActions,rule.name,reteNet),
 
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;
@@ -263,6 +265,37 @@ var convertRulesToComponents = function(rules){
         },{});
     return components;
 };
+
+/**
+   @function createReteNet
+   @purpose Creates an initialises a new retenet object, 
+   also registers the relevant functions for action
+ */
+var ReteNetFactory = function(){
+    var rn = new RDS.ReteNet();
+    
+
+    return rn;
+};
+
+/**
+   @TODO : Register an action proposal function,
+   AND its realisation function
+ */
+var registerActionFunctions = function(reteNet,proposalFunc,performanceFunc){
+    
+
+};
+
+/**
+   @TODO : perform a proposed action
+   //if its assert/retract, schedule it,
+   //if its a different action... do what?
+*/
+
+/**
+   @TODO : schedule a generic action
+ */
 
 
 var moduleInterface = {

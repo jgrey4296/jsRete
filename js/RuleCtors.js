@@ -76,6 +76,12 @@ var Action = function(actionType, name){
     this.values = {};
     this.arithmeticActions = {};
     this.regexActions = {};
+    //Specify the timing of the proposed action to create:
+    this.timing = {
+        invalidate : 0,
+        assert : 0,
+        retract : 0
+    }
 };
 
 Action.prototype.addValue = function(varName,value){
