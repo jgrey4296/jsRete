@@ -87,16 +87,10 @@ ReteNet.prototype.clearProposedActions = function(){
 };
 
 //Assert Immediately
-ReteNet.prototype.assertWME = function(wme,retractionTime){
+ReteNet.prototype.assertWME = function(wme){
     console.log("ASSERTING:",data);
-    if(retractionTime === undefined) { retractionTime = 0; }
     if(data.isWME === undefined || data.id === undefined){
-        data = new RDS.WME(data,this.currentTime,retractionTime);
-        this.scheduleAction({
-            actionType : "retract",
-            payload : data,
-            timePoint : data.lifeTime[1]
-        });
+        data = new RDS.WME(data,this.currentTime);
         this.storeWME(data);
     }
     //Actually push the wme into the net
@@ -126,6 +120,8 @@ ReteNet.prototype.retractWME = function(wme){
     var invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
     ReteActivationsAndDeletion.deleteAllNegJoinResultsForWME(wme);
+    //Record when the wme was retracted
+    wme.lifeTime[1] = this.currentTime;
     return wme;
 };
 
@@ -142,30 +138,52 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
     
 };
 
-//schedule action (be it assert,retract,modify,other)
-ReteNet.prototype.scheduleAction = function(action){
-    if(action.actionType === undefined || action.payload === undefined || action.timePoint === undefined){
+//Schedule an action by it's ID, ALSO scheduling any parallel actions
+ReteNet.prototype.scheduleAction = function(actionId){
+    if(this.proposedActions[actionId] === undefined){
+        throw new Error("Invalid action specified");
+    }
+    var action = this.proposedActions[actionId],
+        parallelActions = action.parallelActions.map(d=>this.proposedActions[d]);
+
+    this.addToSchedule(action);
+    parallelActions.forEach(d=>this.addToSchedule(d));
+    
+};
+
+//Utility method to add an action object
+ReteNet.prototype.addToSchedule = function(action){
+    if(action.actionType === undefined || action.payload === undefined || action.timing === undefined){
         throw new Error("Scheduling action failure");
     }
     if(this.schedule[action.actionType] === undefined){
         this.schedule[action.actionType] = [];
     }
-    if(this.schedule[action.actionType][action.timePoint] === undefined){
-        this.schedule[action.actionType][action.timePoint] = [];
+    var performTime = this.currentTime + action.timing.performOffset;
+    if(this.schedule[action.actionType][performTime] === undefined){
+        this.schedule[action.actionType][performTime] = [];
     }
-    this.schedule[action.actionType][action.timePoint].push(action);
+    this.schedule[action.actionType][performTime].push(action);
+    //Action is no longer proposed, so remove it from the token
+    action.token.proposedActions = _.reject(action.token.proposedActions,d=>d.id===action.id);
 };
 
 //Step Time forward
 ReteNet.prototype.stepTime = function(){
-    //get all actions schedule at the current timepoint
+    //get all actions scheduled at the current timepoint
     var actions = _.values(this.schedule),
         actionsForTimePoint = _.flatten(actions.map(d=>d[this.currentTime]).reject(d=>d===undefined));
     //perform those actions
     actionsForTimePoint.forEach(function(d){
         var performanceFunction = this.actionFunctions(d.actionType).performFunc;
         performanceFunction(this,d.payload);
+        this.enactedActions.push(d);
     },this);
+
+    //todo: remove performed actions from proposed action list
+    
+    //cleanup invalidated actions
+    this.proposedActions = _.reject(this.proposedActions,d=>d.timing.invalidateTime === this.currentTime);
     
     this.currentTime++;
 };
@@ -184,16 +202,16 @@ ReteNet.prototype.addRule = function(ruleId,components){
         conditions = _.keys(rule.conditions).map(d=>components[d]),
         //build network with a dummy node for the parent
         finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
-        //Build the actions that are triggered by the rule:
+        //Get the action descriptions that are triggered by the rule:
         actionDescriptions = _.keys(rule.actions).map(d=>components[d]),
-        //Bind actions with descriptions and store in the rule Action:
+        //Bind proposalFuncs with actionDescriptions
         boundActionDescriptions = actionDescriptions.map(function(d){
             if(this.actionFunctions[d.tags.actionType] === undefined){
                 throw new Error("Unrecognised action type");
             }
             return _.bind(this.actionFunctions[d.tags.actionType].proposeFunc,d);
         }),
-        //Create the action
+        //Create the action, with the bound action functions
         ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActions,rule.name,this),
 
     //Add the bound actions into the action node:

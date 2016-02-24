@@ -13,25 +13,23 @@ var _ = require('underscore'),
    @note queue/invalidate time absolute,
    @note assertTime/retractTime relative to when action is enacted
 */
-var ProposedAction = function(reteNet,type,payload,token,queueTime,invalidateTime,assertTime,retractTime){
+var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj){
     this.id = nextId++;
     this.reteNet = reteNet;
     this.actionType = type;//ie: "assert","retract","perform"...
     this.payload = payload; //ie" : {a:3,b:4}...
     this.token = token; //Source Token that spawned this action
-    this.queueTime = queueTime;//Time the action was queued
-    this.invalidateTime = invalidateTime;//Time the action becomes unactionable
-    this.assertTime = assertTime; //Time to perform the action
-    this.retractTime = retractTime; //Time to remove the
+    this.timing = {
+        proposeTime : proposeTime,//when PA is created
+        invalidateTime : proposeTime+timingObj.invalidateOffset, //when it becomes invalid
+        performOffset : timingObj.performOffset, //PerformTime+pO is when it happens
+        unperformOffset : timingObj.unperformOffset //PerformTime+uPO when to remove
+    };
 
     //todo: possibly include metrics for selection of actions?
     //todo: check for circular reference cleanup
     //update Token:
-    //todo: update the name of this
-
-    //Store the proposed action in the token
     this.token.proposedActions.push(this);
-    
 };
 
 
@@ -39,14 +37,13 @@ var ProposedAction = function(reteNet,type,payload,token,queueTime,invalidateTim
    @data WME
    @purpose to store facts in the rete net
 */
-var WME = function(data,assertTime,retractTime){
+var WME = function(data,assertTime){
     this.isWME = true;
     this.data = data;
     //The lifetime of the wme. Asserted at time lifeTime[0],
     //retracted at time lifeTime[1]:
     if(assertTime === undefined) { assertTime = 0; }
-    if(retractTime === undefined) { retractTime = 0; }
-    this.lifeTime = [assertTime,retractTime];
+    this.lifeTime = [assertTime];
     //Alpha memories the wme is part of
     this.alphaMemoryItems = [];
     //Tokens the wme is part of
@@ -70,7 +67,7 @@ var Token = function(parentToken,wme,owningNode,bindings){
     this.children = []; //list of nodes
     this.negJoinResults = [];//list of NegativeJoinResults
     this.nccResults = []; //list of Token
-    this.proposedActions = [];
+    this.proposedActions = []; //current proposed actions
     
     if(this.parentToken){
         this.parentToken.children.unshift(this);

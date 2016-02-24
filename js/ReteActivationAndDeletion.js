@@ -163,9 +163,10 @@ var activateActionNode = function(actionNode,token){
     //store the proposed actions in the reteNet.potential actions
     //and also tie all the actions that fire together by their ids
     //ie: {action:"assert",payload:wme}
+    //see RDS.ProposedAction for details
     newProposedActions.forEach(function(d){
         d.parallelActions = newProposedActionIds;
-        actionNode.reteNet.potentialActions[d.id] = d;
+        actionNode.reteNet.proposedActions[d.id] = d;
     });
 };
 

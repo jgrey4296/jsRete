@@ -78,9 +78,9 @@ var Action = function(actionType, name){
     this.regexActions = {};
     //Specify the timing of the proposed action to create:
     this.timing = {
-        invalidate : 0,
-        assert : 0,
-        retract : 0
+        invalidateOffset : 0,
+        performOffset : 0,
+        unperformOffset : 0
     }
 };
 

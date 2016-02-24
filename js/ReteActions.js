@@ -24,7 +24,7 @@ var ActionInterface = {};
 //the action has the information (+ 2), the incoming token as the base value to add to.
 
 //Proposal functions return an object of the form:
-//{ action: "", payload: {}, (assertionTime,retractionTime)? }
+//{ action: "", payload: {}, (timeData)? }
 
 
 //** @action assert
@@ -75,19 +75,43 @@ ActionInterface.assert.proposeFunc = function(token,reteNet){
 
     //DONT create the wme, just store the data for it
     //To be returned to activateActionNode
-    var retractTime = this.timing.retract === 0 ? 0 : reteNet.currentTime+this.timing.retract;
     var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
-                                                reteNet.currentTime+this.timing.invalidate,
-                                                reteNet.currentTime+this.timing.assert,
-                                                retractTime;
-                                                );
+                                                this.timing);
+
     return proposedAction;        
 };
 
 
+ActionInterface.assert.performFunc = function(reteNet,proposedAction){
+    //check the type matches
+    if(proposedAction.actionType !== 'assert') { throw new Error("Expected Assert"); }
+    //Perform the action:
+    var newWMEID = reteNet.assertWME(proposedAction.payload,proposedAction.retractTime);
+
+    //schedule the retraction:
+    if(proposedAction.timing.unperformOffset > 0){
+        //schedule a retract, with no invalidate time (its not being proposed)
+        //and the perform time being the original actions unperformoffset
+        reteNet.addToSchedule(new RDS.ProposedAction(reteNet,"retract",newWMEId,null,reteNet.currentTime,{
+            invalidateOffset : null,
+            performOffset : proposedAction.timing.unperformOffset,
+            unperformOffset : null
+        }));
+    }
+};
+
+
+
+//----------------------------------------
 //** @action retract
-actions.retract = function(token,reteNet){
+ActionInterface.retract = {
+    name : "retract",
+    proposeFunc : null,
+    performFunc : null,
+
+};
+actions.retract.proposeFunc = function(token,reteNet){
     //get all wmes the token touches:
     var wmes = [];
     var currToken = token;
@@ -104,26 +128,43 @@ actions.retract = function(token,reteNet){
         return _.contains(wmeIDs,wme.id);
     });
 
-    var retractTime = this.timing.retract === 0 ? 0 : reteNet.currentTime+this.timing.retract;
-    //return the list of all retracted wmes:
+    //Propose the list of all wmes to retract 
     var proposedAction = new RDS.ProposedAction(reteNet,"retract", toRetract, token,
                                                 reteNet.currentTime,
-                                                reteNet.currentTime+this.timing.invalidate,
-                                                reteNet.currentTime+this.timing.assert,
-                                                retractTime);
+                                                this.timing);
+
     return proposedAction;
 };
 
-//What other actions might i want?
-//aggregate
-//modify
+ActionInterface.retract.performFunc = function(reteNet,proposedAction){
+    if(proposedAction.actionType !== 'retract') { throw new Error("Expected retract"); }
+    if(proposedAction.payload instanceof Array){
+        var retractedWMEs = proposedAction.payload.map(d=>reteNet.retractWME(d));
+    }else{
+        var retractedWME = reteNet.retractWME(proposedAction.payload);
+    }
+    //do anything with the retracted wme(s)?
+};
 
-//propose action...
-//note: an actual proposed action will set action.tag.character to the char.id of
-//who is to do it
+//--------------------
+ActionInterface.addRule = {
+    name : "addRule",
+    performFunc : null,
+    proposeFunc : null
+};
 
-//performance would be taking the data provided, and an id of a grammar node,
-//combining the two, and tracing
+//propose takes the token, retrieves existing conditions/actions, or creates new ones
+//perform takes the payload, as a rule object, and calls addRule on it
+
+//--------------------
+ActionInterface.removeRule = {
+    name : "removeRule",
+    performFunc : null,
+    proposeFunc : null
+};
+
+//propose gets the rule id specified and packages it up
+//perform calls removeRule on the retrieved rule
 
 module.exports = ActionInterface;
 
