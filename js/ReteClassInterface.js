@@ -7,7 +7,7 @@ var _ = require('underscore'),
     RDS = require('./ReteDataStructures'),
     ReteNetworkBuilding = require('./ReteNetworkBuilding'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
-    ReteUtil = require('./ReteUtil'),
+    ReteUtil = require('./ReteUtilities'),
     RuleCtors = require('./RuleCtors'),
     ReteActions = require('./ReteActions'),
     ComparisonOperators = require('./ReteComparisonOperators'),
@@ -191,7 +191,7 @@ ReteNet.prototype.stepTime = function(){
 //Add a rule
 ReteNet.prototype.addRule = function(ruleId,components){
     if(ruleId instanceof Array){
-        return ruleId.map(d=>this.addRule(d,components)c];
+        return ruleId.map(d=>this.addRule(d,components));
     }
     //-----------
         //Add a single rule:
@@ -212,7 +212,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
             return _.bind(this.actionFunctions[d.tags.actionType].proposeFunc,d);
         }),
         //Create the action, with the bound action functions
-        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActions,rule.name,this),
+        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActions,rule.name,this);
 
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;

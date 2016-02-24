@@ -12,14 +12,14 @@
     },
     exclude : ['underscore'],
     //keepAmdefine : true,
-    include : ['../node_modules/almond/almond','ReteInterface'],
+    include : ['../node_modules/almond/almond','ReteClassInterface'],
     cjsTranslate : true,
-    name : "ReteInterface",
-    insertRequire : [ "ReteInterface"],
+    name : "ReteClassInterface",
+    insertRequire : [ "ReteClassInterface"],
     out: "./Rete.min.js",
     optimize: "none",
     wrap : {
         startFile : "startWrap.js",
-        end : "define('underscore',function() { return _; }); return require('ReteInterface'); }));"
+        end : "define('underscore',function() { return _; }); return require('ReteClassInterface'); }));"
     },
 })

@@ -111,7 +111,8 @@ ActionInterface.retract = {
     performFunc : null,
 
 };
-actions.retract.proposeFunc = function(token,reteNet){
+
+ActionInterface.retract.proposeFunc = function(token,reteNet){
     //get all wmes the token touches:
     var wmes = [];
     var currToken = token;
