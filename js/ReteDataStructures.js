@@ -6,80 +6,6 @@
 var _ = require('underscore'),
     nextId = 0;
 
-/**
-   @data ReteNet
-   @purpose A Data structure to hold what you need to start a retenet.
-*/
-var ReteNet = function(){
-    this.dummyBetaMemory = new BetaMemory();
-    this.rootAlpha = new AlphaNode();
-
-    //registered Action proposal functions
-    this.actionProposalFunctions = {};
-    //registered action performance actions
-    this.actionPerformanceFunctions = {};
-    
-    //Actions indexed by rule node id:
-    this.actions = [];
-    //WMEs indexed by id:
-    this.allWMEs = [];
-
-    //Actions whose conditions are satisfied, indexed by id
-    this.potentialActions = [];
-    //Actions that were chosen to be performed
-    this.enactedActions = [];
-
-    //Storage of internal nodes:
-    this.allReteNodes = {};
-    this.allReteNodesByType = {
-        "constantTests" : {},
-        "alphaMemories" : {},
-        "betaMemories" : {},
-        "joinNodes" : {},
-        "negativeNodes" : {},
-        "nccNodes" : {},
-        "nccPartnerNodes" : {},
-        "actionNodes" : {},
-    };
-    
-    //Automatic retraction capabilities:
-    this.currentTime = 1;
-    //wmes to assert and retract by absolute time:
-    this.wmeLifeTimes = {
-        assertions: [],
-        retractions: [],
-    };
-};
-
-//Utility method:
-ReteNet.prototype.storeNode = function(node){
-    this.allReteNodes[node.id] = node;
-    var storeTarget = "unknown";
-    if(node.isConstantTestNode){
-        storeTarget = "constantTests";
-    }else if(node.isAlphaMemory){
-        storeTarget = "alphaMemories";
-    }else if(node.isBetaMemory){
-        storeTarget = "betaMemories";
-    }else if(node.isJoinNode){
-        storeTarget = "joinNodes";
-    }else if(node.isActionNode){
-        storeTarget = "actionNodes";
-    }else if(node.isNegativeNode){
-        storeTarget = "negativeNodes";
-    }else if(node.isAnNCCNode){
-        storeTarget = "nccNodes";
-    }else if(node.isAnNCCPartnerNode){
-        storeTarget = "nccPartnerNodes";
-    }
-
-    if(this.allReteNodesByType[storeTarget] !== undefined){
-        this.allReteNodesByType[storeTarget][node.id] = node;
-    }else{
-        console.log(node);
-        throw new Error("unrecognised type attempted to be stored");
-    }
-};
 
 /**
    @data ProposedAction
@@ -409,7 +335,6 @@ var DataStructures = {
     "NCCNode"          : NCCNode,
     "NCCPartnerNode"   : NCCPartnerNode,
     "ActionNode"       : ActionNode,
-    "ReteNet"          : ReteNet,
     "ProposedAction"   : ProposedAction
 };
 

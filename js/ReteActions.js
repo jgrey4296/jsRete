@@ -13,27 +13,28 @@ if(ArithmeticActions === undefined){
 }
 
 //Action node possible actions:
-var actions = {};
+//Stores both performance functions and proposal functions
+//in the form: {name: "", performFunc : func, propseFunc : func }
+var ActionInterface = {};
 
-//each function returns an object of the form:
-//{ action: "", payload: {}, (assertionTime,retractionTime)? }
-//Rete Interface.incrementTime uses the action to modify the
-//state of the retenet, and so must have an implemented condition for each
-//function defined here
-
-//NOTE: these will be called after being bound to an action description,
-//so 'this' refers to the information stored in an action/the action object itself,
-//while the token information will be passed in
+//Performance functions take a retenet, and a payload
+//proposal functions are bound to an action description, and take a token and a retenet
 
 //eg: the action asserts a new wme, with an arithmetic action of +2,
 //the action has the information (+ 2), the incoming token as the base value to add to.
 
+//Proposal functions return an object of the form:
+//{ action: "", payload: {}, (assertionTime,retractionTime)? }
 
-//not in place, returns a wme to be dealt with elsewhere
+
 //** @action assert
-actions.assert = function(token,reteNet){
-    //console.log("Asserting with action:",[this,token,reteNet]);
-    
+ActionInterface.assert = {
+    name : "assert",
+    proposeFunc : null,
+    performFunc : null
+};
+
+ActionInterface.assert.proposeFunc = function(token,reteNet){
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
@@ -41,13 +42,8 @@ actions.assert = function(token,reteNet){
         //if the value starts with # or $, look it up in the token list
         memo[key] = v.match(/^[\$#]/) === null ? v : token.bindings[v.slice(1)];
         return memo;
-    },{},this);
+    },{bindings: {} },this);
 
-    //If there are no 'values', create them:
-    if(newWMEData.values === undefined){
-        newWMEData.bindings = {};
-    }
-    
     //Then copy in the bindings:
     var newDataPlusBindings = _.reduce(_.keys(token.bindings),function(memo,key){
         memo.bindings[key] = token.bindings[key];            
@@ -129,5 +125,5 @@ actions.retract = function(token,reteNet){
 //performance would be taking the data provided, and an id of a grammar node,
 //combining the two, and tracing
 
-module.exports = actions;
+module.exports = ActionInterface;
 
