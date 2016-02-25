@@ -231,6 +231,7 @@ var rightActivate = function(node,wme){
 //combining bindings to.
 var negativeNodeLeftActivation = function(node,newToken){
     //Relink
+    //console.log("Negative node left activation");
     if(node.items.length === 0){
         ReteUtil.relinkToAlphaMemory(node);
     }
@@ -261,6 +262,7 @@ var negativeNodeLeftActivation = function(node,newToken){
 //any that the wme blocks, gets an additional negative Join result
 //any that don't get blocked should already have been activated
 var negativeNodeRightActivation = function(node,wme){
+    console.log("Negative node right activation");
     node.items.forEach(function(currToken){
         var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
         if(joinTestResult !== undefined && joinTestResult !== false){

@@ -88,14 +88,14 @@ ReteNet.prototype.clearProposedActions = function(){
 
 //Assert Immediately
 ReteNet.prototype.assertWME = function(wme){
-    console.log("ASSERTING:",data);
-    if(data.isWME === undefined || data.id === undefined){
-        data = new RDS.WME(data,this.currentTime);
-        this.storeWME(data);
+    console.log("ASSERTING:",wme);
+    if(wme.isWME === undefined || wme.id === undefined){
+        wme = new RDS.WME(wme,this.currentTime);
+        this.storeWME(wme);
     }
     //Actually push the wme into the net
-    ReteActivationsAndDeletion.alphaNodeActivation(this.rootAlpha,data);
-    return data.id;
+    ReteActivationsAndDeletion.alphaNodeActivation(this.rootAlpha,wme);
+    return wme.id;
 };
 
 //Retract Immediately
@@ -210,9 +210,9 @@ ReteNet.prototype.addRule = function(ruleId,components){
                 throw new Error("Unrecognised action type");
             }
             return _.bind(this.actionFunctions[d.tags.actionType].proposeFunc,d);
-        }),
+        },this),
         //Create the action, with the bound action functions
-        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActions,rule.name,this);
+        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActionDescriptions,rule.name,this);
 
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;
