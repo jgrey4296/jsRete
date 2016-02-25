@@ -88,7 +88,7 @@ ReteNet.prototype.clearProposedActions = function(){
 
 //Assert Immediately
 ReteNet.prototype.assertWME = function(wme){
-    console.log("ASSERTING:",wme);
+    //console.log("ASSERTING:",wme);
     if(wme.isWME === undefined || wme.id === undefined){
         wme = new RDS.WME(wme,this.currentTime);
         this.storeWME(wme);
@@ -192,6 +192,10 @@ ReteNet.prototype.stepTime = function(){
 ReteNet.prototype.addRule = function(ruleId,components){
     if(ruleId instanceof Array){
         return ruleId.map(d=>this.addRule(d,components));
+    }
+    if(ruleId instanceof this.RuleCtors.Rule){
+        var convertedComponents = this.convertRulesToComponents(ruleId);
+        return this.addRule(ruleId.id,convertedComponents);
     }
     //-----------
         //Add a single rule:

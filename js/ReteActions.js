@@ -71,8 +71,7 @@ ActionInterface.assert.proposeFunc = function(token,reteNet){
     //Expand out to object structure
     //ie: {values.a:5, tags.type: rule} -> {values:{a:5},tags:{type:rule}}
     var complexFormData = ReteUtil.objDescToObject(newWMEData);
-    console.log("new wme data:",complexFormData);        
-
+    
     //DONT create the wme, just store the data for it
     //To be returned to activateActionNode
     var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,

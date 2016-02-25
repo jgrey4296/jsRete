@@ -7,7 +7,6 @@ var _ = require('underscore');
     "use strict";
     var ArithmeticActions = {
         "+" : function(a,b){
-            console.log("Adding:",a,b,"Result:",a+b);
             return a + b;
         },
         "-" : function(a,b){

@@ -13,6 +13,27 @@ var Rule = function(name){
     this.actions = {};
 };
 
+//testsAndBindings = { tests : [ [var,op,val]...], bindings : [ [var,val,[op,var]]] }
+Rule.prototype.newCondition = function(type,testsAndBindings){
+    var newCondition = new Condition(type);
+    //Add all tests
+    testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
+    testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
+    this.addCondition(newCondition);
+    return this;
+};
+
+//valuesArithRegexsAndTiming = { values : [], arith : [], regexs : [], timing : [] }
+Rule.prototype.newAction = function(type,name,valuesArithRegexsAndTiming){
+    var newAction = new Action(type,name);
+    valuesArithRegexsAndTiming.values.forEach(d=>newAction.addValue(...d));
+    valuesArithRegexsAndTiming.arith.forEach(d=>newAction.addArithmetic(...d));
+    valuesArithRegexsAndTiming.regexs.forEach(d=>newAction.addRegex(...d));
+    newAction.addTiming(...valuesArithRegexsAndTiming.timing);
+    this.addAction(newAction);
+    return this;
+};
+
 Rule.prototype.addCondition = function(condition){
     this.conditions[condition.id] = condition;
     return this;
@@ -62,14 +83,21 @@ Condition.prototype.addTest = function(field,op,val){
 Condition.prototype.addBinding = function(boundName,dataName,tests){
     //tests as pairs of op and value/boundName
     this.bindings[boundName] = [dataName,tests];
-
 };
+
+Condition.prototype.newCondition = function(type,testsAndBindings){
+    if(this.type !== 'negConjCondition') { throw new Error("Only NCC's can have sub conditions"); }
+    var newCondition = new Condition(type);
+    testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
+    testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
+    this.conditions[newCondition.id] = newCondition;
+}
 
 /**
    Action constructor, defines data/values to put in a new wme,
    arithmetic and regex actions to apply to those values
  */
-var Action = function(actionType, name){
+var Action = function(actionType,name){
     this.id = nextId++;
     this.name = name || "anon";
     this.tags = { actionType : actionType || "assert" };
@@ -96,6 +124,15 @@ Action.prototype.addArithmetic = function(varName,op,value){
 
 Action.prototype.addRegex = function(varName,regex,options,replaceValue){
     this.regexActions[varName] = [regex,options,replaceValue];
+    return this;
+};
+
+Action.prototype.addTiming = function(invalid,perform,unperform){
+    this.timing = {
+        invalidateOffset : invalid,
+        performOffset : perform,
+        unperformOffset : unperform
+    };
     return this;
 };
 

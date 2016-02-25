@@ -249,16 +249,16 @@ var _ = require('underscore');
             return;
         }
         var reteNet = invalidatedActions[0].reteNet,
-            potentialActions = reteNet.potentialActions,
+            proposedActions = reteNet.proposedActions,
             idList = invalidatedActions.map(d=>d.id);
-        //console.log("Cleaning up:",[idList,invalidatedActions,potentialActions]);
-        //filter out the ids from the potentialActions list
+        //console.log("Cleaning up:",[idList,invalidatedActions,proposedActions]);
+        //filter out the ids from the proposedActions list
         //also removing them from the owning tokens
-        potentialActions = _.reject(potentialActions,function(d){
+        proposedActions = _.reject(proposedActions,function(d){
             if(d === undefined) { return true; }
             return idList.indexOf(d.id) !== -1;
         });
-        reteNet.potentialActions = potentialActions;
+        reteNet.proposedActions = proposedActions;
     };
 
 
