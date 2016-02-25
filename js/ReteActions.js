@@ -6,8 +6,8 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures'),
-    AssertAction = require('./ReteAssertAction'),
-    RetractAction = require('./ReteRetractAction'),
+    AssertAction = require('./ReteActionAssert'),
+    RetractAction = require('./ReteActionRetract'),
     AddRuleAction = require('./ReteAction_AddRule'),
     RemoveRuleAction = require('./ReteAction_removeRule');
 
