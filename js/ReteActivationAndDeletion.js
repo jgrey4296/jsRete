@@ -47,10 +47,10 @@ var constantTestNodeActivation = function(alphaNode,wme){
     }
     if(testResult){
         //console.log("successful constant test result",testResult,wme,alphaNode);
-        alphaNode.children.forEach(child=>alphaNodeActivation(child,wme));
         if(alphaNode.outputMemory){
             alphaNodeActivation(alphaNode.outputMemory,wme);
         }
+        alphaNode.children.forEach(child=>alphaNodeActivation(child,wme));
     }
     //console.log("ConstantTest Result:",alphaNode,wme,testResult);
     return testResult;

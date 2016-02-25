@@ -261,7 +261,7 @@ exports.ReteTests = {
             negCondition = new rn.RuleCtors.Condition("negCondition"),
             anAction = new rn.RuleCtors.Action(),
             data = {
-                "first" : 15,
+                "first" : 5,
                 "second" : 10,
                 "blah" : "blah"
             },
@@ -273,7 +273,7 @@ exports.ReteTests = {
             .addTest("second","EQ",10)
             .addBinding("blah","first",[]);
         //Add a negative condition
-        negCondition.addTest("first","EQ",15)
+        negCondition.addTest("first","EQ",5)
             .addBinding("blah","first",[]);
 
         //action:
@@ -286,11 +286,10 @@ exports.ReteTests = {
         components = rn.convertRulesToComponents(aRule);
         //Add the rule
         rn.addRule(aRule.id,components);
-        console.log(rn);
+        
         //Assert a wme
         var wmeId = rn.assertWME(data),
             wme = rn.allWMEs[wmeId];
-        console.log(wme.negJoinResults);
         test.ok(wme.negJoinResults.length === 1);
         //Inspect the resulting proposed actions:
         var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
