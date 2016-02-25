@@ -361,8 +361,29 @@ exports.ReteTests = {
     },    
 
     //store wme test
+    store_wme_test : function(test){
+        var rn = makeRete(),
+            testWME = new rn.DataStructures.WME({testValue : 5});
 
+        test.ok(_.keys(rn.allWMEs).length === 0);
+        rn.storeWME(testWME);
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.done();
+    },
+    
     //add to schedule test
+    addToScheduleTest : function(test){
+        var rn = makeRete();
+        //create a proposed action
+
+        //insert it in
+
+        //check it is placed correctly
+        
+
+
+   },
+
     
     //schedule action test
 

@@ -1,0 +1,25 @@
+{
+    "strict"  : true,
+    "bitwise" : true,
+    "curly"   : true,
+    "eqeqeq"  : true,
+    "forin"   : true,
+    "freeze"  : true,
+    "latedef" : true,
+    "maxdepth": 3,
+    "maxerr" : 500,
+    "nonbsp"  : true,
+    "nonew"   : true,
+    "singleGroups" : false,
+    "undef"   : true,
+    "unused"  : true,
+    "loopfunc" : true,
+    "devel"   : true,
+    "globals" : {
+        "define" : true,
+        "require" : false,
+        "module" : false
+    },
+    "browser" : true,
+    "esversion" : 6
+}

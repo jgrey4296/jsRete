@@ -245,33 +245,32 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
 //essentially a 4 state switch:
 //betaMemory, joinNode, negativeNode, NCC
 var updateNewNodeWithMatchesFromAbove = function(newNode){
-    var i, token;
     var parent = newNode.parent;
     if(parent.isBetaMemory){
-        for(i in parent.items){
+        for(let i = 0; i < parent.items.length; i++){
             ReteActivationsAndDeletion.leftActivate(newNode,parent.items[i]);
         }
     }else if(parent.isJoinNode){
-        var savedChildren = parent.children,
+        let savedChildren = parent.children,
             items = _.values(parent.alphaMemory.items);
         parent.children = [newNode];
-        for(i = 0; i < items.length; i++){
+        for(let i = 0; i < items.length; i++){
             var item = items[i];
             ReteActivationsAndDeletion.rightActivate(parent,item.wme);
         }
         parent.children = savedChildren;
     }else if(parent.isNegativeNode){
-        var items = _.values(parent.items);
-        for(i = 0; i < items.length; i++){
-            token = items[i];
+        let items = _.values(parent.items);
+        for(let i = 0; i < items.length; i++){
+            let token = items[i];
             if(token.negJoinResults.length === 0){
                 ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
     }else if(parent.isAnNCCNode){
         var items = _.values(parent.items);
-        for(i = 0; i < items.length; i++){
-            token = parent.items[i];
+        for(let i = 0; i < items.length; i++){
+            let token = parent.items[i];
             if(token.nccResults.length === 0){
                 ReteActivationsAndDeletion.leftActivate(newNode,token);
             }

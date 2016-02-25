@@ -138,6 +138,19 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
     
 };
 
+//Propose an action
+ReteNet.prototype.proposeAction = function(action){
+    if(action instanceof Array){
+        action.forEach(d=>this.proposeAction(d));
+        return;
+    }
+    if(this.proposedActions[action.id] !== undefined){
+        throw new Error("Proposing a duplicate action");
+    }
+    this.proposedActions[action.id] = action;
+};
+
+
 //Schedule an action by it's ID, ALSO scheduling any parallel actions
 ReteNet.prototype.scheduleAction = function(actionId){
     if(this.proposedActions[actionId] === undefined){
@@ -148,7 +161,6 @@ ReteNet.prototype.scheduleAction = function(actionId){
 
     this.addToSchedule(action);
     parallelActions.forEach(d=>this.addToSchedule(d));
-    
 };
 
 //Utility method to add an action object
@@ -166,6 +178,8 @@ ReteNet.prototype.addToSchedule = function(action){
     this.schedule[action.actionType][performTime].push(action);
     //Action is no longer proposed, so remove it from the token
     action.token.proposedActions = _.reject(action.token.proposedActions,d=>d.id===action.id);
+    //also remove it from retenet's proposed actions:
+    delete this.proposedActions[action.id];
 };
 
 //Step Time forward
@@ -173,6 +187,9 @@ ReteNet.prototype.stepTime = function(){
     //get all actions scheduled at the current timepoint
     var actions = _.values(this.schedule),
         actionsForTimePoint = _.flatten(actions.map(d=>d[this.currentTime]).reject(d=>d===undefined));
+    //Sort by priority
+    actionsForTimePoint.sort((a,b)=>a.priority - b.priority);
+    
     //perform those actions
     actionsForTimePoint.forEach(function(d){
         var performanceFunction = this.actionFunctions(d.actionType).performFunc;
@@ -180,8 +197,6 @@ ReteNet.prototype.stepTime = function(){
         this.enactedActions.push(d);
     },this);
 
-    //todo: remove performed actions from proposed action list
-    
     //cleanup invalidated actions
     this.proposedActions = _.reject(this.proposedActions,d=>d.timing.invalidateTime === this.currentTime);
     
@@ -227,12 +242,12 @@ ReteNet.prototype.addRule = function(ruleId,components){
 
 //Remove rule
 ReteNet.prototype.removeRule = function(rule){
-    if(actionNode instanceof Array){
-        actionNode.forEach(d=>this.removeRule(d));
+    if(rule instanceof Array){
+        rule.forEach(d=>this.removeRule(d));
         return;
     }
     //delete from bottom up
-    var invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(actionNode);
+    var invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(rule);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 };
 

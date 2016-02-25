@@ -13,7 +13,7 @@ var _ = require('underscore'),
    @note queue/invalidate time absolute,
    @note assertTime/retractTime relative to when action is enacted
 */
-var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj){
+var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,priority){
     this.id = nextId++;
     this.reteNet = reteNet;
     this.actionType = type;//ie: "assert","retract","perform"...
@@ -25,6 +25,7 @@ var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj){
         performOffset : timingObj.performOffset, //PerformTime+pO is when it happens
         unperformOffset : timingObj.unperformOffset //PerformTime+uPO when to remove
     };
+    this.priority = priority || 0;
 
     //todo: possibly include metrics for selection of actions?
     //todo: check for circular reference cleanup

@@ -65,7 +65,7 @@ var Condition = function(type){
         break;
     default:
         throw new Error("Unrecognised condition");
-    };
+    }
     this.constantTests = [];
     this.bindings = {};
     this.conditions = {};    
@@ -91,7 +91,7 @@ Condition.prototype.newCondition = function(type,testsAndBindings){
     testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
     testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
     this.conditions[newCondition.id] = newCondition;
-}
+};
 
 /**
    Action constructor, defines data/values to put in a new wme,
@@ -109,7 +109,8 @@ var Action = function(actionType,name){
         invalidateOffset : 0,
         performOffset : 0,
         unperformOffset : 0
-    }
+    };
+    this.priority = 0;
 };
 
 Action.prototype.addValue = function(varName,value){
@@ -120,7 +121,7 @@ Action.prototype.addValue = function(varName,value){
 Action.prototype.addArithmetic = function(varName,op,value){
     this.arithmeticActions[varName] = [op,value];
     return this;
-}
+};
 
 Action.prototype.addRegex = function(varName,regex,options,replaceValue){
     this.regexActions[varName] = [regex,options,replaceValue];

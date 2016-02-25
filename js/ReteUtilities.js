@@ -154,18 +154,18 @@ var _ = require('underscore');
         var i = firstTestSet.length -1;
         var j = secondTestSet.length -1;
         while(i >= 0 && j >= 0){
-            var ts1 = firstTestSet[i],
+            let ts1 = firstTestSet[i],
                 ts2 = secondTestSet[j];
             //console.log("comparing",i,j,"|||",firstTestSet[i][0],secondTestSet[j][0],"|||",firstTestSet[i][1],secondTestSet[j][1]);
-            if(firstTestSet[i][0] === secondTestSet[j][0]){
-                if(firstTestSet[i][1] === secondTestSet[j][1]){
+            if(ts1[0] === ts2[0]){
+                if(ts1[1] === ts2[1]){
                     i--; j--;
                 }else{
                     return false;
                 }
-            }else if(firstTestSet[i][0] > secondTestSet[j][0]){
+            }else if(ts1[0] > ts2[0]){
                 i--;
-            }else if(firstTestSet[i][0] < secondTestSet[j][0]){
+            }else if(ts1[0] < ts2[0]){
                 j--;
             }else{
                 return false;
