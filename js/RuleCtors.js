@@ -52,6 +52,7 @@ Rule.prototype.addAction = function(action){
  */
 var Condition = function(type){
     this.id = nextId++;
+    this.name = "conditon";
     type = type === undefined ? "positive" : type;
     switch(type){
     case "positive":

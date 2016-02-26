@@ -9,52 +9,36 @@ require.config({
 require(['underscore','rete'],function(_,Rete){
     console.log("Rete Example");
     var rn = new Rete(),
-        aRule = new rn.RuleCtors.Rule(),
-        exampleDataForWME = {
-            num : 5
-        },
-        //The var to modify to test the action
-        testVar = 0;
+        aRule = new rn.Rule(),
+        data = {
+            "first" : 5,
+            "second" : 10,
+            "blah" : "blah"
+        };
 
-    //Register a dummy action
-    rn.registerAction({
-        name : "registeredTestAction",
-        propose : function(token,reteNet){
-            return new reteNet.ProposedAction(reteNet,"registeredTestAction",
-                                              token.bindings,token,reteNet.currentTime,
-                                              {
-                                                  invalidateOffset : 0,
-                                                  performOffset : 0,
-                                                  unperformOffset : 0,
-                                              });
-        },
-        perform : function(proposedAction,reteNet){
-            if(proposedAction.actionType === "registeredTestAction"){
-                testVar += 5;
-            }
-        }
-    });
-
-    //Setup the rule
-    aRule.newCondition('positive',{
-        tests : [['num','EQ',5]],
-        bindings : [['num','num',[]]]
+    aRule.newCondition("positive",{
+        tests : [['first','EQ',5],
+                 ['second','EQ',10]],
+        bindings : [['blah','first',[]]]
     })
-        .newAction("registeredTestAction","myAction",{
-            values : [],
-            arith : [],
+        .newCondition("negative",{
+            tests : [['first','EQ',5]],
+            bindings : [['blah','first',[]]]
+        })
+        .newAction("assert","testNegAction",{
+            values : [['output','$blah']],
+            arith : [['output','+',5]],
             regexs : [],
             timing : [0,0,0],
+            priority : 0
         });
 
+    //Add the rule
     rn.addRule(aRule);
+    //Assert a wme
+    var wmeId = rn.assertWME(data),
+        wme = rn.allWMEs[wmeId];
+    //Inspect the resulting proposed actions:
+    var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
 
-    //Assert the data
-    rn.assertWME(exampleDataForWME);
-    //Schedule the action:
-    rn.scheduleAction(_.reject(rn.proposedActions,d=>d===undefined)[0].id);
-    //step time:
-    rn.stepTime();
-
-    
 });

@@ -27,7 +27,7 @@ var ReteNet = function(){
     this.actionFunctions = ReteActions;
 
     //RuleCtor storage
-    this.RuleCtors = RuleCtors;
+    this.Rule = RuleCtors.Rule;
     //Comparison operators
     this.ComparisonOperators = ComparisonOperators;
     //Arithmetic Operators:
@@ -216,7 +216,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
     if(ruleId instanceof Array){
         return ruleId.map(d=>this.addRule(d,components));
     }
-    if(ruleId instanceof this.RuleCtors.Rule){
+    if(ruleId instanceof this.Rule){
         var convertedComponents = this.convertRulesToComponents(ruleId);
         return this.addRule(ruleId.id,convertedComponents);
     }
@@ -315,6 +315,18 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
             m[v.id] = v;
             return m;
         },{});
+
+    // rules.forEach(function(d){
+    //     d.conditions = _.values(d.conditions).reduce(function(m,v){
+    //         m[v.id] = v.name;
+    //         return m;
+    //     },{});
+    //     d.actions = _.values(d.actions).reduce(function(m,v){
+    //         m[v.id] = v.name;
+    //         return m;
+    //     },{});
+    //});
+    
     return components;
 };
 

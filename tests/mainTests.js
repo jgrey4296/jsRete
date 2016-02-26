@@ -67,19 +67,22 @@ exports.ReteTests = {
     //check the rule/condition/action objects are converted correctly
     rule_component_construction_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
-            aCondition = new rn.RuleCtors.Condition(),
-            anAction = new rn.RuleCtors.Action(),
-            components;
-        aCondition.addTest("first","EQ",5)
-            .addTest("second","EQ",10)
-            .addBinding("blah","first",[]);
-        anAction.addValue("output","$blah")
-            .addArithmetic("output","+",5);
-        aRule.addCondition(aCondition)
-            .addAction(anAction);
-        //convert to components:
-        components = rn.convertRulesToComponents(aRule);
+            aRule = new rn.Rule();
+
+        aRule.newCondition("positive",{
+            tests : [["first","EQ",5],
+                     ["second","EQ",10]],
+            bindings : [["blah","first",[]]]
+        })
+            .newAction("assert","testAction",{
+                values : [["output","$blah"]],
+                arith : [["output","+",5]],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
+        
+         components = rn.convertRulesToComponents(aRule);
         //Check the components were constructed correctly:
         //Rule + Condition + action = 3
         test.ok(_.keys(components).length === 3);
@@ -89,7 +92,7 @@ exports.ReteTests = {
     //using the simpler constructor
     rule_construction_alt_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
+            aRule = new rn.Rule(),
             exampleData = {
                 num : 5,
                 str : "test",
@@ -125,7 +128,7 @@ exports.ReteTests = {
     //Another rule test
     addRule_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule("blah"),
+            aRule = new rn.Rule("blah"),
             components;
 
         aRule.newCondition('positive',{
@@ -159,25 +162,27 @@ exports.ReteTests = {
     //test a rule with an assertion
     ruleFire_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
-            aCondition = new rn.RuleCtors.Condition(),
-            anAction = new rn.RuleCtors.Action(),
+            aRule = new rn.Rule(),
             data = {
                 "first" : 5,
                 "second" : 10
             },
             components;
+
+        aRule.newCondition("positive",{
+            tests : [["first","EQ",5],
+                     ["second","EQ",10]],
+            bindings : [["blah","first",[]]],
+        })
+            .newAction("assert","testAction",{
+                values : [["output","$blah"]],
+                arith : [["output","+",5]],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
         
-        aCondition.addTest("first","EQ",5)
-            .addTest("second","EQ",10)
-            .addBinding("blah","first",[]);
-        anAction.addValue("output","$blah")
-            .addArithmetic("output","+",5);
-        aRule.addCondition(aCondition)
-            .addAction(anAction);
-        //convert to components:
-        components = rn.convertRulesToComponents(aRule);
-        rn.addRule(aRule.id,components);
+        rn.addRule(aRule);
         //Check there are no actions or wmes
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
@@ -197,7 +202,7 @@ exports.ReteTests = {
     //using the simpler constructor
     assertion_test2 : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
+            aRule = new rn.Rule(),
             exampleData = {
                 num : 5,
                 str : "test",
@@ -235,25 +240,28 @@ exports.ReteTests = {
     //Assert and then retract a wme
     ruleFire_and_retraction_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
-            aCondition = new rn.RuleCtors.Condition(),
-            anAction = new rn.RuleCtors.Action(),
+            aRule = new rn.Rule(),
             data = {
                 "first" : 5,
                 "second" : 10
             },
             components;
-        aCondition.addTest("first","EQ",5)
-            .addTest("second","EQ",10)
-            .addBinding("blah","first",[]);
-        anAction.addValue("output","$blah")
-            .addArithmetic("output","+",5);
-        aRule.addCondition(aCondition)
-            .addAction(anAction);
-        //convert to components:
-        components = rn.convertRulesToComponents(aRule);
+
+        aRule.newCondition("positive",{
+            tests : [["first","EQ",5],
+                     ["second","EQ",10]],
+            bindings : [["blah","first",[]]]
+        })
+            .newAction("assert","testAction",{
+                values : [["output","$blah"]],
+                arith : [["output","+",5]],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
+        
         //Add the rule
-        rn.addRule(aRule.id,components);
+        rn.addRule(aRule);
         //Check there are no actions or wmes
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
@@ -282,25 +290,27 @@ exports.ReteTests = {
     //add a rule, assert a fact, check the proposed action that results
     ruleFire_proposedAction_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
-            aCondition = new rn.RuleCtors.Condition(),
-            anAction = new rn.RuleCtors.Action(),
+            aRule = new rn.Rule(),
             data = {
                 "first" : 5,
                 "second" : 10
-            },
-            components;
-        aCondition.addTest("first","EQ",5)
-            .addTest("second","EQ",10)
-            .addBinding("blah","first",[]);
-        anAction.addValue("output","$blah")
-            .addArithmetic("output","+",5);
-        aRule.addCondition(aCondition)
-            .addAction(anAction);
-        //convert to components:
-        components = rn.convertRulesToComponents(aRule);
+            };
+
+        aRule.newCondition("positive",{
+            tests : [["first","EQ",5],
+                     ["second","EQ",10]],
+            bindings : [["blah","first",[]]]
+        })
+            .newAction("assert","testAction",{
+                values : [["output","$blah"]],
+                arith : [["output","+",5]],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
+
         //Add the rule
-        rn.addRule(aRule.id,components);
+        rn.addRule(aRule);
         rn.assertWME(data);
         //Inspect the resulting proposed action:
         test.ok(_.values(rn.proposedActions).length === 1);
@@ -314,34 +324,32 @@ exports.ReteTests = {
     //Create and test a rule with a negative node
     ruleFire_negative_node_test : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
-            aCondition = new rn.RuleCtors.Condition(),
-            negCondition = new rn.RuleCtors.Condition("negative"),
-            anAction = new rn.RuleCtors.Action(),
+            aRule = new rn.Rule(),
             data = {
                 "first" : 5,
                 "second" : 10,
                 "blah" : "blah"
-            },
-            components;
-        //verify the negCondition is constructed to be negative:
-        test.ok(negCondition.tags.isNegative === true);
-        aCondition.addTest("first","EQ",5)
-            .addTest("second","EQ",10)
-            .addBinding("blah","first",[]);
-        //Add a negative condition
-        negCondition.addTest("first","EQ",5)
-            .addBinding("blah","first",[]);
-        //action:
-        anAction.addValue("output","$blah")
-            .addArithmetic("output","+",5);
-        aRule.addCondition(aCondition)
-            .addCondition(negCondition)
-            .addAction(anAction);
-        //convert to components:
-        components = rn.convertRulesToComponents(aRule);
+            };
+
+        aRule.newCondition("positive",{
+            tests : [['first','EQ',5],
+                     ['second','EQ',10]],
+            bindings : [['blah','first',[]]]
+        })
+            .newCondition("negative",{
+                tests : [['first','EQ',5]],
+                bindings : [['blah','first',[]]]
+            })
+            .newAction("assert","testNegAction",{
+                values : [['output','$blah']],
+                arith : [['output','+',5]],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
+
         //Add the rule
-        rn.addRule(aRule.id,components);
+        rn.addRule(aRule);
         //Assert a wme
         var wmeId = rn.assertWME(data),
             wme = rn.allWMEs[wmeId];
@@ -405,7 +413,7 @@ exports.ReteTests = {
     //Test simple registered action
     simpleRegsterActionTest : function(test){
         var rn = makeRete(),
-            aRule = new rn.RuleCtors.Rule(),
+            aRule = new rn.Rule(),
             exampleDataForWME = {
                 num : 5
             },
@@ -453,6 +461,16 @@ exports.ReteTests = {
         rn.stepTime();
         //The performance should have changed the 
         test.ok(testVar === 5);
+        test.done();
+    },
+
+    //Assert schedule test:
+    assertScheduleTest : function(test){
+        var rn = makeRete(),
+            aRule = new rn.Rule();
+            
+
+
         test.done();
     },
 
