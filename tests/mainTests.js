@@ -265,15 +265,12 @@ exports.ReteTests = {
         test.ok(rn.allWMEs[newWMEId].data.first === 5);
         test.ok(rn.allWMEs[newWMEId].data.second === 10);
         test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
-
         //check alphamemory items, tokens, etc:
         var wme = rn.allWMEs[newWMEId];
         test.ok(wme.alphaMemoryItems.length === 1);
         test.ok(wme.tokens.length === 1);
-        
         //Retract the wme:
         rn.retractWME(wme);
-
         //Check the wme is cleaned up:
         test.ok(wme.alphaMemoryItems.length === 0);
         test.ok(wme.tokens.length === 0);
@@ -329,14 +326,12 @@ exports.ReteTests = {
             components;
         //verify the negCondition is constructed to be negative:
         test.ok(negCondition.tags.isNegative === true);
-        
         aCondition.addTest("first","EQ",5)
             .addTest("second","EQ",10)
             .addBinding("blah","first",[]);
         //Add a negative condition
         negCondition.addTest("first","EQ",5)
             .addBinding("blah","first",[]);
-
         //action:
         anAction.addValue("output","$blah")
             .addArithmetic("output","+",5);
@@ -347,14 +342,12 @@ exports.ReteTests = {
         components = rn.convertRulesToComponents(aRule);
         //Add the rule
         rn.addRule(aRule.id,components);
-        
         //Assert a wme
         var wmeId = rn.assertWME(data),
             wme = rn.allWMEs[wmeId];
         test.ok(wme.negJoinResults.length === 1);
         //Inspect the resulting proposed actions:
         var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-        //console.log(proposedActions[0].payload.bindings);
         test.ok(proposedActions.length === 0);
         test.done();
     },    
@@ -363,7 +356,6 @@ exports.ReteTests = {
     store_wme_test : function(test){
         var rn = makeRete(),
             testWME = new rn.DataStructures.WME({testValue : 5});
-
         test.ok(_.keys(rn.allWMEs).length === 0);
         rn.storeWME(testWME);
         test.ok(_.keys(rn.allWMEs).length === 1);
@@ -372,14 +364,30 @@ exports.ReteTests = {
     
     //add to schedule test
     addToScheduleTest : function(test){
-        var rn = makeRete();
-        //create a proposed action
-
+        var rn = makeRete(),
+            //create a proposed action
+            propAction = new rn.ProposedAction(rn,"assert",{},new RDS.Token(),rn.currentTime,{
+                invalidateOffset : 0,
+                performOffset : 0,
+                unperformOffset : 0
+            },0),
+            propAction2 = new rn.ProposedAction(rn,"retract",{},new RDS.Token(),rn.currentTime,{
+                invalidateOffset : 0,
+                performOffset : 0,
+                unperformOffset : 0
+            },0);
+        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
         //insert it in
-
+        rn.proposeAction(propAction);
         //check it is placed correctly
-        
-        
+        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //add the other
+        rn.proposeAction(propAction2);
+        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 2);
+        //Check you can't add the same action again
+        test.throws(function(){
+            rn.proposeAction(propAction2);
+        });
         test.done();
    },
 
@@ -403,7 +411,6 @@ exports.ReteTests = {
             },
             //The var to modify to test the action
             testVar = 0;
-
         //Register a dummy action
         rn.registerAction({
             name : "registeredTestAction",
@@ -422,7 +429,6 @@ exports.ReteTests = {
                 }
             }
         });
-
         //Setup the rule
         aRule.newCondition('positive',{
             tests : [['num','EQ',5]],
@@ -434,9 +440,7 @@ exports.ReteTests = {
                 regexs : [],
                 timing : [0,0,0],
             });
-
         rn.addRule(aRule);
-
         //check there are no proposed actions:
         test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
         //Assert the data
@@ -447,7 +451,6 @@ exports.ReteTests = {
         rn.scheduleAction(_.reject(rn.proposedActions,d=>d===undefined)[0].id);
         //step time:
         rn.stepTime();
-
         //The performance should have changed the 
         test.ok(testVar === 5);
         test.done();
