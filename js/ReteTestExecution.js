@@ -12,7 +12,7 @@ var RDS = require('./ReteDataStructures'),
 var performJoinTests = function(joinNode,token,wme){
     var newBindings = {},
         successState = true,
-        varRegex = new RegExp(/^\$/);
+        varRegex = new RegExp(/^[#\$]/);
     //Populate with current bindings from token
     _.keys(token.bindings).forEach(function(key){
         newBindings[key] = token.bindings[key];
@@ -23,7 +23,7 @@ var performJoinTests = function(joinNode,token,wme){
         joinNode.tests.forEach(function(test){
             var newValue = null;
             //retrieve the value
-            if(test[1] === "#id" || test[1] === '$id'){
+            if(/^[#\$]id$/.test(test[1][0])){
                 newValue = wme.id;
             }else{
                 newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1][0]);

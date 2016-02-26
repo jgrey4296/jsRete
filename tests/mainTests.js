@@ -496,5 +496,82 @@ exports.ReteTests = {
         test.done();
     },
 
+    schedule_perform_offset_test : function(test){
+        var rn = makeRete(),
+            aRule = new rn.Rule(),
+            testData = {
+                num : 5,
+                str : "testString",
+            };
+
+        aRule.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["str","str",[]]],
+        })
+            .newAction("assert","testAction",{
+                values : [["str","$str"]],
+                arith : [],
+                regexs : [],
+                timing : [0,2,0],
+                priority : 0
+            });
+
+        rn.addRule(aRule);
+        rn.assertWME(testData);
+        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(proposedActions.length === 1);
+        rn.scheduleAction(proposedActions[0]);
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        rn.stepTime();//start step
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        rn.stepTime();//first post schedule
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        rn.stepTime();//second post schedule -- assert performed
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        rn.stepTime();//one after
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        test.done();
+    },
+
+    retractTest : function(test){
+        var rn = makeRete(),
+            aRule = new rn.Rule(),
+            testData = {
+                num : 5,
+                str : "testString",
+            };
+
+        aRule.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["wmeid","$id",[]]],
+        })
+            .newAction("retract","testAction",{
+                values : [["wme1","$wmeid"]],
+                arith : [],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
+
+        rn.addRule(aRule);
+        rn.assertWME(testData);
+        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(proposedActions.length === 1);
+        //schedule the action
+        rn.scheduleAction(proposedActions[0]);
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        //perform the action:
+        rn.stepTime();
+        //wme remains, but is marked as retracted
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        var wme = _.reject(rn.allWMEs,d=>d===undefined)[0];
+        //check assertion time:
+        test.ok(wme.lifeTime[0] === 1);
+        //check retraction time:
+        test.ok(wme.lifeTime[1] === 1);
+        test.done();
+    },
+        
+
     
 };

@@ -23,16 +23,21 @@ RetractAction.propose = function(token,reteNet){
         currToken = currToken.parentToken;
     }
 
-    //get the wme ids to remove:
-    var wmeIDs = _.values(token.bindings);
-
-    //filter the wmeList by the wmeIDs:
-    var toRetract = _.filter(wmes,function(wme){
-        return _.contains(wmeIDs,wme.id);
-    });
+    //Get the keys of the action that have 'wme' in them
+    var wmeKeys = _.keys(this.values).filter(d=>/^wme([0-9]*)/.test(d)),
+        //get the ones of those that related to a binding in the token
+        wmeIdBindings = wmeKeys.map(d=>this.values[d]).filter(d=>/^\$/.test(d)),
+        //get the value for those bindings
+        wmeIds = wmeIdBindings.map(d=>token.bindings[d.slice(1)]);
+    //console.log("Token bindings :",token.bindings);
+    //console.log("Retrieved wme ids for retraction:",wmeIds);
+    // //filter the wmeList by the wmeIDs:
+    // var toRetract = _.filter(wmes,function(wme){
+    //     return _.contains(wmeIDs,wme.id);
+    // });
 
     //Propose the list of all wmes to retract 
-    var proposedAction = new RDS.ProposedAction(reteNet,"retract", toRetract, token,
+    var proposedAction = new RDS.ProposedAction(reteNet,"retract", wmeIds, token,
                                                 reteNet.currentTime,
                                                 this.timing);
 
@@ -41,6 +46,7 @@ RetractAction.propose = function(token,reteNet){
 
 RetractAction.perform = function(proposedAction,reteNet){
     if(proposedAction.actionType !== 'retract') { throw new Error("Expected retract"); }
+    //console.log("Retracting:",proposedAction.payload);
     if(proposedAction.payload instanceof Array){
         var retractedWMEs = proposedAction.payload.map(d=>reteNet.retractWME(d));
     }else{
