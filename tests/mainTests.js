@@ -96,7 +96,7 @@ exports.ReteTests = {
             };
 
         //Chain create a rule
-        aRule.newCondition("condition",{
+        aRule.newCondition("positive",{
             tests : [['num','EQ',5]],
             bindings : [['myStrBinding','str',[]],
                         ['myNumBinding','num',[]]]
@@ -128,7 +128,7 @@ exports.ReteTests = {
             aRule = new rn.RuleCtors.Rule("blah"),
             components;
 
-        aRule.newCondition('condition',{
+        aRule.newCondition('positive',{
             tests : [['first','EQ',5],
                     ['second','EQ',10]],
             bindings : [['blah','first',[]]]            
@@ -204,7 +204,7 @@ exports.ReteTests = {
             };
 
         //Chain create a rule
-        aRule.newCondition("condition",{
+        aRule.newCondition("positive",{
             tests : [['num','EQ',5]],
             bindings : [['myStrBinding','str',[]],
                         ['myNumBinding','num',[]]]
@@ -309,7 +309,6 @@ exports.ReteTests = {
         test.ok(_.values(rn.proposedActions).length === 1);
         var proposedAction = _.values(rn.proposedActions)[0];
         test.ok(proposedAction !== undefined);
-        //console.log(proposedAction);
         test.ok(proposedAction.payload.output !== undefined);
         test.ok(proposedAction.payload.output === 10);
         test.done();
@@ -320,7 +319,7 @@ exports.ReteTests = {
         var rn = makeRete(),
             aRule = new rn.RuleCtors.Rule(),
             aCondition = new rn.RuleCtors.Condition(),
-            negCondition = new rn.RuleCtors.Condition("negCondition"),
+            negCondition = new rn.RuleCtors.Condition("negative"),
             anAction = new rn.RuleCtors.Action(),
             data = {
                 "first" : 5,
@@ -380,8 +379,8 @@ exports.ReteTests = {
 
         //check it is placed correctly
         
-
-
+        
+        test.done();
    },
 
     
@@ -392,6 +391,67 @@ exports.ReteTests = {
     //remove rule test
 
     //register action test
+
+
+
+    //Test simple registered action
+    simpleRegsterActionTest : function(test){
+        var rn = makeRete(),
+            aRule = new rn.RuleCtors.Rule(),
+            exampleDataForWME = {
+                num : 5
+            },
+            //The var to modify to test the action
+            testVar = 0;
+
+        //Register a dummy action
+        rn.registerAction({
+            name : "registeredTestAction",
+            propose : function(token,reteNet){
+                return new reteNet.ProposedAction(reteNet,"registeredTestAction",
+                                                  token.bindings,token,reteNet.currentTime,
+                                                  {
+                                                      invalidateOffset : 0,
+                                                      performOffset : 0,
+                                                      unperformOffset : 0,
+                                                  });
+            },
+            perform : function(proposedAction,reteNet){
+                if(proposedAction.actionType === "registeredTestAction"){
+                    testVar += 5;
+                }
+            }
+        });
+
+        //Setup the rule
+        aRule.newCondition('positive',{
+            tests : [['num','EQ',5]],
+            bindings : [['num','num',[]]]
+        })
+            .newAction("registeredTestAction","myAction",{
+                values : [],
+                arith : [],
+                regexs : [],
+                timing : [0,0,0],
+            });
+
+        rn.addRule(aRule);
+
+        //check there are no proposed actions:
+        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        //Assert the data
+        rn.assertWME(exampleDataForWME);
+        //there should now be a proposed action
+        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //Schedule the action:
+        rn.scheduleAction(_.reject(rn.proposedActions,d=>d===undefined)[0].id);
+        //step time:
+        rn.stepTime();
+
+        //The performance should have changed the 
+        test.ok(testVar === 5);
+        test.done();
+    },
 
     
 };

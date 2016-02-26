@@ -23,12 +23,15 @@ Rule.prototype.newCondition = function(type,testsAndBindings){
     return this;
 };
 
-//valuesArithRegexsAndTiming = { values : [], arith : [], regexs : [], timing : [] }
+//valuesArithRegexsAndTiming = { values : [], arith : [], regexs : [], timing : [], priority : n}
 Rule.prototype.newAction = function(type,name,valuesArithRegexsAndTiming){
     var newAction = new Action(type,name);
     valuesArithRegexsAndTiming.values.forEach(d=>newAction.addValue(...d));
     valuesArithRegexsAndTiming.arith.forEach(d=>newAction.addArithmetic(...d));
     valuesArithRegexsAndTiming.regexs.forEach(d=>newAction.addRegex(...d));
+    if(valuesArithRegexsAndTiming.priority !== undefined){
+        newAction.priority = valuesArithRegexsAndTiming.priority;
+    }
     newAction.addTiming(...valuesArithRegexsAndTiming.timing);
     this.addAction(newAction);
     return this;
@@ -49,17 +52,17 @@ Rule.prototype.addAction = function(action){
  */
 var Condition = function(type){
     this.id = nextId++;
-    type = type === undefined ? "condition" : type;
+    type = type === undefined ? "positive" : type;
     switch(type){
-    case "condition":
+    case "positive":
         this.tags = { type : "condition",
                       isPositive : true };
         break;
-    case "negCondition":
+    case "negative":
         this.tags = { type : "condition",
                       isNegative : true };
         break;
-    case "negConjCondition":
+    case "ncc":
         this.tags = { isNCCCondition : true,
                       type : "negConjCondition" };
         break;

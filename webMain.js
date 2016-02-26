@@ -8,52 +8,53 @@ require.config({
 
 require(['underscore','rete'],function(_,Rete){
     console.log("Rete Example");
-    var rn = new Rete();
-    console.log(rn);
-    
-    var aRule = new rn.RuleCtors.Rule(),
-        aCondition = new rn.RuleCtors.Condition(),
-        negCondition = new rn.RuleCtors.Condition("negCondition"),
-        anAction = new rn.RuleCtors.Action(),
-        data = {
-            "first" : 5,
-            "second" : 10,
-            "blah" : "blah"
+    var rn = new Rete(),
+        aRule = new rn.RuleCtors.Rule(),
+        exampleDataForWME = {
+            num : 5
         },
-        components;
-    //verify the negCondition is constructed to be negative:
-    //test.ok(negCondition.tags.isNegative === true);
-    
-    aCondition.addTest("first","EQ",5)
-        .addTest("second","EQ",10)
-        .addBinding("blah","first",[]);
-    //Add a negative condition
-    negCondition.addTest("first","EQ",5)
-        .addBinding("blah","first",[]);
+        //The var to modify to test the action
+        testVar = 0;
 
-    //action:
-    anAction.addValue("output","$blah")
-        .addArithmetic("output","+",5);
-    aRule.addCondition(aCondition)
-        .addCondition(negCondition)
-        .addAction(anAction);
-    //convert to components:
-    components = rn.convertRulesToComponents(aRule);
-    //Add the rule
-    rn.addRule(aRule.id,components);
-    
-    //Assert a wme
-    var wmeId = rn.assertWME(data),
-        wme = rn.allWMEs[wmeId];
-    //test.ok(wme.negJoinResults.length === 1);
-    //Inspect the resulting proposed actions:
-    var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-    console.log(rn);
-    console.log(proposedActions);
-    //console.log(proposedActions[0].payload.bindings);
-    //test.ok(proposedActions.length === 0);
-    //test.done();
+    //Register a dummy action
+    rn.registerAction({
+        name : "registeredTestAction",
+        propose : function(token,reteNet){
+            return new reteNet.ProposedAction(reteNet,"registeredTestAction",
+                                              token.bindings,token,reteNet.currentTime,
+                                              {
+                                                  invalidateOffset : 0,
+                                                  performOffset : 0,
+                                                  unperformOffset : 0,
+                                              });
+        },
+        perform : function(proposedAction,reteNet){
+            if(proposedAction.actionType === "registeredTestAction"){
+                testVar += 5;
+            }
+        }
+    });
+
+    //Setup the rule
+    aRule.newCondition('positive',{
+        tests : [['num','EQ',5]],
+        bindings : [['num','num',[]]]
+    })
+        .newAction("registeredTestAction","myAction",{
+            values : [],
+            arith : [],
+            regexs : [],
+            timing : [0,0,0],
+        });
+
+    rn.addRule(aRule);
+
+    //Assert the data
+    rn.assertWME(exampleDataForWME);
+    //Schedule the action:
+    rn.scheduleAction(_.reject(rn.proposedActions,d=>d===undefined)[0].id);
+    //step time:
+    rn.stepTime();
 
     
-
 });

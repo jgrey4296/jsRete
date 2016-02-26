@@ -1,4 +1,4 @@
-/**
+2/**
    @file ReteClassInterface
    @purpose Defines a class based ReteNet interface
  */
@@ -23,7 +23,7 @@ var ReteNet = function(){
     this.rootAlpha = new RDS.AlphaNode();
 
     //To store proposal functions and performance actions
-    //Each element of form {name: "",performFunc : func, proposeFunc : func };
+    //Each element of form {name: "",perform : func, propose : func };
     this.actionFunctions = ReteActions;
 
     //RuleCtor storage
@@ -32,6 +32,10 @@ var ReteNet = function(){
     this.ComparisonOperators = ComparisonOperators;
     //Arithmetic Operators:
     this.ArithmeticOperators = ArithmeticOperators;
+    //Propose Action Constructor:
+    //ctor = function(reteNet,type,payload,token,time,timingOffsets,priority)
+    this.ProposedAction = RDS.ProposedAction;
+
     
     //DataStructures
     this.DataStructures = RDS;
@@ -153,8 +157,12 @@ ReteNet.prototype.proposeAction = function(action){
 
 //Schedule an action by it's ID, ALSO scheduling any parallel actions
 ReteNet.prototype.scheduleAction = function(actionId){
+    if(actionId instanceof this.ProposedAction){
+        this.scheduleAction(actionId.id);
+        return;
+    }
     if(this.proposedActions[actionId] === undefined){
-        throw new Error("Invalid action specified");
+        throw new Error("Invalid action specified: " + actionId);
     }
     var action = this.proposedActions[actionId],
         parallelActions = action.parallelActions.map(d=>this.proposedActions[d]);
@@ -182,23 +190,23 @@ ReteNet.prototype.addToSchedule = function(action){
     delete this.proposedActions[action.id];
 };
 
-//Step Time forward
+//Step Time forward. actions should be scheduled BEFORE CALLING STEP TIME.
 ReteNet.prototype.stepTime = function(){
     //get all actions scheduled at the current timepoint
     var actions = _.values(this.schedule),
-        actionsForTimePoint = _.flatten(actions.map(d=>d[this.currentTime]).reject(d=>d===undefined));
+        actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
     //Sort by priority
     actionsForTimePoint.sort((a,b)=>a.priority - b.priority);
     
     //perform those actions
     actionsForTimePoint.forEach(function(d){
-        var performanceFunction = this.actionFunctions(d.actionType).performFunc;
-        performanceFunction(this,d.payload);
+        var performanceFunction = this.actionFunctions[d.actionType].perform;
+        performanceFunction(d,this);
         this.enactedActions.push(d);
     },this);
 
     //cleanup invalidated actions
-    this.proposedActions = _.reject(this.proposedActions,d=>d.timing.invalidateTime === this.currentTime);
+    this.proposedActions = _.reject(this.proposedActions,d=>d===undefined || d.timing.invalidateTime === this.currentTime);
     
     this.currentTime++;
 };
@@ -228,7 +236,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
             if(this.actionFunctions[d.tags.actionType] === undefined){
                 throw new Error("Unrecognised action type");
             }
-            return _.bind(this.actionFunctions[d.tags.actionType].proposeFunc,d);
+            return _.bind(this.actionFunctions[d.tags.actionType].propose,d);
         },this),
         //Create the action, with the bound action functions
         ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActionDescriptions,rule.name,this);
@@ -254,7 +262,7 @@ ReteNet.prototype.removeRule = function(rule){
 //register a join action proposal and performance function
 //as a single object of form : {name: "", propose:func, perform:func};
 ReteNet.prototype.registerAction = function(actionObj){
-    if(actionObj.name === undefined || actionObj.performFunc === undefined || actionObj.proposeFun === undefined){
+    if(actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
         throw new Error("Action Registration Failure");
     }
     if(this.actionFunctions[actionObj.name] !== undefined){

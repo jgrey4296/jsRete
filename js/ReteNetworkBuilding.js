@@ -245,6 +245,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
 //essentially a 4 state switch:
 //betaMemory, joinNode, negativeNode, NCC
 var updateNewNodeWithMatchesFromAbove = function(newNode){
+    "use strict";
     var parent = newNode.parent;
     if(parent.isBetaMemory){
         for(let i = 0; i < parent.items.length; i++){

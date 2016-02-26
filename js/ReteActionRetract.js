@@ -7,13 +7,14 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
 "use strict";
 
 var RetractAction = {
-    "name" : "assert",
-    proposeFunc : null,
-    performFunc : null
+    //this should be RETRACT
+    "name" : "retract",
+    propose : null,
+    perform : null
 };
 
 
-RetractAction.proposeFunc = function(token,reteNet){
+RetractAction.propose = function(token,reteNet){
     //get all wmes the token touches:
     var wmes = [];
     var currToken = token;
@@ -38,7 +39,7 @@ RetractAction.proposeFunc = function(token,reteNet){
     return proposedAction;
 };
 
-RetractAction.performFunc = function(reteNet,proposedAction){
+RetractAction.perform = function(proposedAction,reteNet){
     if(proposedAction.actionType !== 'retract') { throw new Error("Expected retract"); }
     if(proposedAction.payload instanceof Array){
         var retractedWMEs = proposedAction.payload.map(d=>reteNet.retractWME(d));

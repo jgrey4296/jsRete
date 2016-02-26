@@ -7,13 +7,13 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
 "use strict";
 
 var ActionInterface = {
-    "name" : "TEMPLATE",
-    proposeFunc : null,
-    performFunc : null
+    "name" : "removeRule",
+    propose : null,
+    perform : null
 };
 
 //Token + Action Description -> ProposedAction
-ActionInterface.proposeFunc = function(token,reteNet){
+ActionInterface.propose = function(token,reteNet){
     //Propose the list of all wmes to retract 
     var proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", toRetract, token,
                                                 reteNet.currentTime,
@@ -22,8 +22,8 @@ ActionInterface.proposeFunc = function(token,reteNet){
     return proposedAction;
 };
 
-//ProposedAction -> Performance
-ActionInterface.performFunc = function(reteNet,proposedAction){
+//ProposedAction -> performance
+ActionInterface.perform = function(proposedAction,reteNet){
     console.log("No-op");
 };
 

@@ -8,12 +8,12 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
 
 var AssertAction = {
     "name" : "assert",
-    proposeFunc : null,
-    performFunc : null
+    propose : null,
+    perform : null
 };
 
 //Propose the action
-AssertAction.proposeFunc = function(token,reteNet){
+AssertAction.propose = function(token,reteNet){
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
@@ -61,7 +61,7 @@ AssertAction.proposeFunc = function(token,reteNet){
 };
 
 //Perform the action
-AssertAction.performFunc = function(reteNet,proposedAction){
+AssertAction.perform = function(proposedAction,reteNet){
     //check the type matches
     if(proposedAction.actionType !== 'assert') { throw new Error("Expected Assert"); }
     //Perform the action:

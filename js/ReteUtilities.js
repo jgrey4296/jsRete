@@ -143,7 +143,8 @@ var _ = require('underscore');
        @function compareJoinTests
        @purpose Compare specified join tests, to see if a join node is the same as one needed
     */
-    var compareJoinTests = function(firstTestSet,secondTestSet){
+var compareJoinTests = function(firstTestSet,secondTestSet){
+    "use strict";
         if(!(secondTestSet instanceof Array)){
             secondTestSet = _.pairs(secondTestSet);
         }
