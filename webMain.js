@@ -10,35 +10,30 @@ require(['underscore','rete'],function(_,Rete){
     console.log("Rete Example");
     var rn = new Rete(),
         aRule = new rn.Rule(),
-        data = {
-            "first" : 5,
-            "second" : 10,
-            "blah" : "blah"
+        testData = {
+            num : 5,
+            str : "testString",
         };
 
     aRule.newCondition("positive",{
-        tests : [['first','EQ',5],
-                 ['second','EQ',10]],
-        bindings : [['blah','first',[]]]
+        tests : [["num","EQ",5]],
+        bindings : [["str","str",[]]],
     })
-        .newCondition("negative",{
-            tests : [['first','EQ',5]],
-            bindings : [['blah','first',[]]]
-        })
-        .newAction("assert","testNegAction",{
-            values : [['output','$blah']],
-            arith : [['output','+',5]],
+        .newAction("assert","testAction",{
+            values : [["str","$str"]],
+            arith : [],
             regexs : [],
-            timing : [0,0,0],
+            timing : [0,2,0],
             priority : 0
         });
 
-    //Add the rule
     rn.addRule(aRule);
-    //Assert a wme
-    var wmeId = rn.assertWME(data),
-        wme = rn.allWMEs[wmeId];
-    //Inspect the resulting proposed actions:
+    rn.assertWME(testData);
     var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-
+    rn.scheduleAction(proposedActions[0]);
+    var i = 5;
+    while(0 < i--){
+        rn.stepTime();
+        console.log(rn);
+    }
 });

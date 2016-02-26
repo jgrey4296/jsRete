@@ -467,10 +467,32 @@ exports.ReteTests = {
     //Assert schedule test:
     assertScheduleTest : function(test){
         var rn = makeRete(),
-            aRule = new rn.Rule();
-            
+            aRule = new rn.Rule(),
+            testData = {
+                num : 5,
+                str : "testString",
+            };
 
+        aRule.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["str","str",[]]],
+        })
+            .newAction("assert","testAction",{
+                values : [["str","$str"]],
+                arith : [],
+                regexs : [],
+                timing : [0,0,0],
+                priority : 0
+            });
 
+        rn.addRule(aRule);
+        rn.assertWME(testData);
+        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(proposedActions.length === 1);
+        rn.scheduleAction(proposedActions[0]);
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        rn.stepTime();
+        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
         test.done();
     },
 
