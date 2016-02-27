@@ -3,7 +3,7 @@ if(typeof define !== 'function'){
 }
 
 var _ = require('underscore'),
-    Rete = require('../js/ReteClassInterface');
+    Rete = require('../js/ReteClassInterface'),
     RDS = require('../js/ReteDataStructures'),
     makeRete = function() { return new Rete(); },
     globalRete = makeRete();
@@ -82,7 +82,7 @@ exports.ReteTests = {
                 priority : 0
             });
         
-         components = rn.convertRulesToComponents(aRule);
+        var components = rn.convertRulesToComponents(aRule);
         //Check the components were constructed correctly:
         //Rule + Condition + action = 3
         test.ok(_.keys(components).length === 3);
@@ -133,7 +133,7 @@ exports.ReteTests = {
 
         aRule.newCondition('positive',{
             tests : [['first','EQ',5],
-                    ['second','EQ',10]],
+                     ['second','EQ',10]],
             bindings : [['blah','first',[]]]            
         })
             .newAction('assert','testAction',{
@@ -403,7 +403,7 @@ exports.ReteTests = {
             rn.proposeAction(propAction2);
         });
         test.done();
-   },
+    },
 
     
     //schedule action test
@@ -581,7 +581,7 @@ exports.ReteTests = {
         test.ok(wme.lifeTime[1] === 1);
         test.done();
     },
-        
+    
     twoRule_test : function(test){
         var rn = makeRete(),
             rule1 = new rn.Rule(),
@@ -631,10 +631,199 @@ exports.ReteTests = {
         //enact the actions
         var changes = rn.stepTime();
         //check for the changes
-        test.ok(_.keys(rn.allWMEs).length == 3);
+        test.ok(_.keys(rn.allWMEs).length === 3);
         test.ok(changes.length === 2);
         test.done();
     },
+
+    twoRule_offset_test : function(test){
+        var rn = makeRete(),
+            rule1 = new rn.Rule(),
+            rule2 = new rn.Rule(),
+            wmeData = {
+                num : 5,
+                str : "hello"
+            };
+
+        rule1.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["num","num",[]]],
+        })
+            .newAction("assert","firstRule",{
+                values : [["num","$num"]],
+                arith : [["num","+",5]],
+                timing : [0,1,0]
+            });
+
+        rule2.newCondition("positive",{
+            tests : [["str","EQ","hello"]],
+            bindings : [["str","str",[]]]
+        })
+            .newAction("assert","secondRule",{
+                values : [["str","$str"]],
+                regexs : [["str","h","g","G"]],
+                timing : [0,2,0],
+            });
+
+        //check no rules or actions exist
+        test.ok(_.keys(rn.allRules).length === 0);
+        test.ok(_.keys(rn.actions).length === 0);
+        //Add the rules
+        rn.addRule(rule1)[0].addRule(rule2);
+        //check for rn updating
+        test.ok(_.keys(rn.allRules).length === 2);
+        test.ok(_.keys(rn.actions).length === 2);
+
+        //test the rules firing:
+        test.ok(_.keys(rn.allWMEs).length === 0);
+        //assert data
+        rn.assertWME(wmeData);
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 2,_.keys(rn.proposedActions).length);
+        //schedule the actions
+        rn.scheduleAction(_.keys(rn.proposedActions)[0])
+            .scheduleAction(_.keys(rn.proposedActions)[0]);
+        //enact the actions
+        var changes = rn.stepTime();
+        //changes should NOT take plus until 1 and 2 timesteps have passed
+        //check for the changes
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.ok(changes.length === 0);
+        //First time after, 1 wme added:
+        changes = rn.stepTime();
+        test.ok(_.keys(rn.allWMEs).length === 2);
+        test.ok(changes.length === 1);
+        //Second, another wme added:
+        changes = rn.stepTime();
+        test.ok(_.keys(rn.allWMEs).length === 3);
+        test.ok(changes.length === 1);
+        test.done();
+    },
+
+    twoRule_priority_test : function(test){
+        var rn = makeRete(),
+            rule1 = new rn.Rule(),
+            rule2 = new rn.Rule(),
+            wmeData = {
+                num : 5,
+                str : "hello"
+            };
+
+        rule1.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["num","num",[]]],
+        })
+            .newAction("assert","firstRule",{
+                values : [["num","$num"]],
+                arith : [["num","+",5]],
+                priority : 1,
+            });
+
+        rule2.newCondition("positive",{
+            tests : [["str","EQ","hello"]],
+            bindings : [["str","str",[]]]
+        })
+            .newAction("assert","secondRule",{
+                values : [["str","$str"]],
+                regexs : [["str","h","g","G"]],
+                priority : 2,
+            });
+
+        //check no rules or actions exist
+        test.ok(_.keys(rn.allRules).length === 0);
+        test.ok(_.keys(rn.actions).length === 0);
+        //Add the rules
+        rn.addRule(rule1)[0].addRule(rule2);
+        //check for rn updating
+        test.ok(_.keys(rn.allRules).length === 2);
+        test.ok(_.keys(rn.actions).length === 2);
+
+        //test the rules firing:
+        test.ok(_.keys(rn.allWMEs).length === 0);
+        //assert data
+        rn.assertWME(wmeData);
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 2);
+        //schedule the actions
+        rn.scheduleAction(_.keys(rn.proposedActions)[0])
+            .scheduleAction(_.keys(rn.proposedActions)[0]);
+        //use listeners to check:
+        var assertRecord = [];
+        rn.registerListener('assert',function(d){
+            assertRecord.push(d);
+        });
+        //enact the actions
+        var changes = rn.stepTime();
+        //String wme should come before num wme
+        test.ok(assertRecord[0].str === 'Gello');
+        test.ok(assertRecord[0].num === undefined);
+        test.ok(assertRecord[1].str === undefined);
+        test.ok(assertRecord[1].num === 10);
+        test.ok(_.keys(rn.allWMEs).length === 3);
+        test.done();
+    },
+
+    //----------------------------------------
+    singleRule_twoAction_test : function(test){
+        var rn = makeRete(),
+            rule1 = new rn.Rule(),
+            wmeData = {
+                num : 5,
+                str : "hello"
+            };
+
+        rule1.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["num","num",[]],
+                        ["str","str",[]]],
+        })
+            .newAction("assert","firstRule",{
+                values : [["num","$num"]],
+                arith : [["num","+",5]],
+                priority : 1,
+            })
+            .newAction("assert","secondRule",{
+                values : [["str","$str"]],
+                regexs : [["str","h","g","G"]],
+                priority : 2,
+            });
+
+        //check no rules or actions exist
+        test.ok(_.keys(rn.allRules).length === 0);
+        test.ok(_.keys(rn.actions).length === 0);
+        //Add the rules
+        rn.addRule(rule1);
+        //check for rn updating
+        test.ok(_.keys(rn.allRules).length === 1);
+        test.ok(_.keys(rn.actions).length === 1);
+
+        //test the rules firing:
+        test.ok(_.keys(rn.allWMEs).length === 0);
+        //assert data
+        rn.assertWME(wmeData);
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 2,_.keys(rn.proposedActions).length);
+        //schedule the actions
+        rn.scheduleAction(_.keys(rn.proposedActions)[0]);
+        //use listeners to check:
+        var assertRecord = [];
+        rn.registerListener('assert',function(d){
+            assertRecord.push(d);
+        });
+        
+        //enact the actions
+        var changes = rn.stepTime();
+        //String wme should come before num wme
+        test.ok(assertRecord[0].str === 'Gello');
+        test.ok(assertRecord[0].num === undefined);
+        test.ok(assertRecord[1].str === undefined);
+        test.ok(assertRecord[1].num === 10);
+        test.ok(_.keys(rn.allWMEs).length === 3);
+        test.done();
+    },
+
+    
+
 
     
     

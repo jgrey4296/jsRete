@@ -3,7 +3,7 @@ require.config({
     paths : {
         rete : "/Rete.min",
         underscore : '/libs/underscore-min'
-    },
+    }
 });
 
 require(['underscore','rete'],function(_,Rete){
@@ -12,12 +12,12 @@ require(['underscore','rete'],function(_,Rete){
         aRule = new rn.Rule(),
         testData = {
             num : 5,
-            str : "testString",
+            str : "testString"
         };
 
     aRule.newCondition("positive",{
         tests : [["num","EQ",5]],
-        bindings : [["str","str",[]]],
+        bindings : [["str","str",[]]]
     })
         .newAction("assert","testAction",{
             values : [["str","$str"]],

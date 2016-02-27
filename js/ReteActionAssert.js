@@ -4,7 +4,6 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
 
-"use strict";
 
 var AssertAction = {
     "name" : "assert",
@@ -14,6 +13,7 @@ var AssertAction = {
 
 //Propose the action
 AssertAction.propose = function(token,reteNet){
+    "use strict";
     //create the data object:
     //initialise from the action's 'values' object
     var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
@@ -55,13 +55,16 @@ AssertAction.propose = function(token,reteNet){
     //To be returned to activateActionNode
     var proposedAction = new RDS.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
-                                                this.timing);
+                                                this.timing,
+                                                this.priority
+                                                );
 
     return proposedAction;        
 };
 
 //Perform the action
 AssertAction.perform = function(proposedAction,reteNet){
+    "use strict";
     //check the type matches
     if(proposedAction.actionType !== 'assert') { throw new Error("Expected Assert"); }
     //Perform the action:
@@ -71,7 +74,7 @@ AssertAction.perform = function(proposedAction,reteNet){
     if(proposedAction.timing.unperformOffset > 0){
         //schedule a retract, with no invalidate time (its not being proposed)
         //and the perform time being the original actions unperformoffset
-        reteNet.addToSchedule(new RDS.ProposedAction(reteNet,"retract",newWMEId,null,reteNet.currentTime,{
+        reteNet.addToSchedule(new RDS.ProposedAction(reteNet,"retract",newWMEID,null,reteNet.currentTime,{
             invalidateOffset : null,
             performOffset : proposedAction.timing.unperformOffset,
             unperformOffset : null
@@ -80,7 +83,7 @@ AssertAction.perform = function(proposedAction,reteNet){
 
     return {
         "asserted" : newWMEID
-    }
+    };
 };
 
 

@@ -1,4 +1,4 @@
-2/**
+/**
    @file ReteClassInterface
    @purpose Defines a class based ReteNet interface
  */
@@ -82,6 +82,7 @@ var ReteNet = function(){
         "addRule" : [],
         "removeRule" : [],
         "schedule" : [],
+        "stepTimeActions" : [],
     };
     
 };
@@ -230,8 +231,9 @@ ReteNet.prototype.stepTime = function(){
     var actions = _.values(this.schedule),
         actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
     //Sort by priority
-    actionsForTimePoint.sort((a,b)=>a.priority - b.priority);
-    
+    actionsForTimePoint.sort((a,b)=>b.priority - a.priority);
+
+    this.fireListener('stepTimeActions',actionsForTimePoint);
     //perform those actions, storing objects describing the changes
     var changes = actionsForTimePoint.map(function(d){
         var performanceFunction = this.actionFunctions[d.actionType].perform;
