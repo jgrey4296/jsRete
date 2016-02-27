@@ -49,10 +49,17 @@ RetractAction.perform = function(proposedAction,reteNet){
     //console.log("Retracting:",proposedAction.payload);
     if(proposedAction.payload instanceof Array){
         var retractedWMEs = proposedAction.payload.map(d=>reteNet.retractWME(d));
+        return {
+            "retracted" : retractedWMEs
+        };
     }else{
         var retractedWME = reteNet.retractWME(proposedAction.payload);
+        return {
+            "retracted" : [retractedWME]
+        }
     }
     //do anything with the retracted wme(s)?
+
 };
 
 

@@ -77,6 +77,10 @@ AssertAction.perform = function(proposedAction,reteNet){
             unperformOffset : null
         }));
     }
+
+    return {
+        "asserted" : newWMEID
+    }
 };
 
 

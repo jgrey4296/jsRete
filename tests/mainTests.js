@@ -56,11 +56,11 @@ exports.ReteTests = {
     clearProposedActions_test : function(test){
         var rn = makeRete();
         test.ok(rn.proposedActions !== undefined);
-        rn.proposedActions.push(1);
-        rn.proposedActions.push(2);
-        test.ok(rn.proposedActions.length === 2);
+        rn.proposedActions[0] = 1;
+        rn.proposedActions[1] = 2;
+        test.ok(_.keys(rn.proposedActions).length === 2);
         rn.clearProposedActions();
-        test.ok(rn.proposedActions.length === 0);
+        test.ok(_.keys(rn.proposedActions).length === 0);
         test.done();        
     },
 
@@ -186,7 +186,6 @@ exports.ReteTests = {
         //Check there are no actions or wmes
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
-        test.ok(rn.proposedActions.length === 0);
         //Assert the wme:
         var newWMEId = rn.assertWME(data);
         //Check the wme is asserted, and the action for it fires
@@ -195,7 +194,8 @@ exports.ReteTests = {
         test.ok(rn.allWMEs[newWMEId].data.first === 5);
         test.ok(rn.allWMEs[newWMEId].data.second === 10);
         //Check there is one proposed action:
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         test.done();
     },
 
@@ -233,7 +233,8 @@ exports.ReteTests = {
         test.ok(rn.allWMEs[newWMEId] !== undefined);
         test.ok(rn.allWMEs[newWMEId].data.num === 5);
         test.ok(rn.allWMEs[newWMEId].data.str === "test");
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         test.done();
     },
 
@@ -272,7 +273,8 @@ exports.ReteTests = {
         test.ok(rn.allWMEs[newWMEId] !== undefined);
         test.ok(rn.allWMEs[newWMEId].data.first === 5);
         test.ok(rn.allWMEs[newWMEId].data.second === 10);
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         //check alphamemory items, tokens, etc:
         var wme = rn.allWMEs[newWMEId];
         test.ok(wme.alphaMemoryItems.length === 1);
@@ -283,7 +285,8 @@ exports.ReteTests = {
         test.ok(wme.alphaMemoryItems.length === 0);
         test.ok(wme.tokens.length === 0);
         //check the proposed action is cleaned up
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        test.ok(_.keys(rn.proposedActions).length === 0);
         test.done();
     },
 
@@ -355,15 +358,15 @@ exports.ReteTests = {
             wme = rn.allWMEs[wmeId];
         test.ok(wme.negJoinResults.length === 1);
         //Inspect the resulting proposed actions:
-        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-        test.ok(proposedActions.length === 0);
+        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(_.keys(rn.proposedActions).length === 0);
         test.done();
     },    
 
     //store wme test
     store_wme_test : function(test){
         var rn = makeRete(),
-            testWME = new rn.DataStructures.WME({testValue : 5});
+            testWME = new rn.WME({testValue : 5});
         test.ok(_.keys(rn.allWMEs).length === 0);
         rn.storeWME(testWME);
         test.ok(_.keys(rn.allWMEs).length === 1);
@@ -384,14 +387,17 @@ exports.ReteTests = {
                 performOffset : 0,
                 unperformOffset : 0
             },0);
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        test.ok(_.keys(rn.proposedActions).length === 0);
         //insert it in
         rn.proposeAction(propAction);
         //check it is placed correctly
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         //add the other
         rn.proposeAction(propAction2);
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 2);
+        test.ok(_.keys(rn.proposedActions).length === 2);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 2);
         //Check you can't add the same action again
         test.throws(function(){
             rn.proposeAction(propAction2);
@@ -450,13 +456,15 @@ exports.ReteTests = {
             });
         rn.addRule(aRule);
         //check there are no proposed actions:
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 0);
+        test.ok(_.keys(rn.proposedActions).length === 0);
         //Assert the data
         rn.assertWME(exampleDataForWME);
         //there should now be a proposed action
-        test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         //Schedule the action:
-        rn.scheduleAction(_.reject(rn.proposedActions,d=>d===undefined)[0].id);
+        rn.scheduleAction(_.values(rn.proposedActions)[0].id);
         //step time:
         rn.stepTime();
         //The performance should have changed the 
@@ -487,12 +495,14 @@ exports.ReteTests = {
 
         rn.addRule(aRule);
         rn.assertWME(testData);
-        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-        test.ok(proposedActions.length === 1);
-        rn.scheduleAction(proposedActions[0]);
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(_.keys(rn.proposedActions).length === 1);
+        rn.scheduleAction(_.values(rn.proposedActions)[0]);
+        //test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.allWMEs).length === 1);
         rn.stepTime();
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        //test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        test.ok(_.keys(rn.allWMEs).length === 2);
         test.done();
     },
 
@@ -518,18 +528,18 @@ exports.ReteTests = {
 
         rn.addRule(aRule);
         rn.assertWME(testData);
-        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-        test.ok(proposedActions.length === 1);
-        rn.scheduleAction(proposedActions[0]);
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(_.keys(rn.proposedActions).length === 1);
+        rn.scheduleAction(_.values(rn.proposedActions)[0].id);
+        test.ok(_.keys(rn.allWMEs).length === 1);
         rn.stepTime();//start step
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.allWMEs).length === 1);
         rn.stepTime();//first post schedule
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        test.ok(_.keys(rn.allWMEs).length === 1);
         rn.stepTime();//second post schedule -- assert performed
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        test.ok(_.keys(rn.allWMEs).length === 2);
         rn.stepTime();//one after
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 2);
+        test.ok(_.keys(rn.allWMEs).length === 2);
         test.done();
     },
 
@@ -555,16 +565,16 @@ exports.ReteTests = {
 
         rn.addRule(aRule);
         rn.assertWME(testData);
-        var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
-        test.ok(proposedActions.length === 1);
+        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        test.ok(_.keys(rn.proposedActions).length === 1);
         //schedule the action
-        rn.scheduleAction(proposedActions[0]);
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
+        rn.scheduleAction(_.values(rn.proposedActions)[0]);
+        test.ok(_.keys(rn.allWMEs).length === 1);
         //perform the action:
         rn.stepTime();
         //wme remains, but is marked as retracted
-        test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
-        var wme = _.reject(rn.allWMEs,d=>d===undefined)[0];
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        var wme = _.values(rn.allWMEs)[0];
         //check assertion time:
         test.ok(wme.lifeTime[0] === 1);
         //check retraction time:
@@ -572,6 +582,60 @@ exports.ReteTests = {
         test.done();
     },
         
+    twoRule_test : function(test){
+        var rn = makeRete(),
+            rule1 = new rn.Rule(),
+            rule2 = new rn.Rule(),
+            wmeData = {
+                num : 5,
+                str : "hello"
+            };
 
+        rule1.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : [["num","num",[]]],
+        })
+            .newAction("assert","firstRule",{
+                values : [["num","$num"]],
+                arith : [["num","+",5]],
+            });
+
+        rule2.newCondition("positive",{
+            tests : [["str","EQ","hello"]],
+            bindings : [["str","str",[]]]
+        })
+            .newAction("assert","secondRule",{
+                values : [["str","$str"]],
+                regexs : [["str","h","g","G"]]
+            });
+
+        //check no rules or actions exist
+        test.ok(_.keys(rn.allRules).length === 0);
+        test.ok(_.keys(rn.actions).length === 0);
+        //Add the rules
+        rn.addRule(rule1)[0].addRule(rule2);
+        //check for rn updating
+        test.ok(_.keys(rn.allRules).length === 2);
+        test.ok(_.keys(rn.actions).length === 2);
+
+        //test the rules firing:
+        test.ok(_.keys(rn.allWMEs).length === 0);
+        //assert data
+        rn.assertWME(wmeData);
+        test.ok(_.keys(rn.allWMEs).length === 1);
+        test.ok(_.keys(rn.proposedActions).length === 2,_.keys(rn.proposedActions).length);
+        //schedule the actions
+        rn.scheduleAction(_.keys(rn.proposedActions)[0]);
+        test.ok(_.keys(rn.proposedActions).length === 1);
+        rn.scheduleAction(_.keys(rn.proposedActions)[0]);
+        //enact the actions
+        var changes = rn.stepTime();
+        //check for the changes
+        test.ok(_.keys(rn.allWMEs).length == 3);
+        test.ok(changes.length === 2);
+        test.done();
+    },
+
+    
     
 };

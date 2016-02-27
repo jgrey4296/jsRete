@@ -35,19 +35,21 @@ var ReteNet = function(){
     //Propose Action Constructor:
     //ctor = function(reteNet,type,payload,token,time,timingOffsets,priority)
     this.ProposedAction = RDS.ProposedAction;
+    //ctor = function(data,assertTime)
+    this.WME = RDS.WME;
+    //ctor = function (parentToken,wme,owningNode,bindings)
+    this.Token = RDS.Token;
+    
 
-    
-    //DataStructures
-    this.DataStructures = RDS;
-    
-    
-    //Actions indexed by rule node id:
-    this.actions = [];
+    //All Loaded rules:
+    this.allRules = {};
+    //ActionNodes indexed by rule node id:
+    this.actions = {};
     //WMEs indexed by id:
-    this.allWMEs = [];
+    this.allWMEs = {};
 
     //Actions whose conditions are satisfied, indexed by id
-    this.proposedActions = [];
+    this.proposedActions = {};
     //Actions that were chosen to be performed
     this.enactedActions = [];
 
@@ -64,7 +66,6 @@ var ReteNet = function(){
         "actionNodes" : {},
     };
     
-
     this.currentTime = 1;
     //Schedule Actions:
     this.schedule = {
@@ -73,6 +74,31 @@ var ReteNet = function(){
         modifications: []
     };
 
+    //listeners:
+    this.listeners = {
+        "propose" : [],
+        "assert" : [],
+        "retract" : [],
+        "addRule" : [],
+        "removeRule" : [],
+        "schedule" : [],
+    };
+    
+};
+
+//Utility to register listeners:
+ReteNet.prototype.registerListener = function(name,fn){
+    if(this.listeners[name] !== undefined){
+        this.listeners[name].push(fn);
+    }
+};
+
+ReteNet.prototype.fireListener = function(name,...vals){
+    if(this.listeners[name] === undefined){
+        throw new Error(`Unrecognised listener fired: ${name}`);
+    }
+    //call the registered functions
+    this.listeners[name].forEach(d=>d(...vals));
 };
 
 ReteNet.prototype.storeWME = function(wme){
@@ -87,11 +113,12 @@ ReteNet.prototype.clearHistory = function(){
 
 //Clear the list of proposed actions
 ReteNet.prototype.clearProposedActions = function(){
-    this.proposedActions = [];
+    this.proposedActions = {};
 };
 
 //Assert Immediately
 ReteNet.prototype.assertWME = function(wme){
+    this.fireListener("assert",wme);
     //console.log("ASSERTING:",wme);
     if(wme.isWME === undefined || wme.id === undefined){
         wme = new RDS.WME(wme,this.currentTime);
@@ -104,6 +131,7 @@ ReteNet.prototype.assertWME = function(wme){
 
 //Retract Immediately
 ReteNet.prototype.retractWME = function(wme){
+    this.fireListener("retract",wme);
     //console.log("retracting immediately:",wme);
     //if not given the wme directly
     if(wme.isWME === undefined){
@@ -144,6 +172,9 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
 
 //Propose an action
 ReteNet.prototype.proposeAction = function(action){
+    //Call the listeners:
+    this.fireListener("propose",action);
+    
     if(action instanceof Array){
         action.forEach(d=>this.proposeAction(d));
         return;
@@ -151,12 +182,14 @@ ReteNet.prototype.proposeAction = function(action){
     if(this.proposedActions[action.id] !== undefined){
         throw new Error("Proposing a duplicate action");
     }
+    //console.log("Proposing:",action);
     this.proposedActions[action.id] = action;
 };
 
 
 //Schedule an action by it's ID, ALSO scheduling any parallel actions
 ReteNet.prototype.scheduleAction = function(actionId){
+    this.fireListener("schedule",actionId);
     if(actionId instanceof this.ProposedAction){
         this.scheduleAction(actionId.id);
         return;
@@ -169,6 +202,7 @@ ReteNet.prototype.scheduleAction = function(actionId){
 
     this.addToSchedule(action);
     parallelActions.forEach(d=>this.addToSchedule(d));
+    return this;
 };
 
 //Utility method to add an action object
@@ -198,21 +232,30 @@ ReteNet.prototype.stepTime = function(){
     //Sort by priority
     actionsForTimePoint.sort((a,b)=>a.priority - b.priority);
     
-    //perform those actions
-    actionsForTimePoint.forEach(function(d){
+    //perform those actions, storing objects describing the changes
+    var changes = actionsForTimePoint.map(function(d){
         var performanceFunction = this.actionFunctions[d.actionType].perform;
-        performanceFunction(d,this);
+        var effects = performanceFunction(d,this);
         this.enactedActions.push(d);
+        return effects;
     },this);
 
     //cleanup invalidated actions
-    this.proposedActions = _.reject(this.proposedActions,d=>d===undefined || d.timing.invalidateTime === this.currentTime);
+    //this.proposedActions = _.reject(this.proposedActions,d=>d===undefined || d.timing.invalidateTime === this.currentTime);
+    _.values(this.proposedActions).forEach(function(d){
+        if(d.timing.invalidateTime === this.currentTime){
+            delete this.proposedActions[d.id];
+        }
+    });
     
     this.currentTime++;
+
+    return changes;
 };
 
 //Add a rule
 ReteNet.prototype.addRule = function(ruleId,components){
+    this.fireListener("addRule",components);
     if(ruleId instanceof Array){
         return ruleId.map(d=>this.addRule(d,components));
     }
@@ -220,11 +263,11 @@ ReteNet.prototype.addRule = function(ruleId,components){
         var convertedComponents = this.convertRulesToComponents(ruleId);
         return this.addRule(ruleId.id,convertedComponents);
     }
-    //-----------
-        //Add a single rule:
     if(!Number.isInteger(ruleId) || components[ruleId] === undefined){
         throw new Error("Unrecognised rule id specified");
     }
+    //-----------
+    //Add a single rule:
     var rule = components[ruleId],
         conditions = _.keys(rule.conditions).map(d=>components[d]),
         //build network with a dummy node for the parent
@@ -244,12 +287,14 @@ ReteNet.prototype.addRule = function(ruleId,components){
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;
     this.actions[rule.id] = ruleAction;
-    return ruleAction;
+    this.allRules[rule.id] = rule;
+    return [this,ruleAction];
 };
 
 
 //Remove rule
 ReteNet.prototype.removeRule = function(rule){
+    this.fireListener("removeRule",rule);
     if(rule instanceof Array){
         rule.forEach(d=>this.removeRule(d));
         return;

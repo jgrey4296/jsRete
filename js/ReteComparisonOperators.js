@@ -26,7 +26,20 @@ var ConstantTestOperators = {
     },
     "NE" : function(a,b){
         return a !== b;
+    },
+    "MATCH" : function(a,b){
+        var regex = new RegExp(b);
+        return regex.test(a);
     }
 };
+
+ConstantTestOperators['==='] = ConstantTestOperators.EQ;
+ConstantTestOperators['<'] = ConstantTestOperators.LT;
+ConstantTestOperators['>'] = ConstantTestOperators.GT;
+ConstantTestOperators['<='] = ConstantTestOperators.LTE;
+ConstantTestOperators['>='] = ConstantTestOperators.GTE;
+ConstantTestOperators['!=='] = ConstantTestOperators.NE;
+ConstantTestOperators['~='] = ConstantTestOperators.MATCH;
+
 
 module.exports = ConstantTestOperators;

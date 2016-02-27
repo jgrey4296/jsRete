@@ -17,8 +17,12 @@ var Rule = function(name){
 Rule.prototype.newCondition = function(type,testsAndBindings){
     var newCondition = new Condition(type);
     //Add all tests
-    testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
-    testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
+    if(testsAndBindings.tests !== undefined){
+        testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
+    }
+    if(testsAndBindings.bindings !== undefined){
+        testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
+    }
     this.addCondition(newCondition);
     return this;
 };
@@ -26,13 +30,21 @@ Rule.prototype.newCondition = function(type,testsAndBindings){
 //valuesArithRegexsAndTiming = { values : [], arith : [], regexs : [], timing : [], priority : n}
 Rule.prototype.newAction = function(type,name,valuesArithRegexsAndTiming){
     var newAction = new Action(type,name);
-    valuesArithRegexsAndTiming.values.forEach(d=>newAction.addValue(...d));
-    valuesArithRegexsAndTiming.arith.forEach(d=>newAction.addArithmetic(...d));
-    valuesArithRegexsAndTiming.regexs.forEach(d=>newAction.addRegex(...d));
+    if(valuesArithRegexsAndTiming.values !== undefined){
+        valuesArithRegexsAndTiming.values.forEach(d=>newAction.addValue(...d));
+    }
+    if(valuesArithRegexsAndTiming.arith !== undefined){
+        valuesArithRegexsAndTiming.arith.forEach(d=>newAction.addArithmetic(...d));
+    }
+    if(valuesArithRegexsAndTiming.regexs !== undefined){
+        valuesArithRegexsAndTiming.regexs.forEach(d=>newAction.addRegex(...d));
+    }
     if(valuesArithRegexsAndTiming.priority !== undefined){
         newAction.priority = valuesArithRegexsAndTiming.priority;
     }
-    newAction.addTiming(...valuesArithRegexsAndTiming.timing);
+    if(valuesArithRegexsAndTiming.timing !== undefined){
+        newAction.addTiming(...valuesArithRegexsAndTiming.timing);
+    }
     this.addAction(newAction);
     return this;
 };
@@ -140,6 +152,7 @@ Action.prototype.addTiming = function(invalid,perform,unperform){
     };
     return this;
 };
+
 
 module.exports = {
     Rule : Rule,
