@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: ReteTestExecution.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: ReteTestExecution.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+   @module ReteTestExecution
+   @requires ReteDataStructures
+   @requires underscore
+   @requires ReteUtilities
+   @requires ReteComparisonOperators
+ */
+var RDS = require('./ReteDataStructures'),
+    _ = require('underscore'),
+    ReteUtil = require('./ReteUtilities'),
+    ReteComparisonOps = require('./ReteComparisonOperators');
+
+"use strict";
+/**
+   Compare a token and wme, using defined bindings from a joinNode
+   @param joinNode
+   @param token
+   @param wme   
+   @function performJoinTests
+   @returns {False | Object}
+*/
+var performJoinTests = function(joinNode,token,wme){
+    //returns False if no match, dict of all updated bindings otherwise
+    var newBindings = {},
+        successState = true,
+        varRegex = new RegExp(/^[#\$]/);
+    //Populate with current bindings from token
+    _.keys(token.bindings).forEach(function(key){
+        newBindings[key] = token.bindings[key];
+    });
+
+    try{
+        //add new bindings:
+        joinNode.tests.forEach(function(test){
+            var newValue = null;
+            //retrieve the value
+            if(/^[#\$]id$/.test(test[1][0])){
+                newValue = wme.id;
+            }else{
+                newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1][0]);
+            }
+            
+            //compare the value for each specified binding test
+            var bindingComparisons = test[1][1];
+            
+            //Compare using any defined binding tests
+            bindingComparisons.forEach(function(d){
+                var comparator = ReteComparisonOps[d[0]],
+                    varName = d[1];
+                //if it fails, fail the test
+                //use the value in the test, minus the $ at the beginning:
+                if(!varRegex.test(varName)) { throw new Error("Non-bound var name"); }
+                
+                if(!comparator(newValue,newBindings[varName.slice(1)])){
+                    throw new Error("Test failed");
+                }
+            });
+            
+            if(newBindings[test[0]] === undefined){
+                newBindings[test[0]] = newValue;
+            }
+            if(newBindings[test[0]] !== newValue){
+                throw new Error("Test failed");
+            }
+        });
+        
+        if(successState){
+            return newBindings;
+        }else{
+            throw new Error("Test failed");
+        }
+    }catch(e){
+        return false;
+    }
+};
+
+
+var moduleInterface = {
+    "performJoinTests" : performJoinTests,
+};
+module.exports =  moduleInterface;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-ReteActionAssert.html">ReteActionAssert</a></li><li><a href="module-ReteActionInterface.html">ReteActionInterface</a></li><li><a href="module-ReteActionRetract.html">ReteActionRetract</a></li><li><a href="module-ReteActions.html">ReteActions</a></li><li><a href="module-ReteActivationAndDeletion.html">ReteActivationAndDeletion</a></li><li><a href="module-ReteArithmeticActions.html">ReteArithmeticActions</a></li><li><a href="module-ReteClassInterface.html">ReteClassInterface</a></li><li><a href="module-ReteComparisonOperators.html">ReteComparisonOperators</a></li><li><a href="module-ReteDataStructures.html">ReteDataStructures</a></li><li><a href="module-ReteNetworkBuilding.html">ReteNetworkBuilding</a></li><li><a href="module-ReteTestExecution.html">ReteTestExecution</a></li><li><a href="module-ReteUtilities.html">ReteUtilities</a></li><li><a href="module-RuleCtors.html">RuleCtors</a></li></ul><h3>Classes</h3><ul><li><a href="module-ReteActionAssert-AssertAction.html">AssertAction</a></li><li><a href="module-ReteActionRetract-RetractAction.html">RetractAction</a></li><li><a href="module-ReteClassInterface-ReteNet.html">ReteNet</a></li><li><a href="module-ReteDataStructures-ActionNode.html">ActionNode</a></li><li><a href="module-ReteDataStructures-AlphaMemory.html">AlphaMemory</a></li><li><a href="module-ReteDataStructures-AlphaMemoryItem.html">AlphaMemoryItem</a></li><li><a href="module-ReteDataStructures-AlphaNode.html">AlphaNode</a></li><li><a href="module-ReteDataStructures-BetaMemory.html">BetaMemory</a></li><li><a href="module-ReteDataStructures-JoinNode.html">JoinNode</a></li><li><a href="module-ReteDataStructures-NCCNode.html">NCCNode</a></li><li><a href="module-ReteDataStructures-NCCPartnerNode.html">NCCPartnerNode</a></li><li><a href="module-ReteDataStructures-NegativeJoinResult.html">NegativeJoinResult</a></li><li><a href="module-ReteDataStructures-NegativeNode.html">NegativeNode</a></li><li><a href="module-ReteDataStructures-ProposedAction.html">ProposedAction</a></li><li><a href="module-ReteDataStructures-ReteNode.html">ReteNode</a></li><li><a href="module-ReteDataStructures-Token.html">Token</a></li><li><a href="module-ReteDataStructures-WME.html">WME</a></li><li><a href="module-RuleCtors-Action.html">Action</a></li><li><a href="module-RuleCtors-Condition.html">Condition</a></li><li><a href="module-RuleCtors-Rule.html">Rule</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-ReteActionInterface-ActionInterface.html">ActionInterface</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Feb 27 2016 22:29:38 GMT-0800 (PST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

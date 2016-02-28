@@ -1,3 +1,13 @@
+/**
+   Functions that describe Activation of ReteNet nodes, and the removal of said nodes
+   @module ReteActivationAndDeletion
+   @requires ReteDataStructures
+   @requires ReteComparisonOperators
+   @requires ReteUtilities
+   @requires ReteTestExecution
+   @requires ReteActions
+   @requires underscore
+ */
 var RDS = require('./ReteDataStructures'),
     ConstantTestOperators = require('./ReteComparisonOperators'),
     ReteUtil = require('./ReteUtilities'),
@@ -7,11 +17,12 @@ var RDS = require('./ReteDataStructures'),
 
 "use strict";
 
-
 /**
-   @function alphaMemoryActivation
-   @purpose stores a wme in an alpha memory
+   Stores a wme in an alpha memory, 
    Trigger an alpha memory with a new wme to store
+   @param alphaMem
+   @param wme
+   @function alphaMemoryActivation
 */
 var alphaMemoryActivation = function(alphaMem,wme){
     var newItem = new RDS.AlphaMemoryItem(wme,alphaMem);
@@ -22,10 +33,11 @@ var alphaMemoryActivation = function(alphaMem,wme){
 };
 
 /**
+   Tests a wme against the test in the given node
+   @param alphaNode
+   @param wme
    @function constantTestNodeActivation
-   @purpose tests a wme against the test in the given node
 */
-//Trigger a constant test with a new wme
 var constantTestNodeActivation = function(alphaNode,wme){
     //test the wme using the constant test in the node
     var testResult = false;
@@ -57,9 +69,10 @@ var constantTestNodeActivation = function(alphaNode,wme){
 };
 
 /**
+   Selects whether to store a wme, or test the wme
+   @param alphaNode
+   @param wme
    @function alphaNodeActivation
-   @utility
-   @purpose selects whether to store a wme, or test the wme
 */
 //Switchable activation function for alpha network stuff
 var alphaNodeActivation = function(alphaNode,wme){
@@ -73,14 +86,16 @@ var alphaNodeActivation = function(alphaNode,wme){
 };
 
 /**
+   Stores a token in the beta memory
+   @param betaMemory
+   @param token
    @function betaMemoryActivation
-   @purpose stores a token in the beta memory
 */
-//trigger a beta memory to store a new token
-//bindings are from the join node, holding results of the NEW binding tests
-//old bindings are still in the token, the constructor of Token will combine the two
-//sets of bindings
 var betaMemoryActivation = function(betaMemory,token){
+    //trigger a beta memory to store a new token
+    //bindings are from the join node, holding results of the NEW binding tests
+    //old bindings are still in the token, the constructor of Token will combine the two
+    //sets of bindings
     var newToken = token;
     betaMemory.items.unshift(newToken);
     betaMemory.children.forEach(child=>leftActivate(child,newToken));
@@ -88,12 +103,14 @@ var betaMemoryActivation = function(betaMemory,token){
 
 
 /**
+   Given a new token, compares it to all wmes in the related alpha memory
+   @param node
+   @param token
    @function joinNodeLeftActivation
-   @purpose given a new token, compares it to all wmes in the related alpha memory
 */
-//Trigger a join node with a new token
-//will pull all wmes needed from the linked alphaMemory
 var joinNodeLeftActivation = function(node,token){
+    //Trigger a join node with a new token
+    //will pull all wmes needed from the linked alphaMemory
     //If necessary, relink or unlink the
     //parent betamemory or alphamemory
     if(node.parent.items && node.parent.items.length === 1){
@@ -122,6 +139,8 @@ var joinNodeLeftActivation = function(node,token){
 
 /**
    @function joinNodeRightActivation
+   @param node
+   @param wme
    @purpose given a new wme, compares it against all tokens in the related beta memory
 */
 //Trigger a join node with a new wme
@@ -150,8 +169,10 @@ var joinNodeRightActivation = function(node,wme){
 
 
 /**
+   Given a new token, activates any stored actions necessary
+   @param actionNode
+   @param token
    @function activateActionNode
-   @purpose given a new token, activates any stored actions necessary
 */
 var activateActionNode = function(actionNode,token){
     //get the actions the node embodies:
@@ -172,13 +193,12 @@ var activateActionNode = function(actionNode,token){
 
 
 /**
+   Selects what node to activate as appropriate, for a new token
    @function leftActivate
-   @utility
-   @purpose selects what node to activate as appropriate, for a new token
 */
-//Utility leftActivation function to call
-//whichever specific type is needed
 var leftActivate = function(node,token,wme,joinTestResults){
+    //Utility leftActivation function to call
+    //whichever specific type is needed
     //Construct a new token if supplied the correct
     //parameters
     if(joinTestResults && wme){
@@ -210,8 +230,10 @@ var leftActivate = function(node,token,wme,joinTestResults){
 };
 
 /**
+   Selects what node to activate, given a new wme
+   @param node
+   @param wme
    @function rightActivate
-   @purpose selects what node to activate, given a new wme
 */
 var rightActivate = function(node,wme){
     if(node.isJoinNode){
@@ -224,12 +246,16 @@ var rightActivate = function(node,wme){
 };
 
 /**
+   Activate a negative node with a new token
+   @param node
+   @param newToken
    @function negativeNodeLeftActivation
 */
-//Trigger a negative node from a new token
-//brings in bindings, creates a new token as necessary,
-//combining bindings to.
 var negativeNodeLeftActivation = function(node,newToken){
+    //Trigger a negative node from a new token
+    //brings in bindings, creates a new token as necessary,
+    //combining bindings to.
+
     //Relink
     //console.log("Negative node left activation");
     if(node.items.length === 0){
@@ -255,13 +281,16 @@ var negativeNodeLeftActivation = function(node,newToken){
 };
 
 /**
+   Activate a negative node with a new wme
+   @param node
+   @param wme
    @function negativeNodeRightActivation
 */
-//trigger a negative node from a new wme,
-//getting all tokens stored, comparing to the wme.
-//any that the wme blocks, gets an additional negative Join result
-//any that don't get blocked should already have been activated
 var negativeNodeRightActivation = function(node,wme){
+    //trigger a negative node from a new wme,
+    //getting all tokens stored, comparing to the wme.
+    //any that the wme blocks, gets an additional negative Join result
+    //any that don't get blocked should already have been activated
     console.log("Negative node right activation");
     node.items.forEach(function(currToken){
         var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
@@ -279,10 +308,13 @@ var negativeNodeRightActivation = function(node,wme){
 };
 
 /**
+   Activate a Negated Conjunctive Condition with a new Token
+   @param nccNode
+   @param token
    @function nccNodeLeftActivation
 */
-//from a new token, trigger the subnetwork?
 var nccNodeLeftActivation = function(nccNode,token){
+    //from a new token, trigger the subnetwork?
     //Create and store the incoming token from prior join node
     if(nccNode.isAnNCCNode === undefined){
         throw new Error("nccNodeLeftActivation should be on an NCCNode");
@@ -313,11 +345,14 @@ var nccNodeLeftActivation = function(nccNode,token){
 };
 
 /**
+   Activate a Negated Conjunctive Condition's subnetwork with a new token
+   @param partner
+   @param token
    @function nccPartnerNodeLeftActivation
 */
-//the nccPartnerNode is activated by a new token from the subnetwork
-//figure out who owns this new token from the main (positive) network
 var nccPartnerNodeLeftActivation = function(partner,token){
+    //the nccPartnerNode is activated by a new token from the subnetwork
+    //figure out who owns this new token from the main (positive) network
     //the partner's ncc
     var nccNode = partner.nccNode,
         //the token created in left activate, with partner as owner
@@ -358,6 +393,8 @@ var nccPartnerNodeLeftActivation = function(partner,token){
 
 
 /**
+   Utility function to activate based on lack of existence of negated join results
+   @param nJR
    @function activateIfNegatedJRIsUnblocked
 */
 var activateIfNegatedJRIsUnblocked = function(nJR){
@@ -370,9 +407,10 @@ var activateIfNegatedJRIsUnblocked = function(nJR){
 
 
 /**
-   @function removeAlphaMemoryItemsForWME
-   @purpose to remove a wme from all alpha memories it is stored in
-   @postCondition wme.alphaMemoryItems is empty
+   To remove a wme from all alpha memories it is stored in
+   postCondition wme.alphaMemoryItems is empty
+   @param wme
+   @function removeAlphaMemoryItemsForWME   
 */
 var removeAlphaMemoryItemsForWME = function(wme){
     //remove alpha memory items
@@ -392,8 +430,9 @@ var removeAlphaMemoryItemsForWME = function(wme){
 };
 
 /**
+   To cleanup all tokens a wme is part of
+   @param wme
    @function deleteAllTokensForWME
-   @purpose to cleanup all tokens a wme is part of
 */
 var deleteAllTokensForWME = function(wme){
     var invalidatedActions = [];
@@ -407,8 +446,9 @@ var deleteAllTokensForWME = function(wme){
 };
 
 /**
+   For negative conditions, discount the wme as a block
+   @param wme
    @function deleteAllNegJoinResultsForWME
-   @purpose For negative conditions, discount the wme as a block
 */
 var deleteAllNegJoinResultsForWME = function(wme){
     //unlink the negative Join results in the owning token
@@ -428,8 +468,9 @@ var deleteAllNegJoinResultsForWME = function(wme){
 
 
 /**
+   To delete any blocked tokens in negative conditions
+   @param token
    @function removeNegJoinResultsForToken
-   @purpose to delete any blocked tokens in negative conditions
 */
 var removeNegJoinResultsForToken = function(token){
     //remove Negative join results
@@ -447,8 +488,9 @@ var removeNegJoinResultsForToken = function(token){
 
 
 /**
+   To remove a token from whatever node created it
+   @param token
    @function removeTokenFromNode
-   @purpose To remove a token from whatever node created it
 */
 //Now the utility functions for deleteing token:
 var removeTokenFromNode = function(token){
@@ -465,8 +507,8 @@ var removeTokenFromNode = function(token){
 };
 
 /**
+   To clean a token up, removing it from any WME references
    @function removeTokenFromWME
-   @purpose to clean a token up, removing it from any WME references
 */
 var removeTokenFromWME = function(token){
     //remove the token from the wme it is based on
@@ -479,8 +521,9 @@ var removeTokenFromWME = function(token){
 };
 
 /**
+   Cleanup the token from its parents list
+   @param token
    @function removeTokenFromParentToken
-   @purpose cleanup the token from its parents list
 */
 var removeTokenFromParentToken = function(token){
     //Remove the token from it's parent's child list
@@ -495,21 +538,22 @@ var removeTokenFromParentToken = function(token){
 
 
 
-/*
-  Removes DOWNWARD links, but leaves UPWARD links intact
-  Do a number of things:
-  clean up tokens stored in a node
-  remove any reference to the node from a connected alpha
-  remove any reference to the node from a parent
-
-  +: call recursively on any parent that has no children
-*/
 
 /**
+   Cleanup an unused node and any parent nodes that are also unused once this node is gone.
+   @param node
    @function deleteNodeAndAnyUnusedAncestors
-   @purpose cleanup an unused node and any parent nodes that are also unused once this node is gone.
 */
 var deleteNodeAndAnyUnusedAncestors = function(node){
+    /*
+      Removes DOWNWARD links, but leaves UPWARD links intact
+      Do a number of things:
+      clean up tokens stored in a node
+      remove any reference to the node from a connected alpha
+      remove any reference to the node from a parent
+      
+      +: call recursively on any parent that has no children
+    */
     var index,
         invalidatedActions = [];
     //if NCC, delete partner to
@@ -564,16 +608,15 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
         invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.parent));
     }
     //deallocate memory for none
-
     return invalidatedActions;
     
 };
 
 
 /**
+   Simplification of removing children of a token, but not the token itself
+   @param token
    @function deleteDescendentsOfToken
-   @purpose simplification of removing children of a token, but not the token itself
-   @utility
 */
 //utility function to delete all descendents without deleting the token
 var deleteDescendentsOfToken = function(token){
@@ -587,15 +630,18 @@ var deleteDescendentsOfToken = function(token){
 
 
 /**
+   @param token
    @function deleteTokenAndDescendents
-   @purpose To remove a token and clean it 
+*/
+var deleteTokenAndDescendents = function(token){
+   /* purpose To remove a token and clean it 
    delete a token and all the tokens that rely on it
    a bit of a frankenstein. Deletes the token,
    deletes descendents, but also sets and cleans up 
    left unlinking of join nodes, AND
    activates NCC's that are no longer blocked
-*/
-var deleteTokenAndDescendents = function(token){
+   */
+
     var invalidatedActions = [];
     
     //Recursive call:
@@ -632,6 +678,7 @@ var deleteTokenAndDescendents = function(token){
 };
 
 /**
+   @param token
    @function cleanupNCCResultsInToken
 */
 var cleanupNCCResultsInToken = function(token){
@@ -663,6 +710,7 @@ var cleanupNCCResultsInToken = function(token){
 };
 
 /**
+   @param token
    @function cleanupNCCPartnerOwnedToken
 */
 var cleanupNCCPartnerOwnedToken = function(token){

@@ -1,6 +1,7 @@
 /**
-   @file ReteDataStructures
-   @purpose to define the data structures required for rete
+   Defines the data structures required for the Net
+   @module ReteDataStructures
+   @requires underscore
 */
 "use strict";
 var _ = require('underscore'),
@@ -8,10 +9,17 @@ var _ = require('underscore'),
 
 
 /**
-   @data ProposedAction
-   @purpose describes a queued, but not yet performed, action
-   @note queue/invalidate time absolute,
-   @note assertTime/retractTime relative to when action is enacted
+   Describes a queued, but not yet performed, action
+   @param reteNet
+   @param type
+   @param payload
+   @param token
+   @param proposeTime
+   @param timingObj
+   @param priority
+   @class ProposedAction
+   queue/invalidate time absolute,
+   assertTime/retractTime relative to when action is enacted
 */
 var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,priority){
     this.id = nextId++;
@@ -35,8 +43,10 @@ var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,p
 
 
 /**
-   @data WME
-   @purpose to store facts in the rete net
+   Stores facts in the rete net
+   @param data
+   @param assertTime
+   @class WME
 */
 var WME = function(data,assertTime){
     this.isWME = true;
@@ -56,11 +66,15 @@ var WME = function(data,assertTime){
 };
 
 /**
-   @data Token
-   @purpose To combine intermediate results in the beta network
+   Represents intermediate results in the beta network
+   @param parentToken
+   @param wme
+   @param owningNode
+   @param bindings
+   @class Token
 */
-//bindings are updated as the token progresses
 var Token = function(parentToken,wme,owningNode,bindings){
+    //bindings are updated as the token progresses
     this.isToken = true;
     this.parentToken = parentToken; //ie:owner
     this.wme = wme;
@@ -97,8 +111,10 @@ var Token = function(parentToken,wme,owningNode,bindings){
 //------------------------------
 
 /**
-   @data AlphaMemoryItem
-   @purpose a Pairing of a wme with an alpha memory it resides in
+   A Pairing of a wme with an alpha memory it resides in
+   @param wme
+   @param alphaMem
+   @class AlphaMemoryItem
 */
 //Utility storage of wme and its alphaMemory together
 //used in alphamemory and WME
@@ -111,11 +127,13 @@ var AlphaMemoryItem = function(wme,alphaMem){
 
 
 /**
-   @data AlphaNode
-   @purpose a node to perform constant tests on newly asserted WMEs
+   A node to perform constant tests on newly asserted WMEs
+   constantTest = {field: string, value: string ,operator: string};
+   @param parent
+   @param constantTestSpec
+   @class AlphaNode
 */
-//A constant test node
-//constantTest = {field:"",value:"",operator:""};
+
 var AlphaNode = function(parent,constantTestSpec){
     this.id = nextId;
     this.isConstantTestNode = true;
@@ -136,10 +154,10 @@ var AlphaNode = function(parent,constantTestSpec){
 };
 
 /**
-   @data AlphaMemory
-   @purpose to store wmes that have passed through constant tests
+   To store wmes that have passed through constant tests
+   @param parent
+   @class AlphaMemory
 */
-//Alpha Memory node
 var AlphaMemory = function(parent){
     this.isAlphaMemory = true;
     this.items = [];
@@ -163,8 +181,9 @@ var AlphaMemory = function(parent){
 };
 
 /**
-   @data ReteNode
-   @purpose provides a base definition of a node in the rete network
+   Provides a base definition of a node in the rete network
+   @class ReteNode
+
 */    
 //Base node for the beta network
 var ReteNode = function(parent){
@@ -179,11 +198,11 @@ var ReteNode = function(parent){
 };
 
 /**
-   @data BetaMemory
-   @inherits ReteNode
-   @purpose A Node to store tokens in the rete network
+   A Node to store tokens in the rete network
+   @param parent 
+   @class BetaMemory
+   @augments ReteNode
 */
-//Beta Memory Stores tokens
 var BetaMemory = function(parent){
     ReteNode.call(this,parent);
     this.isBetaMemory = true;
@@ -198,13 +217,13 @@ var BetaMemory = function(parent){
 };
 
 /**
-   @data JoinNode
-   @inherits ReteNode
-   @purpose To combine tokens and wmes, according to binding tests
+   To combine tokens and wmes, according to binding tests
+   @class JoinNode
+   @augments ReteNode
 */
-//Join Node combines tokens with wmes
-//tests are the binding tuples from a condition
 var JoinNode = function(parent,alphaMemory,tests){
+    //Join Node combines tokens with wmes
+    //tests are the binding tuples from a condition
     ReteNode.call(this,parent);
     this.isJoinNode = true;
     this.alphaMemory = alphaMemory;
@@ -221,11 +240,17 @@ var JoinNode = function(parent,alphaMemory,tests){
 };
 
 /**
-   @data ActionNode
-   @purpose A Node which, when activated, will cause the effects a rule describes
+   A Node which, when activated, will cause the effects a rule describes
+   @param parent
+   @param actionDescriptions
+   @param boundActions
+   @param ruleName
+   @param reteNet
+   @augments ReteNode
+   @class ActionNode
 */
-//Container object for a general graphnode action description    
 var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNet){
+    //Container object for a general graphnode action description    
     ReteNode.call(this,parent);
     this.isActionNode = true;
     this.name = ruleName;
@@ -237,12 +262,15 @@ var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNe
 
 
 /**
-   @data NegativeJoinResult
-   @purpose To Store the combination of a token and a wme that blocks it from progressing through the network
+   To Store the combination of a token and a wme that blocks it from progressing through the network
+   @param owner
+   @param wme
+   @class NegativeJoinResult
+   @augments ReteNode
 */
-//Storage for a token blocked by a wme
-//Updates the owner token and wme as part of its construction
 var NegativeJoinResult = function(owner,wme){
+    //Storage for a token blocked by a wme
+    //Updates the owner token and wme as part of its construction
     this.owner = owner;
     if(this.owner){
         this.owner.negJoinResults.unshift(this);
@@ -257,11 +285,15 @@ var NegativeJoinResult = function(owner,wme){
 
 
 /**
-   @data NegativeNode
-   @purpose A Node that tests for the abscence of particular wmes
+   A Node that tests for the abscence of particular wmes
+   @param parent
+   @param alphaMemory
+   @param tests
+   @class NegativeNode
+   @augments ReteNode
 */
-//Negative Node:The node that gates token progression
 var NegativeNode = function(parent,alphaMemory,tests){
+    //Negative Node:The node that gates token progression
     if(tests.length === 0){
         throw new Error("Negative Node requires a binding");
     }
@@ -278,13 +310,14 @@ var NegativeNode = function(parent,alphaMemory,tests){
 };
 
 /**
-   @data NCCNode
-   @purpose The generalisation of the negative node to multiple conditions, forms the leaf of a subnetwork
+   The generalisation of the negative node to multiple conditions, forms the leaf of a subnetwork
+   @param parent
+   @class NCCNode
+   @augments ReteNode
+   @see {@link NCCondition}
 */
-//NCC : gates token progression based on a subnetwork
-//SEE ALSO: NCCCondition
-//old: NegatedConjunctiveConditionNode
 var NCCNode = function(parent){
+    //NCC : gates token progression based on a subnetwork
     //don't pass parent in
     ReteNode.call(this);
     this.parent = parent;
@@ -298,12 +331,11 @@ var NCCNode = function(parent){
 
 
 /**
-   @data NCCPartnerNode
-   @purpose to store potential partial matches in the subnetwork for a NCCNode
+   To store potential partial matches in the subnetwork for a NCCNode.
+   @param parent
+   @param num
+   @class NCCPartnerNode
 */
-//The partner of the NCC, connects to the subnetwork
-//old NegConjuConPartnerNode
-//var NCCPartner
 var NCCPartnerNode = function(parent,num){
     ReteNode.call(this,parent);
     this.isAnNCCPartnerNode = true;
@@ -316,9 +348,6 @@ var NCCPartnerNode = function(parent,num){
 
 
 //--------------------
-/**
-   @interface ReteDataStructures
-*/
 var DataStructures = {
     "WME"              : WME,
     "Token"            : Token,

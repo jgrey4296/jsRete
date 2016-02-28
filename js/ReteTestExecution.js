@@ -1,3 +1,10 @@
+/**
+   @module ReteTestExecution
+   @requires ReteDataStructures
+   @requires underscore
+   @requires ReteUtilities
+   @requires ReteComparisonOperators
+ */
 var RDS = require('./ReteDataStructures'),
     _ = require('underscore'),
     ReteUtil = require('./ReteUtilities'),
@@ -5,11 +12,15 @@ var RDS = require('./ReteDataStructures'),
 
 "use strict";
 /**
+   Compare a token and wme, using defined bindings from a joinNode
+   @param joinNode
+   @param token
+   @param wme   
    @function performJoinTests
-   @purpose compare a token and wme, using defined bindings from a joinNode
-   @return False if no match, dict of all updated bindings otherwise
+   @returns {False | Object}
 */
 var performJoinTests = function(joinNode,token,wme){
+    //returns False if no match, dict of all updated bindings otherwise
     var newBindings = {},
         successState = true,
         varRegex = new RegExp(/^[#\$]/);

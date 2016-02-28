@@ -1,3 +1,11 @@
+/**
+   Defines the Assert Action
+   @module ReteActionAssert
+   @requires ReteArithmeticActions
+   @requires ReteUtilities
+   @requires ReteDataStructures
+   @requires underscore
+*/
 
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
@@ -5,13 +13,22 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
     RDS = require('./ReteDataStructures');
 
 
+/**
+   @implements {module:ReteActionInterface}
+   @class AssertAction
+ */
 var AssertAction = {
     "name" : "assert",
     propose : null,
     perform : null
 };
 
-//Propose the action
+/**
+   Propose the Assertion
+   @param {module:ReteDataStructures.Token} token The token that is emitted by the network
+   @param {module:ReteClassInterface.ReteNet} reteNet The top level reteNet
+   @function
+ */
 AssertAction.propose = function(token,reteNet){
     "use strict";
     //create the data object:
@@ -62,7 +79,13 @@ AssertAction.propose = function(token,reteNet){
     return proposedAction;        
 };
 
-//Perform the action
+/**
+   Perform the Assertion, after having been scheduled
+   @param {module:ReteDataStructures.ProposedAction} proposedAction
+   @param {module:ReteClassInterface.ReteNet} reteNet
+   @function
+   @return {Object}
+ */
 AssertAction.perform = function(proposedAction,reteNet){
     "use strict";
     //check the type matches
@@ -86,5 +109,5 @@ AssertAction.perform = function(proposedAction,reteNet){
     };
 };
 
-
+/** The Assert Action Definition */
 module.exports = AssertAction;

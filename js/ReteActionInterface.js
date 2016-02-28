@@ -1,4 +1,7 @@
-
+/**
+   Describes the interface for ReteActions
+   @module ReteActionInterface
+*/
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
     ReteUtil = require('./ReteUtilities'),
@@ -6,14 +9,23 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
 
 "use strict";
 
+/**
+   @interface
+ */
 var ActionInterface = {
+    /** @member */
     "name" : "NO-OP",
     propose : null,
     perform : null
 };
 
-//Token + Action Description -> ProposedAction
+/**
+   @param token
+   @param reteNet
+   @method propose
+ */
 ActionInterface.propose = function(token,reteNet){
+    //Token + Action Description -> ProposedAction
     //Propose the list of all wmes to retract 
     var proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", toRetract, token,
                                                 reteNet.currentTime,
@@ -22,8 +34,13 @@ ActionInterface.propose = function(token,reteNet){
     return proposedAction;
 };
 
-//ProposedAction -> Performance
+/**
+   @param proposedAction
+   @param reteNet
+   @method peform
+ */
 ActionInterface.perform = function(proposedAction,reteNet){
+    //ProposedAction -> Performance
     console.log("No-op");
 };
 

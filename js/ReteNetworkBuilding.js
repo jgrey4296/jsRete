@@ -1,3 +1,11 @@
+/**
+   Functions to create the actual Alpha and Beta Networks of the ReteNet
+   @module ReteNetworkBuilding
+   @requires ReteDataStructures
+   @requires ReteUtilities
+   @requires ReteActivationAndDeletion
+   @requires underscore
+ */
 var RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
@@ -5,8 +13,14 @@ var RDS = require('./ReteDataStructures'),
 "use strict";
 
 /**
+   To add all given conditions to the network
+   @param parent
+   @param conditions
+   @param rootAlpha
+   @param allNodes
+   @param reteNet
    @function buildOrShareNetworkForConditions
-   @purpose to add all given conditions to the network
+
 */
 var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allNodes,reteNet){
     var currentNode = parent;
@@ -49,8 +63,11 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
 };
 
 /**
+   Reuse, or create a new, constant test node, for the given test
+   @param parent
+   @param constantTestSped
+   @param reteNet
    @function buildOrShareConstantTestNode
-   @purpose Reuse, or create a new, constant test node, for the given test
 */
 var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
     var children = _.values(parent.children);
@@ -68,11 +85,15 @@ var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
 
 
 /**
+   Create alpha network as necessary, stick an alpha memory on the end
+   @param condition
+   @param root
+   @param allNodes
+   @param reteNet
    @function buildOrShareAlphaMemory
-   @purpose Create alpha network as necessary, stick an alpha memory on the end
-   @reminder Rule{Conditions[]}, Condition{constantTests:[],bindings:[[]]}
-*/
+*/   
 var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
+    //Rule{Conditions[]}, Condition{constantTests:[],bindings:[[]]}
     var currentNode = root,
         constantTests = condition.constantTests;//[{field:,op:,value:}]
     
@@ -94,8 +115,10 @@ var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
 };
 
 /**
+   Given a node (ie: join), stick a betamemory on it as a child
+   @param parent
+   @param reteNet
    @function buildOrShareBetaMemoryNode
-   @purpose given a node (ie: join), stick a betamemory on it as a child
 */
 var buildOrShareBetaMemoryNode = function(parent,reteNet){
     //if passed in the dummy top node, return it:
@@ -122,12 +145,13 @@ var buildOrShareBetaMemoryNode = function(parent,reteNet){
     return newBetaMemory;
 };
 
-
-
-
 /**
+   To reuse, or create a new, join node linking an alpha memory and betamemory
+   @param parent
+   @param alphaMemory
+   @param tests
+   @param reteNet
    @function buildOrShareJonNode
-   @purpose To reuse, or create a new, join node linking an alpha memory and betamemory
 */
 var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     //convert tests if necessary:
@@ -169,8 +193,12 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
 };
 
 /**
+   To reuse, or build a new, negative node
+   @param parent
+   @param alphaMemory
+   @param tests
+   @param reteNet
    @function buildOrShareNegativeNode
-   @purpose To reuse, or build a new, negative node
 */
 var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
     if(!(tests instanceof Array)) { tests = _.pairs(tests); }
@@ -201,8 +229,14 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
 };
 
 /**
+   Construction of NCCConditions
+   @param parent
+   @param condition
+   @param rootAlpha
+   @param allNodes
+   @param reteNet
    @function buildOrShareNCCNodes
-   @purpose construction of NCCConditions
+
 */
 var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet){
     if(condition.tags.isNCCCondition === undefined){
@@ -239,12 +273,13 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
 
 
 /**
+   Pulls tokens down from parent upon new creation
+   @param newNode
    @function updateNewNodeWithMatchesFromAbove
-   @purpose pulls tokens down from parent upon new creation
 */
-//essentially a 4 state switch:
-//betaMemory, joinNode, negativeNode, NCC
 var updateNewNodeWithMatchesFromAbove = function(newNode){
+    //essentially a 4 state switch:
+    //betaMemory, joinNode, negativeNode, NCC
     "use strict";
     var parent = newNode.parent;
     if(parent.isBetaMemory){

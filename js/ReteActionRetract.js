@@ -1,4 +1,11 @@
-
+/**
+   Defines the Retract Action
+   @module ReteActionRetract
+   @requires ReteArithmeticActions
+   @requires ReteUtilities
+   @requires ReteDataStructures
+   @requires underscore
+*/
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
     ReteUtil = require('./ReteUtilities'),
@@ -6,14 +13,20 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
 
 "use strict";
 
+/**
+   @class RetractAction
+   @implements {ReteActionInterface}
+ */
 var RetractAction = {
-    //this should be RETRACT
     "name" : "retract",
     propose : null,
     perform : null
 };
 
-
+/**
+   Propose the Retraction
+   @function
+ */
 RetractAction.propose = function(token,reteNet){
     //get all wmes the token touches:
     var wmes = [];
@@ -44,6 +57,10 @@ RetractAction.propose = function(token,reteNet){
     return proposedAction;
 };
 
+/**
+   Perform the retraction
+   @function
+ */
 RetractAction.perform = function(proposedAction,reteNet){
     if(proposedAction.actionType !== 'retract') { throw new Error("Expected retract"); }
     //console.log("Retracting:",proposedAction.payload);
@@ -62,5 +79,5 @@ RetractAction.perform = function(proposedAction,reteNet){
 
 };
 
-
+/** The Retract Action Definition */
 module.exports = RetractAction;

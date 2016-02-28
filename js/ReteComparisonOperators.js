@@ -1,6 +1,6 @@
 /**
-   @file ReteComparisonOperators
-   @purpose To define the possible operators available for constant test nodes
+   To define the possible operators available for constant test nodes
+   @module ReteComparisonOperators
 */
 
 //Define an object of comparisons able to

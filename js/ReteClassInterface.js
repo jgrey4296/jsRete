@@ -1,6 +1,14 @@
 /**
-   @file ReteClassInterface
-   @purpose Defines a class based ReteNet interface
+   Defines a class based ReteNet interface
+   @module ReteClassInterface
+   @requires ReteDataStructures
+   @requires ReteNetworkBuilding
+   @requires ReteActivationAndDeletion
+   @requires ReteUtilities
+   @requires RuleCtors
+   @requires ReteActions
+   @requires ReteComparisonOperators
+   @requires ReteArithmeticActions
  */
 "use strict";
 var _ = require('underscore'),
@@ -15,46 +23,86 @@ var _ = require('underscore'),
 
 
 /**
-   @data ReteNet
-   @purpose A Data structure to hold what you need to start a retenet.
+   The General controller for a retenet
+   @constructor
 */
 var ReteNet = function(){
+    /** 
+        The starting BetaMemory of the retenet
+        @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
+        @private
+    */
     this.dummyBetaMemory = new RDS.BetaMemory();
+    /**
+       The starting alpha node of the retenet
+       @member {module:ReteDataStructures.AlphaNode} rootAlpha
+       @private
+     */
     this.rootAlpha = new RDS.AlphaNode();
 
-    //To store proposal functions and performance actions
-    //Each element of form {name: "",perform : func, propose : func };
+
+    /**
+       The available actions the retenet can perform
+       {name: string ,perform : function, propose : function };
+       @member {Object} 
+       @see {@link module:ReteActions}
+    */
     this.actionFunctions = ReteActions;
 
-    //RuleCtor storage
+    /** @alias {module:RuleCtors.Rule} */
     this.Rule = RuleCtors.Rule;
-    //Comparison operators
+    /** @see {module:ReteComparisonOperators} */
     this.ComparisonOperators = ComparisonOperators;
-    //Arithmetic Operators:
+    /** @see {module:ReteArithmeticActions} */
     this.ArithmeticOperators = ArithmeticOperators;
-    //Propose Action Constructor:
-    //ctor = function(reteNet,type,payload,token,time,timingOffsets,priority)
+    /** @see {module:ReteDataStructures.ProposedAction} */
     this.ProposedAction = RDS.ProposedAction;
-    //ctor = function(data,assertTime)
+    /** @see {module:ReteDataStructures.WME} */
     this.WME = RDS.WME;
-    //ctor = function (parentToken,wme,owningNode,bindings)
+    /** @see {module:ReteDataStructures.Token} */
     this.Token = RDS.Token;
-    
 
-    //All Loaded rules:
+    /**
+       All rules loaded into the ReteNet
+       @member {Object}
+       @see {@link module:RuleCtors.Rule}
+     */
     this.allRules = {};
-    //ActionNodes indexed by rule node id:
+    /**
+       Constructed ActionNodes of the ReteNet
+       @member {Object}
+       @see {@link module:ReteDataStructures.ActionNode}
+     */
     this.actions = {};
-    //WMEs indexed by id:
+    /**
+       All WMEs that exist in the ReteNet
+       @member {Object}
+       @see {@link module:ReteDataStructures.WME}
+     */
     this.allWMEs = {};
 
-    //Actions whose conditions are satisfied, indexed by id
+    /**
+       All Proposed Actions, from ActionNodes that have fired
+       @member {Object}
+       @see {@link module:ReteDataStructure.ProposedActions}
+     */
     this.proposedActions = {};
-    //Actions that were chosen to be performed
+    /**
+       All Actions that were schedule and then performed
+       @member {Array} 
+       @see {@link module:ReteDataStructures.ProposedActions}
+     */
     this.enactedActions = [];
 
-    //Storage of internal nodes:
+    /**
+       All nodes of the ReteNet, enabling inspection
+       @member {Object}        
+     */
     this.allReteNodes = {};
+    /**
+       All ReteNodes, indexed by type
+       @member {Object} 
+     */
     this.allReteNodesByType = {
         "constantTests" : {},
         "alphaMemories" : {},
@@ -65,16 +113,26 @@ var ReteNet = function(){
         "nccPartnerNodes" : {},
         "actionNodes" : {},
     };
-    
+
+    /**
+       The current time step of the retenet
+       @member {Int}
+     */
     this.currentTime = 1;
-    //Schedule Actions:
+    /**
+       The Actions that have been scheduled
+       @member {Object}
+     */
     this.schedule = {
         assertions : [],
         retractions : [],
         modifications: []
     };
 
-    //listeners:
+    /**
+       Listeners that have been registered for various occurences
+       @member {Object}
+     */
     this.listeners = {
         "propose" : [],
         "assert" : [],
@@ -86,14 +144,29 @@ var ReteNet = function(){
     };
     
 };
+//--------------------
+//METHODS:
+//--------------------
 
 //Utility to register listeners:
+/**
+   Register a function for a retenet occurent
+   @param {string} name The occurrence type to listen for
+   @param {function} fn The function to trigger when the occurrence happens
+   @method
+ */
 ReteNet.prototype.registerListener = function(name,fn){
     if(this.listeners[name] !== undefined){
         this.listeners[name].push(fn);
     }
 };
 
+/**
+   Trigger all registered listeners for an occurence
+   @param {string} name The name of the occurrence that happened
+   @param ...vals The parameters to pass to the listener functions
+   @method
+ */
 ReteNet.prototype.fireListener = function(name,...vals){
     if(this.listeners[name] === undefined){
         throw new Error(`Unrecognised listener fired: ${name}`);
@@ -102,22 +175,38 @@ ReteNet.prototype.fireListener = function(name,...vals){
     this.listeners[name].forEach(d=>d(...vals));
 };
 
+
+/**
+   Stores a wme in the retenet
+   @param {WME} wme
+   @private
+ */
 ReteNet.prototype.storeWME = function(wme){
     this.allWMEs[wme.id] = wme;
 };
 
-
-//Clear the record of actions that have been performed
+/**
+   Clears the history of actions that have been performed
+   @method
+ */
 ReteNet.prototype.clearHistory = function(){
     this.enactedActions = [];
 };
 
-//Clear the list of proposed actions
+/**
+   Clear the proposed actions list
+   @method
+ */
 ReteNet.prototype.clearProposedActions = function(){
     this.proposedActions = {};
 };
 
-//Assert Immediately
+/**
+   Assert a wme immediately
+   @param {WME/Object} wme The wme or data to assert
+   @return {Int} WME.id
+   @method
+ */
 ReteNet.prototype.assertWME = function(wme){
     this.fireListener("assert",wme);
     //console.log("ASSERTING:",wme);
@@ -130,7 +219,11 @@ ReteNet.prototype.assertWME = function(wme){
     return wme.id;
 };
 
-//Retract Immediately
+/**
+   Retract a wme immediately
+   @param {wme/id} wme The wme object or id to retract
+   @method
+ */
 ReteNet.prototype.retractWME = function(wme){
     this.fireListener("retract",wme);
     //console.log("retracting immediately:",wme);
@@ -158,8 +251,12 @@ ReteNet.prototype.retractWME = function(wme){
     return wme;
 };
 
-
-//Modify immediately
+/**
+   Retract, change, and then assert some data
+   @param {WME/id} wme The wme to retract
+   @param {function} modifyFunction The function that changes the data of the wme
+   @method
+ */
 ReteNet.prototype.modifyWME = function(wme,modifyFunction){
     var retractedWME = this.retractWME(wme),
         data = retractedWME.data,
@@ -171,7 +268,11 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
     
 };
 
-//Propose an action
+/**
+   Propose an action, typically from an action node
+   @param {module:ReteDataStructures.ProposedAction} action
+   @method
+ */
 ReteNet.prototype.proposeAction = function(action){
     //Call the listeners:
     this.fireListener("propose",action);
@@ -187,8 +288,11 @@ ReteNet.prototype.proposeAction = function(action){
     this.proposedActions[action.id] = action;
 };
 
-
-//Schedule an action by it's ID, ALSO scheduling any parallel actions
+/**
+   Schedule an action by it's ID, ALSO scheduling any parallel actions   
+   @param  {module:ReteDataStructures.ProposedAction|Int} actionId The action to propose
+   @method
+ */
 ReteNet.prototype.scheduleAction = function(actionId){
     this.fireListener("schedule",actionId);
     if(actionId instanceof this.ProposedAction){
@@ -206,7 +310,12 @@ ReteNet.prototype.scheduleAction = function(actionId){
     return this;
 };
 
-//Utility method to add an action object
+/**
+   Internal method to add to the schedule
+   @param {module:ReteDataStructures.ProposedAction} action
+   @method
+   @private
+ */
 ReteNet.prototype.addToSchedule = function(action){
     if(action.actionType === undefined || action.payload === undefined || action.timing === undefined){
         throw new Error("Scheduling action failure");
@@ -225,7 +334,11 @@ ReteNet.prototype.addToSchedule = function(action){
     delete this.proposedActions[action.id];
 };
 
-//Step Time forward. actions should be scheduled BEFORE CALLING STEP TIME.
+/**
+   Step Time forward. actions should be scheduled BEFORE CALLING STEP TIME.
+   @method
+   @returns {Array} An array of the effects of this timestep
+*/
 ReteNet.prototype.stepTime = function(){
     //get all actions scheduled at the current timepoint
     var actions = _.values(this.schedule),
@@ -243,7 +356,6 @@ ReteNet.prototype.stepTime = function(){
     },this);
 
     //cleanup invalidated actions
-    //this.proposedActions = _.reject(this.proposedActions,d=>d===undefined || d.timing.invalidateTime === this.currentTime);
     _.values(this.proposedActions).forEach(function(d){
         if(d.timing.invalidateTime === this.currentTime){
             delete this.proposedActions[d.id];
@@ -255,7 +367,14 @@ ReteNet.prototype.stepTime = function(){
     return changes;
 };
 
-//Add a rule
+/**
+   Add a rule to the retenet, auto converting to correct format if necessary, returning [ReteNet,{@link{module:ReteDataStructures.ActionNode}]
+   @param {Array | int | module:RuleCtors.Rule} ruleId The rule/rules to add
+   @param {Object} components An object to lookup components of rules in
+   @method
+   @returns {Array}
+   
+*/
 ReteNet.prototype.addRule = function(ruleId,components){
     this.fireListener("addRule",components);
     if(ruleId instanceof Array){
@@ -294,7 +413,11 @@ ReteNet.prototype.addRule = function(ruleId,components){
 };
 
 
-//Remove rule
+/**
+   Remove rule(s) from the retenet, bottom up, by {@link:module.ReteDataStructures.ActionNode}
+   @param {module:ReteDataStructures.ActionNode | Array} rule The rule(s) to remove from the net
+   @method
+ */
 ReteNet.prototype.removeRule = function(rule){
     this.fireListener("removeRule",rule);
     if(rule instanceof Array){
@@ -306,8 +429,14 @@ ReteNet.prototype.removeRule = function(rule){
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 };
 
-//register a join action proposal and performance function
-//as a single object of form : {name: "", propose:func, perform:func};
+
+
+/**
+   register a join action proposal and performance function   
+   @param {{name : string, propose : function, perform : function}} actionObj
+   @method
+   @see module:ReteActions
+*/
 ReteNet.prototype.registerAction = function(actionObj){
     if(actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
         throw new Error("Action Registration Failure");
@@ -319,7 +448,12 @@ ReteNet.prototype.registerAction = function(actionObj){
 };
 
 
-//Utility method:
+/**
+   Store a node in the appropriate members of the ReteNet
+   @param {module:ReteDataStructures.ReteNode} node
+   @method
+   @private
+ */
 ReteNet.prototype.storeNode = function(node){
     this.allReteNodes[node.id] = node;
     var storeTarget = "unknown";
@@ -349,8 +483,12 @@ ReteNet.prototype.storeNode = function(node){
     }
 };
 
-//convert a rule to a component list
-//used to convert the jsRete Rule object to the standard form for loading
+/**
+   Converts rules to an object of their components for easy addition 
+   @param {module:RuleCtors.Rule | Array} rules
+   @method
+   @return {Object}
+ */
 ReteNet.prototype.convertRulesToComponents = function(rules){
     if(!(rules instanceof Array)){
         rules = [rules];
@@ -362,19 +500,8 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
             m[v.id] = v;
             return m;
         },{});
-
-    // rules.forEach(function(d){
-    //     d.conditions = _.values(d.conditions).reduce(function(m,v){
-    //         m[v.id] = v.name;
-    //         return m;
-    //     },{});
-    //     d.actions = _.values(d.actions).reduce(function(m,v){
-    //         m[v.id] = v.name;
-    //         return m;
-    //     },{});
-    //});
-    
     return components;
 };
+
 
 module.exports = ReteNet;

@@ -1,6 +1,6 @@
 /**
-   @file ReteActions
-   @purpose Defines action proposals
+   Aggregates ReteNet Actions that implement {@link module:ReteActionInterface}
+   @module ReteActions
 */
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('underscore'),
