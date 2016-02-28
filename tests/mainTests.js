@@ -405,16 +405,6 @@ exports.ReteTests = {
         test.done();
     },
 
-    
-    //schedule action test
-
-    //steptime test
-
-    //remove rule test
-
-    //register action test
-
-
 
     //Test simple registered action
     simpleRegsterActionTest : function(test){
@@ -506,6 +496,7 @@ exports.ReteTests = {
         test.done();
     },
 
+    //schedulings test
     schedule_perform_offset_test : function(test){
         var rn = makeRete(),
             aRule = new rn.Rule(),
@@ -543,6 +534,7 @@ exports.ReteTests = {
         test.done();
     },
 
+    //test the retraction of a wme
     retractTest : function(test){
         var rn = makeRete(),
             aRule = new rn.Rule(),
@@ -581,7 +573,7 @@ exports.ReteTests = {
         test.ok(wme.lifeTime[1] === 1);
         test.done();
     },
-    
+    //test the firing of two rules
     twoRule_test : function(test){
         var rn = makeRete(),
             rule1 = new rn.Rule(),
@@ -635,7 +627,7 @@ exports.ReteTests = {
         test.ok(changes.length === 2);
         test.done();
     },
-
+    //test the prioritised firing order of two rules
     twoRule_offset_test : function(test){
         var rn = makeRete(),
             rule1 = new rn.Rule(),
@@ -700,6 +692,7 @@ exports.ReteTests = {
         test.done();
     },
 
+    //test the priority of schedule tasks
     twoRule_priority_test : function(test){
         var rn = makeRete(),
             rule1 = new rn.Rule(),
@@ -764,6 +757,7 @@ exports.ReteTests = {
     },
 
     //----------------------------------------
+    
     singleRule_twoAction_test : function(test){
         var rn = makeRete(),
             rule1 = new rn.Rule(),
@@ -822,9 +816,7 @@ exports.ReteTests = {
         test.done();
     },
 
-    
-
-
+    //remove rule test
     
     
 };
