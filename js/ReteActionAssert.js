@@ -60,7 +60,7 @@ AssertAction.propose = function(token,reteNet){
     _.keys(this.regexActions).forEach(function(key){
         var pair = this.regexActions[key],
             regex = new RegExp(pair[0],pair[1]),
-            replaceValue = pair[2].match(/\$/) ? newDataPlusBindings[pair[2].slice(1)] : pair[2];
+            replaceValue = pair[2].match(/\$/) ? newDataPlusBindings.bindings[pair[2].slice(1)] : pair[2];
         newDataPlusBindings[key] = newDataPlusBindings[key].replace(regex,replaceValue);
     },this);
     
