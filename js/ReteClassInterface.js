@@ -24,8 +24,9 @@ var _ = require('underscore'),
 /**
    The General controller for a retenet
    @constructor
+   @param actionsToRegister
 */
-var ReteNet = function(){
+var ReteNet = function(actionsToRegister){
     /** 
         The starting BetaMemory of the retenet
         @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
@@ -142,6 +143,12 @@ var ReteNet = function(){
         "schedule" : [],
         "stepTimeActions" : [],
     };
+
+    //Register actions passed in:
+    actionsToRegister.forEach(function(d){
+        this.registerAction(d);
+    },this);
+    
     
 };
 //--------------------
@@ -438,6 +445,7 @@ ReteNet.prototype.removeRule = function(rule){
    @see module:ReteActions
 */
 ReteNet.prototype.registerAction = function(actionObj){
+    console.log("Registering Rete Action:",actionObj);
     if(actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
         throw new Error("Action Registration Failure");
     }
