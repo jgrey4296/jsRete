@@ -21,7 +21,6 @@ var _ = require('underscore'),
     ComparisonOperators = require('./ReteComparisonOperators'),
     ArithmeticOperators = require('./ReteArithmeticActions');
 
-
 /**
    The General controller for a retenet
    @constructor
