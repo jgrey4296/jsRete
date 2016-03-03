@@ -2,7 +2,8 @@
    @module ReteUtilities
    @requires underscore
 */
-var _ = require('underscore');
+var _ = require('underscore'),
+    ArithmeticActions = require('./ReteArithmeticActions');
 "use strict";
 
 /**
@@ -286,6 +287,66 @@ var objDescToObject = function(objDesc,baseObject){
     return finalObj;
 };
 
+/**
+   Create new wme data from an action description and a token's bindings
+   @param {Action} action
+   @param {Token} token
+ */
+var createNewWMEData = function(action,token){
+    "use strict";
+    //initialise from the action's 'values' object
+    var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
+        var v = this.values[key];
+        //if the value starts with # or $, look it up in the token list
+        memo[key] = v.match(/^[\$#]/) === null ? v : token.bindings[v.slice(1)];
+        return memo;
+    },{bindings: {} },action),
+    //copy in the bindings
+        dataPlusBindings = _.reduce(_.keys(token.bindings),function(m,v){
+            m.bindings[v] = token.bindings[v];
+            return m;
+        },newWMEData);
+    
+    return newWMEData;
+};
+
+/**
+   Apply arithmetic actions to a data object, in place
+   @param {Action} action
+   @param {Object} data
+ */
+var applyArithmetic = function(action,data){
+    "use strict";
+    //perform arithmetic:
+    _.keys(action.arithmeticActions).forEach(function(key){
+        var arithDesc = action.arithmeticActions[key],
+            currVal = Number(data[key]),
+            //look up the function:
+            //because the representation form is: a : ["+", 5]
+            arithFunc = ArithmeticActions[arithDesc[0]],
+            //Get the value if its a binding
+            applyVal = arithDesc[1].match(/\$/) ? Number(data.bindings[arithDesc[1].slice(1)]) : Number(arithDesc[1]);
+        if(arithFunc === undefined) { throw new Error("Undefined arithmetic function"); }
+        if(isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number"); }
+        data[key] = arithFunc(currVal,applyVal);
+    });
+};
+
+/**
+   Apply an actions Regex transforms to some data, in place
+   @param {Action} action
+   @param {Object} data
+ */
+var applyRegex = function(action,data){
+    "use strict";
+    _.keys(action.regexActions).forEach(function(key){
+        var regexAction = action.regexActions[key],
+            regex = new RegExp(regexAction[0],regexAction[1]),
+            replaceValue = regexAction[2].match(/\$/) ? data.bindings[regexAction[2].slice(1)] : regexAction[2];
+        data[key] = data[key].replace(regex,replaceValue);
+    });
+
+};
 
 
 //------------------------------
@@ -300,7 +361,10 @@ var moduleInterface = {
     "findNearestAncestorWithAlphaMemory" : findNearestAncestorWithAlphaMemory,
     "retrieveWMEValueFromDotString" : retrieveWMEValueFromDotString,
     "cleanupInvalidatedActions" : cleanupInvalidatedActions,
-    "objDescToObject" : objDescToObject
+    "objDescToObject" : objDescToObject,
+    "createNewWMEData" : createNewWMEData,
+    "applyArithmetic" : applyArithmetic,
+    "applyRegex" : applyRegex
 };
 module.exports = moduleInterface;    
 

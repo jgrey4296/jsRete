@@ -177,12 +177,9 @@ var joinNodeRightActivation = function(node,wme){
 var activateActionNode = function(actionNode,token){
     //get the actions the node embodies:
     var boundActionFunctions = actionNode.boundActions,
-        //Transform the token:
-        
         //apply the token to each of the actions
         newProposedActions = boundActionFunctions.map(d=>d(token,actionNode.reteNet)),
         newProposedActionIds = newProposedActions.map(d=>d.id);
-    
     //store the proposed actions in the reteNet.potential actions
     //and also tie all the actions that fire together by their ids
     //ie: {action:"assert",payload:wme}

@@ -60,7 +60,8 @@ var ReteNet = function(){
     this.WME = RDS.WME;
     /** @see {module:ReteDataStructures.Token} */
     this.Token = RDS.Token;
-
+    /** @see {module:ReteUtilities} */
+    this.utils = ReteUtil;
     /**
        All rules loaded into the ReteNet
        @member {Object}

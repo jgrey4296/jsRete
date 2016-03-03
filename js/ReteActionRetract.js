@@ -35,7 +35,6 @@ RetractAction.propose = function(token,reteNet){
         wmes.push(currToken.wme);
         currToken = currToken.parentToken;
     }
-
     //Get the keys of the action that have 'wme' in them
     var wmeKeys = _.keys(this.values).filter(d=>/^wme([0-9]*)/.test(d)),
         //get the ones of those that related to a binding in the token
@@ -73,7 +72,7 @@ RetractAction.perform = function(proposedAction,reteNet){
         var retractedWME = reteNet.retractWME(proposedAction.payload);
         return {
             "retracted" : [retractedWME]
-        }
+        };
     }
     //do anything with the retracted wme(s)?
 
