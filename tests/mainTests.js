@@ -166,8 +166,7 @@ exports.ReteTests = {
             data = {
                 "first" : 5,
                 "second" : 10
-            },
-            components;
+            };
 
         aRule.newCondition("positive",{
             tests : [["first","EQ",5],

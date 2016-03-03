@@ -295,8 +295,8 @@ var objDescToObject = function(objDesc,baseObject){
 var createNewWMEData = function(action,token){
     "use strict";
     //initialise from the action's 'values' object
-    var newWMEData = _.reduce(_.keys(this.values),function(memo,key){
-        var v = this.values[key];
+    var newWMEData = _.reduce(_.keys(action.values),function(memo,key){
+        var v = action.values[key];
         //if the value starts with # or $, look it up in the token list
         memo[key] = v.match(/^[\$#]/) === null ? v : token.bindings[v.slice(1)];
         return memo;
@@ -307,7 +307,7 @@ var createNewWMEData = function(action,token){
             return m;
         },newWMEData);
     
-    return newWMEData;
+    return dataPlusBindings;
 };
 
 /**
@@ -318,14 +318,14 @@ var createNewWMEData = function(action,token){
 var applyArithmetic = function(action,data){
     "use strict";
     //perform arithmetic:
-    _.keys(action.arithmeticActions).forEach(function(key){
-        var arithDesc = action.arithmeticActions[key],
-            currVal = Number(data[key]),
+    _.keys(action.arithmeticActions).forEach(function(key){        
+        var arithDesc = action.arithmeticActions[key];
+        var currVal = Number(data[key]),
             //look up the function:
             //because the representation form is: a : ["+", 5]
             arithFunc = ArithmeticActions[arithDesc[0]],
             //Get the value if its a binding
-            applyVal = arithDesc[1].match(/\$/) ? Number(data.bindings[arithDesc[1].slice(1)]) : Number(arithDesc[1]);
+            applyVal = typeof arithDesc[1] === 'number' ? arithDesc[1] : arithDesc[1].match(/\$/) ? parseInt(data.bindings[arithDesc[1].slice(1)]) : parseInt(arithDesc[1]);
         if(arithFunc === undefined) { throw new Error("Undefined arithmetic function"); }
         if(isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number"); }
         data[key] = arithFunc(currVal,applyVal);
