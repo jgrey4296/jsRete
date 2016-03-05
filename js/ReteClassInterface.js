@@ -27,6 +27,9 @@ var _ = require('underscore'),
    @param actionsToRegister
 */
 var ReteNet = function(actionsToRegister){
+    if(actionsToRegister === undefined){
+        actionsToRegister = [];
+    }
     /** 
         The starting BetaMemory of the retenet
         @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
@@ -83,7 +86,7 @@ var ReteNet = function(actionsToRegister){
     this.allWMEs = {};
 
     /**
-       All Proposed Actions, from ActionNodes that have fired
+       All Proposed Actions, from ActionNodes that have fired, indexed by id
        @member {Object}
        @see {@link module:ReteDataStructure.ProposedActions}
      */
@@ -350,9 +353,11 @@ ReteNet.prototype.stepTime = function(){
     //get all actions scheduled at the current timepoint
     var actions = _.values(this.schedule),
         actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
+    //todo : group by tags:
+    
     //Sort by priority
     actionsForTimePoint.sort((a,b)=>b.priority - a.priority);
-
+    
     this.fireListener('stepTimeActions',actionsForTimePoint);
     //perform those actions, storing objects describing the changes
     var changes = actionsForTimePoint.map(function(d){

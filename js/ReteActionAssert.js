@@ -32,7 +32,7 @@ var AssertAction = {
 AssertAction.propose = function(token,reteNet){
     "use strict";
     //create the data object:
-    var newWMEData = ReteUtil.createNewWMEData(this,token);
+    var newWMEData = reteNet.utils.createNewWMEData(this,token);
     reteNet.utils.applyArithmetic(this,newWMEData);
     reteNet.utils.applyRegex(this,newWMEData);
         //Expand out to object structure
