@@ -292,7 +292,7 @@ var NegativeNode = function(parent,alphaMemory,tests){
         this.alphaMemory.referenceCount++;
         this.alphaMemory.children.unshift(this);
     }
-    this.tests = tests | [];
+    this.tests = tests || [];
     this.nearestAncestor = null;
 };
 
