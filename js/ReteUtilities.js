@@ -3,6 +3,7 @@
    @requires underscore
 */
 var _ = require('underscore'),
+    RDS = require('./ReteDataStructures'),
     ArithmeticActions = require('./ReteArithmeticActions');
 "use strict";
 
@@ -14,7 +15,7 @@ var _ = require('underscore'),
 var relinkToAlphaMemory = function(node){
     //reconnect an unlinked join node to its alpha memory when there are
     //wmes in said alpha memory
-    if(node.isJoinNode === undefined && node.isNegativeNode === undefined){
+    if(!(node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode)){
         throw new Error("trying to relink alpha on something other than a join node or negative node");
     }
     var ancestor = node.nearestAncestor,
@@ -69,7 +70,7 @@ var unlinkAlphaMemory = function(alphaMemory){
     //if the alphaMem has no items: UNLINK
     if(alphaMemory.items.length === 0){
         alphaMemory.children.forEach(function(amChild){
-            if(amChild.isJoinNode){
+            if(amChild instanceof RDS.JoinNode){
                 var index = amChild.parent.children.map(d=>d.id).indexOf(amChild.id);
                 //splice out
                 var removed = amChild.parent.children.splice(index,1);
@@ -91,12 +92,12 @@ var ifEmptyBetaMemoryUnlink = function(node){
     //NCCNode, and NCCPartnerNode
 
     //BETAMEMORY
-    if(node && node.isBetaMemory){
+    if(node && node instanceof RDS.BetaMemory){
         //and that betaMemory has no other items
         if(node.items.length === 0){
             //for all the node's children
             node.children.forEach(function(jn){
-                if(jn.isJoinNode === undefined){return;}
+                if(!(jn instanceof RDS.JoinNode)){ return; }
                 var index = jn.alphaMemory.children.map(d=>d.id).indexOf(jn.id);
                 if(index !== -1){
                     var removed = jn.alphaMemory.children.splice(index,1);
@@ -117,7 +118,7 @@ var ifEmptyBetaMemoryUnlink = function(node){
    @function ifEmptyNegNodeUnlink
 */
 var ifEmptyNegNodeUnlink = function(node){
-    if(node && node.isNegativeNode){
+    if(node && node instanceof RDS.NegativeNode){
         //with elements
         if(node.items.length === 0){
             //unlink alpha memory
@@ -189,13 +190,13 @@ var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
 
     //base conditions:
     if(node.dummy){ return null;}
-    if(node.isJoinNode || node.isNegativeNode){
+    if(node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode){
         if(node.alphaMemory.id === alphaMemory.id){
             return node;
         }
     }
     //switch recursion into the partner clause
-    if(node.isAnNCCNode){
+    if(node instanceof RDS.NCCNode){
         return findNearestAncestorWithAlphaMemory(node.partner.parent,alphaMemory);
     }
     //recurse:

@@ -126,7 +126,7 @@ var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
 */
 var buildOrShareBetaMemoryNode = function(parent,reteNet){
     //if passed in the dummy top node, return it:
-    if(parent.isBetaMemory === true){
+    if(parent instanceof RDS.BetaMemory){
         return parent;
     }
     
@@ -135,7 +135,7 @@ var buildOrShareBetaMemoryNode = function(parent,reteNet){
     var children = _.values(parent.children);
     for(var i = 0; i < children.length; i++){
         var child = children[i];
-        if(child.isBetaMemory){
+        if(child instanceof RDS.BetaMemory){
             return child;
         }
     }
@@ -167,7 +167,7 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     var allChildren = parent.children.concat(parent.unlinkedChildren);
     for(var i = 0; i < allChildren.length; i++){
         var child = allChildren[i];
-        if(child.isJoinNode && child.alphaMemory.id === alphaMemory.id && ReteUtil.compareJoinTests(child.tests,tests)){
+        if(child instanceof RDS.JoinNode && child.alphaMemory && child.alphaMemory.id === alphaMemory.id && ReteUtil.compareJoinTests(child.tests,tests)){
             //return it
             return child;
         }
@@ -210,7 +210,8 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
     var children = _.values(parent.children);
     for(var i = 0; i < children.length; i ++){
         var child = children[i];
-        if(child.isNegativeNode
+        if(child instanceof RDS.NegativeNode
+           && child.alphaMemory
            && child.alphaMemory.id === alphaMemory.id
            && ReteUtil.compareJoinTests(child.tests,tests)){
             return child;
@@ -243,7 +244,7 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
 
 */
 var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet){
-    if(condition.tags.isNCCCondition === undefined){
+    if(condition.tags.conditionType !== 'negConjCondition'){
         throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
     }
     //build a network for the conditions
@@ -253,7 +254,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
     //find an existing NCCNode with partner to use
     for(var i = 0; i < parent.children.length; i++){
         var child = parent.children[i];
-        if(child.isAnNCCNode && child.partner.parent.id === bottomOfSubNetwork.id){
+        if(child instanceof RDS.NCCNode && child.partner.parent && child.partner.parent.id === bottomOfSubNetwork.id){
             return child;
         }
     }
@@ -286,11 +287,11 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
     //betaMemory, joinNode, negativeNode, NCC
     "use strict";
     var parent = newNode.parent;
-    if(parent.isBetaMemory){
+    if(parent instanceof RDS.BetaMemory){
         for(let i = 0; i < parent.items.length; i++){
             ReteActivationsAndDeletion.leftActivate(newNode,parent.items[i]);
         }
-    }else if(parent.isJoinNode){
+    }else if(parent instanceof RDS.JoinNode){
         let savedChildren = parent.children,
             items = _.values(parent.alphaMemory.items);
         parent.children = [newNode];
@@ -299,7 +300,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
             ReteActivationsAndDeletion.rightActivate(parent,item.wme);
         }
         parent.children = savedChildren;
-    }else if(parent.isNegativeNode){
+    }else if(parent instanceof RDS.NegativeNode){
         let items = _.values(parent.items);
         for(let i = 0; i < items.length; i++){
             let token = items[i];
@@ -307,7 +308,7 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
                 ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
-    }else if(parent.isAnNCCNode){
+    }else if(parent instanceof RDS.NCCNode){
         var items = _.values(parent.items);
         for(let i = 0; i < items.length; i++){
             let token = parent.items[i];

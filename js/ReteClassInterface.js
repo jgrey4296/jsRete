@@ -220,7 +220,7 @@ ReteNet.prototype.clearProposedActions = function(){
 ReteNet.prototype.assertWME = function(wme){
     this.fireListener("assert",wme);
     //console.log("ASSERTING:",wme);
-    if(wme.isWME === undefined || wme.id === undefined){
+    if(!(wme instanceof RDS.WME)){
         wme = new RDS.WME(wme,this.currentTime);
         this.storeWME(wme);
     }
@@ -238,7 +238,7 @@ ReteNet.prototype.retractWME = function(wme){
     this.fireListener("retract",wme);
     //console.log("retracting immediately:",wme);
     //if not given the wme directly
-    if(wme.isWME === undefined){
+    if(!(wme instanceof RDS.WME)){
         //if given a wme id
         if(Number.isInteger(wme) && this.allWMEs[wme] !== undefined){
             wme = this.allWMEs[wme];
@@ -472,21 +472,21 @@ ReteNet.prototype.registerAction = function(actionObj){
 ReteNet.prototype.storeNode = function(node){
     this.allReteNodes[node.id] = node;
     var storeTarget = "unknown";
-    if(node.isConstantTestNode){
+    if(node instanceof RDS.AlphaNode){
         storeTarget = "constantTests";
-    }else if(node.isAlphaMemory){
+    }else if(node instanceof RDS.AlphaMemory){
         storeTarget = "alphaMemories";
-    }else if(node.isBetaMemory){
+    }else if(node instanceof RDS.BetaMemory){
         storeTarget = "betaMemories";
-    }else if(node.isJoinNode){
+    }else if(node instanceof RDS.JoinNode){
         storeTarget = "joinNodes";
-    }else if(node.isActionNode){
+    }else if(node instanceof RDS.ActionNode){
         storeTarget = "actionNodes";
-    }else if(node.isNegativeNode){
+    }else if(node instanceof RDS.NegativeNode){
         storeTarget = "negativeNodes";
-    }else if(node.isAnNCCNode){
+    }else if(node instanceof RDS.NCCNode){
         storeTarget = "nccNodes";
-    }else if(node.isAnNCCPartnerNode){
+    }else if(node instanceof RDS.NCCPartnerNode){
         storeTarget = "nccPartnerNodes";
     }
 

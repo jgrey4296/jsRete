@@ -76,9 +76,9 @@ var constantTestNodeActivation = function(alphaNode,wme){
 */
 //Switchable activation function for alpha network stuff
 var alphaNodeActivation = function(alphaNode,wme){
-    if(alphaNode.isAlphaMemory){
+    if(alphaNode instanceof RDS.AlphaMemory){
         alphaMemoryActivation(alphaNode,wme);
-    }else if(alphaNode.isConstantTestNode){
+    }else if(alphaNode instanceof RDS.AlphaNode){
         return constantTestNodeActivation(alphaNode,wme);
     }else{
         throw new Error("Unrecognised node:",alphaNode);
@@ -210,17 +210,17 @@ var leftActivate = function(node,token,wme,joinTestResults){
     //and Action
     if(node.__isDummy){
         //pass on, because this is a test
-    }else if(node.isBetaMemory){
+    }else if(node instanceof RDS.BetaMemory){
         betaMemoryActivation(node,token);
-    }else if(node.isJoinNode){
+    }else if(node instanceof RDS.JoinNode){
         joinNodeLeftActivation(node,token);
-    }else if(node.isNegativeNode){
+    }else if(node instanceof RDS.NegativeNode){
         negativeNodeLeftActivation(node,token);
-    }else if(node.isAnNCCNode){
+    }else if(node instanceof RDS.NCCNode){
         nccNodeLeftActivation(node,token);
-    }else if(node.isAnNCCPartnerNode){
+    }else if(node instanceof RDS.NCCPartnerNode){
         nccPartnerNodeLeftActivation(node,token);
-    }else if(node.isActionNode){
+    }else if(node instanceof RDS.ActionNode){
         activateActionNode(node,token);
     }else{
         throw new Error("Unknown node type leftActivated");
@@ -235,9 +235,9 @@ var leftActivate = function(node,token,wme,joinTestResults){
    @function rightActivate
 */
 var rightActivate = function(node,wme){
-    if(node.isJoinNode){
+    if(node instanceof RDS.JoinNode){
         joinNodeRightActivation(node,wme);
-    }else if(node.isNegativeNode){
+    }else if(node instanceof RDS.NegativeNode){
         negativeNodeRightActivation(node,wme);
     }else{
         throw new Error("Tried to rightActivate Unrecognised node");
@@ -315,10 +315,10 @@ var negativeNodeRightActivation = function(node,wme){
 var nccNodeLeftActivation = function(nccNode,token){
     //from a new token, trigger the subnetwork?
     //Create and store the incoming token from prior join node
-    if(nccNode.isAnNCCNode === undefined){
+    if(!(nccNode instanceof RDS.NCCNode)){
         throw new Error("nccNodeLeftActivation should be on an NCCNode");
     }
-    if(token.isToken === undefined){
+    if(!(token instanceof RDS.Token)){
         throw new Error("nccNodeLeftActivation should be on a token");
     }
     var newToken = token;
@@ -495,8 +495,8 @@ var removeNegJoinResultsForToken = function(token){
 var removeTokenFromNode = function(token){
     //Deal with if the owning node is NOT an NCC
     if(token.owningNode
-       && token.owningNode.isAnNCCPartnerNode === undefined
-       && token.owningNode.isMemoryNode){
+       && !(token.owningNode instanceof RDS.NCCPartnerNode)
+       && (token instanceof RDS.AlphaMemory || token instanceof RDS.BetaMemory)){
         //by removing the token as an element in that node
         var index = token.owningNode.items.map(d=>d.id).indexOf(token.id);
         if(index !== -1){
@@ -556,24 +556,24 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
     var index,
         invalidatedActions = [];
     //if NCC, delete partner to
-    if(node.isAnNCCNode){
+    if(node instanceof RDS.NCCNode){
         invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.partner));
     }
     
     //clean up tokens
-    if(node.isBetaMemory){
+    if(node instanceof RDS.BetaMemory){
         while(node.items.length > 0){
             invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(node.items[0]));
         }
     }
-    if(node.isAnNCCPartnerNode){
+    if(node instanceof RDS.NCCPartnerNode){
         while(node.newResultBuffer.length > 0){
             invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(node.items[0]));
         }
     }
 
     //clean up any associated alphamemory
-    if(node.isJoinNode || node.isNegativeNode && node.alphaMemory){
+    if(node instanceof RDS.JoinNode || (node instanceof RDS.NegativeNode && node.alphaMemory)){
         index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
         if(index > -1){
             node.alphaMemory.children.splice(index,1);
@@ -663,7 +663,7 @@ var deleteTokenAndDescendents = function(token){
     cleanupNCCPartnerOwnedToken(token);
     
     if(token && token.owningNode
-       && token.owningNode.isAnNCCPartnerNode
+       && token.owningNode instanceof RDS.NCCPartnerNode
        && token.parentToken.nccResults.length === 0){
         //Activate newly unblocked Token
         //todo: should this be nccnode AND/OR negNode?
@@ -682,7 +682,7 @@ var deleteTokenAndDescendents = function(token){
 */
 var cleanupNCCResultsInToken = function(token){
     //NCCNODE
-    if(token && token.owningNode && token.owningNode.isAnNCCNode){
+    if(token && token.owningNode && token.owningNode instanceof RDS.NCCNode){
         //for all the nccResult tokens, delete them
         token.nccResults.forEach(function(nccR){
             //remove the nccR token from its linked wme
@@ -715,7 +715,7 @@ var cleanupNCCResultsInToken = function(token){
 var cleanupNCCPartnerOwnedToken = function(token){
     //NCCPARTNERNODE
     if(token.owningNode
-       && token.owningNode.isAnNCCPartnerNode
+       && token.owningNode instanceof RDS.NCCPartnerNode
        && token.parentToken){
         //remove from owner.nccResults:
         var index = token.parentToken.nccResults.map(d=>d.id).indexOf(token.id);

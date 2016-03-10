@@ -50,7 +50,6 @@ var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,p
    @class WME
 */
 var WME = function(data,assertTime){
-    this.isWME = true;
     this.data = data;
     //The lifetime of the wme. Asserted at time lifeTime[0],
     //retracted at time lifeTime[1]:
@@ -76,7 +75,6 @@ var WME = function(data,assertTime){
 */
 var Token = function(parentToken,wme,owningNode,bindings){
     //bindings are updated as the token progresses
-    this.isToken = true;
     this.parentToken = parentToken; //ie:owner
     this.wme = wme;
     this.owningNode = owningNode;
@@ -137,7 +135,6 @@ var AlphaMemoryItem = function(wme,alphaMem){
 
 var AlphaNode = function(parent,constantTestSpec){
     this.id = nextId;
-    this.isConstantTestNode = true;
     this.parent = parent;
     if(this.parent && this.parent.children){
         this.parent.children.unshift(this);
@@ -160,23 +157,21 @@ var AlphaNode = function(parent,constantTestSpec){
    @class AlphaMemory
 */
 var AlphaMemory = function(parent){
-    this.isAlphaMemory = true;
     this.items = [];
     this.parent = parent;
     //If adding to a node other than a test node,
-    if(parent && parent.isConstantTestNode === undefined){
+    if(this.parent && !(this.parent instanceof AlphaNode)){
         //add to children
         this.parent.children.unshift(this);
-    }else if(this.parent && this.parent.outputMemory === undefined){
+    }else if(this.parent && this.parent instanceof AlphaNode && this.parent.outputMemory === undefined){
         //if an alphanode, set the ouputmemory field
         this.parent.outputMemory = this;
-    }else if(this.parent && this.parentOutputMemory !== undefined){
+    }else{
         throw new Error("trying to create an alpha memory for a node that already has one");
     }
     this.children = [];
     this.unlinkedChildren = [];
     this.referenceCount = 0;
-    this.isMemoryNode = true;
     this.id = nextId;
     nextId++;
 };
@@ -206,8 +201,6 @@ var ReteNode = function(parent){
 */
 var BetaMemory = function(parent){
     ReteNode.call(this,parent);
-    this.isBetaMemory = true;
-    this.isMemoryNode = true;
     this.items = [];
     if(parent === undefined){
         this.dummy = true;
@@ -226,7 +219,6 @@ var JoinNode = function(parent,alphaMemory,tests){
     //Join Node combines tokens with wmes
     //tests are the binding tuples from a condition
     ReteNode.call(this,parent);
-    this.isJoinNode = true;
     this.alphaMemory = alphaMemory;
     if(tests){
         this.tests = tests;
@@ -253,7 +245,6 @@ var JoinNode = function(parent,alphaMemory,tests){
 var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNet){
     //Container object for a general graphnode action description    
     ReteNode.call(this,parent);
-    this.isActionNode = true;
     this.name = ruleName;
     this.actionDescriptions = actionDescriptions;
     this.boundActions = boundActions;
@@ -299,7 +290,6 @@ var NegativeNode = function(parent,alphaMemory,tests){
         throw new Error("Negative Node requires a binding");
     }
     ReteNode.call(this,parent);
-    this.isNegativeNode = true;
     this.items = [];
     this.alphaMemory = alphaMemory;
     if(this.alphaMemory){
@@ -325,7 +315,6 @@ var NCCNode = function(parent){
     if(this.parent && this.parent.children){
         this.parent.children.push(this);
     }
-    this.isAnNCCNode = true;
     this.items = [];
     this.partner = null;
 };
@@ -339,7 +328,6 @@ var NCCNode = function(parent){
 */
 var NCCPartnerNode = function(parent,num){
     ReteNode.call(this,parent);
-    this.isAnNCCPartnerNode = true;
     this.nccNode = null;
     this.numberOfConjuncts = num;
     this.newResultBuffer = [];
