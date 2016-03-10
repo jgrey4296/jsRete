@@ -23,32 +23,36 @@ var RDS = require('./ReteDataStructures'),
 
 */
 var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allNodes,reteNet){
-    var currentNode = parent;
-    var alphaMemory;
+    "use strict";
+    var currentNode = parent,
+        alphaMemory;
     //for each condition
     conditions.forEach(function(condition){
-        if(condition.tags.type !== 'condition' && condition.tags.type !== 'negConjCondition'
-           && condition.tags.type !== 'negCondition' && condition.tags.type !== 'rule'){
-            throw new Error("Inappropriate condition format");
+        if(condition.tags.type !== 'rule' && condition.tags.type !== 'condition'){
+            throw new Error("trying to add something that isnt a condition");
         }
-        //get the binding tests for join nodes
-        var tests = _.pairs(condition.bindings);
+        if(condition.tags.type === 'condition' && condition.tags.conditionType === undefined){
+            throw new Error("Trying to add a condition without a conditionType");
+        }
         
-        if(condition.tags.isPositive !== undefined){
+        //get the binding tests for join nodes
+        let tests = _.pairs(condition.bindings);
+        
+        if(condition.tags.conditionType === 'positive'){
             //Build a positive condition:
             currentNode = buildOrShareBetaMemoryNode(currentNode,reteNet);
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareJoinNode(currentNode,alphaMemory,tests,reteNet);
-        }else if(condition.tags.isNegative !== undefined){
+        }else if(condition.tags.conditionType === 'negative'){
             //Build a negative condition:
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareNegativeNode(currentNode,alphaMemory,tests,reteNet);
-        }else if(condition.tags.isNCCCondition !== undefined){
+        }else if(condition.tags.conditionType === 'negConjCondition'){
             //Build a Negated Conjunctive Condition
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
         }else if(condition.tags.type === 'rule'){
             //for using other rules as composable conditions
-            var ruleConditions = _.keys(condition.conditions).map(d=>allNodes[d]);
+            let ruleConditions = _.keys(condition.conditions).map(d=>allNodes[d]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
         }else{
             console.error("Problematic Condition:",condition);

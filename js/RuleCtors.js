@@ -90,15 +90,15 @@ var Condition = function(type){
     switch(type){
     case "positive":
         this.tags = { type : "condition",
-                      isPositive : true };
+                      conditionType : 'positive' };
         break;
     case "negative":
         this.tags = { type : "condition",
-                      isNegative : true };
+                      conditionType : 'negative' };
         break;
     case "ncc":
-        this.tags = { isNCCCondition : true,
-                      type : "negConjCondition" };
+        this.tags = { type : 'condition',
+                      conditionType : "negConjCondition" };
         break;
     default:
         throw new Error("Unrecognised condition");
