@@ -518,5 +518,13 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
     return components;
 };
 
+/**
+   Clean up
+ */
+ReteNet.prototype.cleanup = function(){
+    _.values(this.allWMEs).forEach(d=>this.retractWME(d));
+    this.allWMEs = {};
+    this.removeRule(_.values(this.allRules));
+};
 
 module.exports = ReteNet;
