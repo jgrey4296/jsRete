@@ -555,7 +555,9 @@ exports.ReteTests = {
             });
 
         rn.addRule(aRule);
-        rn.assertWME(testData);
+        var newWMEId = rn.assertWME(testData),
+        //Get the wme:
+            theWME = rn.allWMEs[newWMEId];
         //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
         test.ok(_.keys(rn.proposedActions).length === 1);
         //schedule the action
@@ -564,12 +566,11 @@ exports.ReteTests = {
         //perform the action:
         rn.stepTime();
         //wme remains, but is marked as retracted
-        test.ok(_.keys(rn.allWMEs).length === 1);
-        var wme = _.values(rn.allWMEs)[0];
+        test.ok(_.keys(rn.allWMEs).length === 0);
         //check assertion time:
-        test.ok(wme.lifeTime[0] === 1);
+        test.ok(theWME.lifeTime[0] === 1);
         //check retraction time:
-        test.ok(wme.lifeTime[1] === 1);
+        test.ok(theWME.lifeTime[1] === 1);
         test.done();
     },
     //test the firing of two rules
