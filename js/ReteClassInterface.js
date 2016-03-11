@@ -43,7 +43,6 @@ var ReteNet = function(actionsToRegister){
      */
     this.rootAlpha = new RDS.AlphaNode();
 
-
     /**
        The available actions the retenet can perform
        {name: string ,perform : function, propose : function };
@@ -105,6 +104,7 @@ var ReteNet = function(actionsToRegister){
     this.allReteNodes = {};
     /**
        All ReteNodes, indexed by type
+       todo: make this a weak map?
        @member {Object} 
      */
     this.allReteNodesByType = {
@@ -258,6 +258,8 @@ ReteNet.prototype.retractWME = function(wme){
     ReteActivationsAndDeletion.deleteAllNegJoinResultsForWME(wme);
     //Record when the wme was retracted
     wme.lifeTime[1] = this.currentTime;
+
+    delete this.allWMEs[wme.id];
     return wme;
 };
 
@@ -418,7 +420,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
         },this),
         //Create the action, with the bound action functions
         ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActionDescriptions,rule.name,this);
-
+    
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;
     this.actions[rule.id] = ruleAction;
@@ -433,14 +435,23 @@ ReteNet.prototype.addRule = function(ruleId,components){
    @method
  */
 ReteNet.prototype.removeRule = function(rule){
-    this.fireListener("removeRule",rule);
+    this.fireListener("removeRule",actionNode);
     if(rule instanceof Array){
         rule.forEach(d=>this.removeRule(d));
         return;
     }
     //delete from bottom up
-    var invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(rule);
+    var action = this.actions[rule.id],
+        invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(action);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
+    //delete from the allrules record
+    if(this.allRules[rule.id] !== undefined){
+        delete this.allRules[rule.id];
+    }
+    //todo: remove from all rete nodes by type
+    if(this.actions[rule.id] !== undefined){
+        delete this.actions[rule.id];
+    }
 };
 
 
@@ -522,9 +533,16 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
    Clean up
  */
 ReteNet.prototype.cleanup = function(){
+    //retract all wmes
     _.values(this.allWMEs).forEach(d=>this.retractWME(d));
     this.allWMEs = {};
+    //remove all rules
     this.removeRule(_.values(this.allRules));
+    this.allRules = {};
+    this.proposedActions = {};
+    this.enactedActions = {};
+    this.allReteNodesByType = {};
+    this.schedule = {};
 };
 
 module.exports = ReteNet;

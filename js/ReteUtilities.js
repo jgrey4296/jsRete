@@ -240,6 +240,7 @@ var cleanupInvalidatedActions = function(invalidatedActions){
         proposedActions = reteNet.proposedActions,
         idList = invalidatedActions.map(d=>d.id);
     //console.log("Cleaning up:",[idList,invalidatedActions,proposedActions]);
+    
     //filter out the ids from the proposedActions list
     //also removing them from the owning tokens
     proposedActions = _.reject(proposedActions,function(d){

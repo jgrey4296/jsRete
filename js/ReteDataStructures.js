@@ -207,7 +207,6 @@ var BetaMemory = function(parent){
         this.items.push(new Token());
         this.items[0].owningNode = this;
     }
-
 };
 
 /**
@@ -255,10 +254,9 @@ var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNe
 
 /**
    To Store the combination of a token and a wme that blocks it from progressing through the network
-   @param owner
-   @param wme
+   @param owner the token
+   @param wme the wme
    @class NegativeJoinResult
-   @augments ReteNode
 */
 var NegativeJoinResult = function(owner,wme){
     //Storage for a token blocked by a wme

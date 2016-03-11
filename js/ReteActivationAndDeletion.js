@@ -415,8 +415,7 @@ var removeAlphaMemoryItemsForWME = function(wme){
     //remove alpha memory items
     wme.alphaMemoryItems.forEach(function(item){
         //unlink the alphamemory from the item
-        var index = item.alphaMemory.items.map(d=>d.id).indexOf(item.id);
-        if(index !== -1){ item.alphaMemory.items.splice(index,1);}
+        item.alphaMemory.items = _.reject(item.alphaMemory.items,d=>d.id===item.id);
         //unlink the alphaMemory itself if it is now empty
         //will unlink if am.items.length === 0
         ReteUtil.unlinkAlphaMemory(item.alphaMemory);
@@ -439,9 +438,7 @@ var deleteAllTokensForWME = function(wme){
     while(wme.tokens.length > 0){
         invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(wme.tokens[0]));
     }
-
     return invalidatedActions;
-    
 };
 
 /**
@@ -452,10 +449,7 @@ var deleteAllTokensForWME = function(wme){
 var deleteAllNegJoinResultsForWME = function(wme){
     //unlink the negative Join results in the owning token
     wme.negJoinResults.forEach(function(jr){
-        var index = jr.owner.negJoinResults.map(j=>j.id).indexOf(jr.id);
-        if(index !== -1){
-            jr.owner.negJoinResults.splice(index,1);
-        }
+        jr.owner.negJoinResults = _.reject(jr.owner.negJoinResults,d=>d.id === jr.id);
         activateIfNegatedJRIsUnblocked(jr);
         //remove internal references:
         jr.owner = undefined;
@@ -474,10 +468,7 @@ var deleteAllNegJoinResultsForWME = function(wme){
 var removeNegJoinResultsForToken = function(token){
     //remove Negative join results
     token.negJoinResults.forEach(function(jr){
-        var index = jr.wme.negJoinResults.map(d=>d.id).indexOf(jr.id);
-        if(index !== -1){
-            jr.wme.negJoinResults.splice(index,1);
-        }
+        jr.wme.negJoinResults = _.reject(jr.wme.negJoinResults,d=>d.id === jr.id);
         //clear the references
         jr.wme = undefined;
         jr.token = undefined;
@@ -498,10 +489,7 @@ var removeTokenFromNode = function(token){
        && !(token.owningNode instanceof RDS.NCCPartnerNode)
        && (token instanceof RDS.AlphaMemory || token instanceof RDS.BetaMemory)){
         //by removing the token as an element in that node
-        var index = token.owningNode.items.map(d=>d.id).indexOf(token.id);
-        if(index !== -1){
-            token.owningNode.items.splice(index,1);
-        }
+        token.owningNode.items = _.reject(token.owningNode.items,d=>d.id === token.id);
     }
 };
 
@@ -512,10 +500,7 @@ var removeTokenFromNode = function(token){
 var removeTokenFromWME = function(token){
     //remove the token from the wme it is based on
     if(token.wme && token.wme.tokens){
-        var index = token.wme.tokens.map(d=>d.id).indexOf(token.id);
-        if(index !== -1){
-            token.wme.tokens.splice(index,1);
-        }
+        token.wme.tokens = _.reject(token.wme.tokens,d=>d.id === token.id);
     }
 };
 
@@ -527,16 +512,9 @@ var removeTokenFromWME = function(token){
 var removeTokenFromParentToken = function(token){
     //Remove the token from it's parent's child list
     if(token && token.parentToken){
-        var index = token.parentToken.children.map(d=>d.id).indexOf(token.id);
-        if(index !== -1){
-            token.parentToken.children.splice(index,1);
-        }
+        token.parentToken.children = _.reject(token.parentToken.children,d=>d.id === token.id);
     }
 };
-
-
-
-
 
 /**
    Cleanup an unused node and any parent nodes that are also unused once this node is gone.
@@ -545,7 +523,6 @@ var removeTokenFromParentToken = function(token){
 */
 var deleteNodeAndAnyUnusedAncestors = function(node){
     /*
-      Removes DOWNWARD links, but leaves UPWARD links intact
       Do a number of things:
       clean up tokens stored in a node
       remove any reference to the node from a connected alpha
@@ -553,9 +530,12 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
       
       +: call recursively on any parent that has no children
     */
-    var index,
-        invalidatedActions = [];
-    //if NCC, delete partner to
+    var invalidatedActions = [];
+    if(node instanceof RDS.ActionNode){
+        node.reteNet = null;
+    }
+    
+    //if NCC, delete partner too
     if(node instanceof RDS.NCCNode){
         invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.partner));
     }
@@ -574,11 +554,10 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
 
     //clean up any associated alphamemory
     if(node instanceof RDS.JoinNode || (node instanceof RDS.NegativeNode && node.alphaMemory)){
-        index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
-        if(index > -1){
-            node.alphaMemory.children.splice(index,1);
-            node.alphaMemory.referenceCount--;
-        }
+        node.alphaMemory.children = _.reject(node.alphaMemory.children,d=>d.id===node.id);
+        node.alphaMemory.unlinkedChildren = _.reject(node.alphaMemory.unlinkedChildren,d=>d.id===node.id);
+        node.alphaMemory.referenceCount--;
+
         if(node.alphaMemory.referenceCount === 0){
             //TODO: write delete alpha memory
             //deleteAlphaMemory(node.alphaMemory);
@@ -588,16 +567,8 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
     //remove the node from its parent
     if(node.parent){
         //check the child list:
-        index = node.parent.children.map(d=>d.id).indexOf(node.id);
-        if(index !== -1){                            
-            node.parent.children.splice(index,1);
-        }else{
-            //check the unlinked children list:
-            index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
-            if(index !== -1){
-                node.parent.unlinkedChildren.splice(index,1);
-            }
-        }
+        node.parent.children = _.reject(node.parent.children,d=>d.id===node.id);
+        node.parent.unlinkedChildren = _.reject(node.parent.unlinkedChildren,d=>d.id===node.id);
     }
 
     //delete parent node if its got no children
@@ -606,9 +577,9 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
        && node.parent.unlinkedChildren.length === 0){
         invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.parent));
     }
+    
     //deallocate memory for none
     return invalidatedActions;
-    
 };
 
 
@@ -672,7 +643,6 @@ var deleteTokenAndDescendents = function(token){
 
     //get the queued actions linked with the token, and return them for cleanup
     invalidatedActions = invalidatedActions.concat(token.proposedActions);
-    
     return invalidatedActions;
 };
 
@@ -687,17 +657,11 @@ var cleanupNCCResultsInToken = function(token){
         token.nccResults.forEach(function(nccR){
             //remove the nccR token from its linked wme
             if(nccR.wme){
-                var index = nccR.wme.tokens.map(d=>d.id).indexOf(nccR.id);
-                if(index !== -1){
-                    nccR.wme.tokens.splice(index,1);
-                }
+                nccR.wme.tokens = _.reject(nccR.wme.tokens,d=>d.id === nccR.id);
             }
             if(nccR.parent){
                 //remove the token from it's parent
-                var nccRindex = nccR.parent.children.map(d=>d.id).indexOf(nccR.id);
-                if(nccRindex !== -1){
-                    nccR.parent.children.splice(nccRindex,1);
-                }
+                nccR.parent.children = _.reject(nccR.parent.children,d=>d.id === nccR.id);
             }
         });
         //clear the nccResults
