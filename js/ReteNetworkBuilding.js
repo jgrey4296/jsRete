@@ -267,7 +267,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
     
     //else: build NCC and Partner nodes
     let newNCC = new RDS.NCCNode(parent),
-        newNCCPartner = new RDS.NCCPartnerNode(bottomOfSubNetwork,condition.conditions.length);
+        newNCCPartner = new RDS.NCCPartnerNode(bottomOfSubNetwork,_.keys(condition.conditions).length);
 
     newNCC.partner = newNCCPartner;
     newNCCPartner.nccNode = newNCC;
