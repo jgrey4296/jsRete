@@ -435,7 +435,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
    @method
  */
 ReteNet.prototype.removeRule = function(rule){
-    this.fireListener("removeRule",actionNode);
+    this.fireListener("removeRule",rule);
     if(rule instanceof Array){
         rule.forEach(d=>this.removeRule(d));
         return;
