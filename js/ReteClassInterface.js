@@ -407,7 +407,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
         //TODO: support rules as conditions by flattening the conditions repeatedly
         conditions = _.keys(rule.conditions).map(d=>components[d]),
         //build network with a dummy node for the parent
-        finalBetaMemory = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
+        finalMemoryNode = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
         //Get the action descriptions that are triggered by the rule:
         //TODO: support rules as actions by repeatedly flattening
         actionDescriptions = _.keys(rule.actions).map(d=>components[d]),
@@ -419,7 +419,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
             return _.bind(this.actionFunctions[d.tags.actionType].propose,d);
         },this),
         //Create the action, with the bound action functions
-        ruleAction = new RDS.ActionNode(finalBetaMemory,actionDescriptions,boundActionDescriptions,rule.name,this);
+        ruleAction = new RDS.ActionNode(finalMemoryNode,actionDescriptions,boundActionDescriptions,rule.name,this);
     
     //Add the bound actions into the action node:
     ruleAction.boundActions = boundActionDescriptions;

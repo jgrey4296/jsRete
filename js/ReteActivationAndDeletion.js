@@ -44,9 +44,10 @@ var constantTestNodeActivation = function(alphaNode,wme){
     if(alphaNode.passThrough){
         testResult = true;
     }else{
-        var wmeFieldValue = ReteUtil.retrieveWMEValueFromDotString(wme,alphaNode.testField);
-        var value = alphaNode.testValue;
-        var operator = alphaNode.operator;
+        var wmeFieldValue = ReteUtil.retrieveWMEValueFromDotString(wme,alphaNode.testField),
+            value = alphaNode.testValue,
+            operator = alphaNode.operator;
+        if(wmeFieldValue === null){ return false; }
         if(ConstantTestOperators[operator]){
             if(operator !== 'EQ' && operator !== 'NE'){
                 testResult = ConstantTestOperators[operator](Number(wmeFieldValue),Number(value));
@@ -159,6 +160,9 @@ var joinNodeRightActivation = function(node,wme){
     //For all tokens, compare to the new wme,
     //pass on successful combinations to betamemory/negative node
     node.parent.items.forEach(function(currToken){
+        if(currToken.negJoinResults.length > 0 || currToken.nccResults.length > 0){
+            return false;
+        }
         //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
         var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
         if(joinTestResult !== undefined && joinTestResult !== false){
@@ -169,12 +173,12 @@ var joinNodeRightActivation = function(node,wme){
 
 
 /**
-   Given a new token, activates any stored actions necessary
+   Given a new token, proposes a set of actions
    @param actionNode
    @param token
    @function activateActionNode
 */
-var activateActionNode = function(actionNode,token){
+var actionNodeActivation = function(actionNode,token){
     //get the actions the node embodies:
     var boundActionFunctions = actionNode.boundActions,
         //apply the token to each of the actions
@@ -221,7 +225,7 @@ var leftActivate = function(node,token,wme,joinTestResults){
     }else if(node instanceof RDS.NCCPartnerNode){
         nccPartnerNodeLeftActivation(node,token);
     }else if(node instanceof RDS.ActionNode){
-        activateActionNode(node,token);
+        actionNodeActivation(node,token);
     }else{
         throw new Error("Unknown node type leftActivated");
     }
@@ -292,6 +296,9 @@ var negativeNodeRightActivation = function(node,wme){
     //any that don't get blocked should already have been activated
     console.log("Negative node right activation");
     node.items.forEach(function(currToken){
+        if(currToken.negJoinResults.length > 0 || currToken.nccResults.length > 0){
+            return false;
+        }
         var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
         if(joinTestResult !== undefined && joinTestResult !== false){
             if(currToken.negJoinResults.length === 0){
@@ -433,12 +440,12 @@ var removeAlphaMemoryItemsForWME = function(wme){
    @function deleteAllTokensForWME
 */
 var deleteAllTokensForWME = function(wme){
-    var invalidatedActions = [];
+    var invalidatedActions = new Set();
     //For all tokens
     while(wme.tokens.length > 0){
-        invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(wme.tokens[0]));
+        deleteTokenAndDescendents(wme.tokens[0]).forEach(d=>invalidatedActions.add(d));
     }
-    return invalidatedActions;
+    return Array.from(invalidatedActions);
 };
 
 /**
@@ -486,8 +493,8 @@ var removeNegJoinResultsForToken = function(token){
 var removeTokenFromNode = function(token){
     //Deal with if the owning node is NOT an NCC
     if(token.owningNode
-       && !(token.owningNode instanceof RDS.NCCPartnerNode)
-       && (token instanceof RDS.AlphaMemory || token instanceof RDS.BetaMemory)){
+       && !(token.owningNode instanceof RDS.NCCPartnerNode)){
+       //&& (token.owningNode instanceof RDS.AlphaMemory || token.owningNode instanceof RDS.BetaMemory)){
         //by removing the token as an element in that node
         token.owningNode.items = _.reject(token.owningNode.items,d=>d.id === token.id);
     }
@@ -530,25 +537,26 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
       
       +: call recursively on any parent that has no children
     */
-    var invalidatedActions = [];
+    var invalidatedActions = new Set();
     if(node instanceof RDS.ActionNode){
         node.reteNet = null;
     }
     
     //if NCC, delete partner too
     if(node instanceof RDS.NCCNode){
-        invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.partner));
+        deleteNodeAndAnyUnusedAncestors(node.partner).forEach(d=>invalidatedActions.add(d));
     }
     
     //clean up tokens
-    if(node instanceof RDS.BetaMemory){
+    if((node instanceof RDS.BetaMemory && node.dummy === undefined)
+       || (node instanceof RDS.NegativeNode) || (node instanceof RDS.NCCNode)){
         while(node.items.length > 0){
-            invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(node.items[0]));
+            deleteTokenAndDescendents(node.items[0]).forEach(d=>invalidatedActions.add(d));
         }
     }
     if(node instanceof RDS.NCCPartnerNode){
         while(node.newResultBuffer.length > 0){
-            invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(node.items[0]));
+            deleteTokenAndDescendents(node.items[0]).forEach(d=>invalidatedActions.add(d));
         }
     }
 
@@ -575,11 +583,11 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
     if(node.parent && node.parent.children.length === 0
        && node.parent.unlinkedChildren
        && node.parent.unlinkedChildren.length === 0){
-        invalidatedActions = invalidatedActions.concat(deleteNodeAndAnyUnusedAncestors(node.parent));
+        deleteNodeAndAnyUnusedAncestors(node.parent).forEach(d=>invalidatedActions.add(d));
     }
     
     //deallocate memory for none
-    return invalidatedActions;
+    return Array.from(invalidatedActions);
 };
 
 
@@ -590,12 +598,12 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
 */
 //utility function to delete all descendents without deleting the token
 var deleteDescendentsOfToken = function(token){
-    var invalidatedActions = [];
+    var invalidatedActions = new Set();
     while(token.children.length > 0){
-        invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(token.children[0]));
+        deleteTokenAndDescendents(token.children[0]).forEach(d=>invalidatedActions.add(d));
     }
-    invalidatedActions = invalidatedActions.concat(token.proposedActions);
-    return invalidatedActions;
+    token.proposedActions.forEach(d=>invalidatedActions.add(d));
+    return Array.from(invalidatedActions);
 };
 
 
@@ -611,12 +619,10 @@ var deleteTokenAndDescendents = function(token){
    left unlinking of join nodes, AND
    activates NCC's that are no longer blocked
    */
-
-    var invalidatedActions = [];
-    
+    var invalidatedActions = new Set();
     //Recursive call:
     while(token.children.length > 0){
-        invalidatedActions = invalidatedActions.concat(deleteTokenAndDescendents(token.children[0]));
+        deleteTokenAndDescendents(token.children[0]).forEach(d=>invalidatedActions.add(d));
     }
 
     //Base Cases:
@@ -642,8 +648,8 @@ var deleteTokenAndDescendents = function(token){
     }
 
     //get the queued actions linked with the token, and return them for cleanup
-    invalidatedActions = invalidatedActions.concat(token.proposedActions);
-    return invalidatedActions;
+    token.proposedActions.forEach(d=>invalidatedActions.add(d));
+    return Array.from(invalidatedActions);
 };
 
 /**

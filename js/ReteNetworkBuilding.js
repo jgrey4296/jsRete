@@ -128,8 +128,9 @@ var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
 */
 var buildOrShareBetaMemoryNode = function(parent,reteNet){
     "use strict";
-    //if passed in the dummy top node, return it:
-    if(parent instanceof RDS.BetaMemory){
+    //if passed in the dummy top node, OR any sort of memory node,
+    //be it NCC,Negative,NCCPartner
+    if(parent instanceof RDS.BetaMemory || parent instanceof RDS.NCCPartnerNode || parent instanceof RDS.NegativeNode || parent instanceof RDS.NCCNode){
         return parent;
     }
     
