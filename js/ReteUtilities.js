@@ -219,6 +219,8 @@ var retrieveWMEValueFromDotString = function(wme,dotString){
         var curr = address.shift();
         if(currLocation[curr] !== undefined){
             currLocation = currLocation[curr];
+        }else{
+            return null;
         }
     }
 
@@ -243,11 +245,7 @@ var cleanupInvalidatedActions = function(invalidatedActions){
     
     //filter out the ids from the proposedActions list
     //also removing them from the owning tokens
-    proposedActions = _.reject(proposedActions,function(d){
-        if(d === undefined) { return true; }
-        return idList.indexOf(d.id) !== -1;
-    });
-    reteNet.proposedActions = proposedActions;
+    reteNet.proposedActions = _.reject(reteNet.proposedActions,d=>idList.indexOf(d.id) !== -1);
 };
 
 
