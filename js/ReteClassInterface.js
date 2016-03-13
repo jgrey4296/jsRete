@@ -107,16 +107,7 @@ var ReteNet = function(actionsToRegister){
        todo: make this a weak map?
        @member {Object} 
      */
-    this.allReteNodesByType = {
-        "constantTests" : {},
-        "alphaMemories" : {},
-        "betaMemories" : {},
-        "joinNodes" : {},
-        "negativeNodes" : {},
-        "nccNodes" : {},
-        "nccPartnerNodes" : {},
-        "actionNodes" : {},
-    };
+    this.allReteNodesByType = {};
 
     /**
        The current time step of the retenet
@@ -422,9 +413,10 @@ ReteNet.prototype.addRule = function(ruleId,components){
         ruleAction = new RDS.ActionNode(finalMemoryNode,actionDescriptions,boundActionDescriptions,rule.name,this);
     
     //Add the bound actions into the action node:
+    ruleAction.ruleId = rule.id;
     ruleAction.boundActions = boundActionDescriptions;
-    this.actions[rule.id] = ruleAction;
-    this.allRules[rule.id] = rule;
+    this.actions[ruleAction.ruleId] = ruleAction;
+    this.allRules[ruleAction.ruleId] = rule;
     return [this,ruleAction];
 };
 
@@ -435,20 +427,31 @@ ReteNet.prototype.addRule = function(ruleId,components){
    @method
  */
 ReteNet.prototype.removeRule = function(rule){
+    "use strict";
     this.fireListener("removeRule",rule);
     if(rule instanceof Array){
         rule.forEach(d=>this.removeRule(d));
         return;
     }
     //delete from bottom up
-    var action = this.actions[rule.id],
+    var action = rule instanceof RDS.ActionNode ? rule : this.actions[rule.id],
         invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(action);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
+
     //delete from the allrules record
-    if(this.allRules[rule.id] !== undefined){
-        delete this.allRules[rule.id];
+    if(this.allRules[action.ruleId] !== undefined){
+        delete this.allRules[action.ruleId];
     }
-    //todo: remove from all rete nodes by type
+
+    //Remove all nodes scheduled for cleanup
+    _.keys(this.allReteNodes).forEach(function(d){
+        if(this.allReteNodes[d].cleanup === true){
+            let currNode = this.allReteNodes[d];
+            delete this.allReteNodesByType[currNode.type][currNode.id];
+            delete this.allReteNodes[d];
+        }
+    },this);
+    
     if(this.actions[rule.id] !== undefined){
         delete this.actions[rule.id];
     }
@@ -482,31 +485,11 @@ ReteNet.prototype.registerAction = function(actionObj){
  */
 ReteNet.prototype.storeNode = function(node){
     this.allReteNodes[node.id] = node;
-    var storeTarget = "unknown";
-    if(node instanceof RDS.AlphaNode){
-        storeTarget = "constantTests";
-    }else if(node instanceof RDS.AlphaMemory){
-        storeTarget = "alphaMemories";
-    }else if(node instanceof RDS.BetaMemory){
-        storeTarget = "betaMemories";
-    }else if(node instanceof RDS.JoinNode){
-        storeTarget = "joinNodes";
-    }else if(node instanceof RDS.ActionNode){
-        storeTarget = "actionNodes";
-    }else if(node instanceof RDS.NegativeNode){
-        storeTarget = "negativeNodes";
-    }else if(node instanceof RDS.NCCNode){
-        storeTarget = "nccNodes";
-    }else if(node instanceof RDS.NCCPartnerNode){
-        storeTarget = "nccPartnerNodes";
-    }
 
-    if(this.allReteNodesByType[storeTarget] !== undefined){
-        this.allReteNodesByType[storeTarget][node.id] = node;
-    }else{
-        console.log(node);
-        throw new Error("unrecognised type attempted to be stored");
+    if(this.allReteNodesByType[node.type] === undefined){
+        this.allReteNodesByType[node.type] = {};
     }
+    this.allReteNodesByType[node.type][node.id] = node;
 };
 
 /**
@@ -534,15 +517,10 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
  */
 ReteNet.prototype.cleanup = function(){
     //retract all wmes
-    _.values(this.allWMEs).forEach(d=>this.retractWME(d));
+    _.values(this.allWoMEs).forEach(d=>this.retractWME(d));
     this.allWMEs = {};
     //remove all rules
     this.removeRule(_.values(this.allRules));
-    this.allRules = {};
-    this.proposedActions = {};
-    this.enactedActions = {};
-    this.allReteNodesByType = {};
-    this.schedule = {};
 };
 
 module.exports = ReteNet;
