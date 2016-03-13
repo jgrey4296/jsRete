@@ -245,7 +245,7 @@ var cleanupInvalidatedActions = function(invalidatedActions){
     
     //filter out the ids from the proposedActions list
     //also removing them from the owning tokens
-    reteNet.proposedActions = _.reject(reteNet.proposedActions,d=>idList.indexOf(d.id) !== -1);
+    reteNet.proposedActions = _.reject(reteNet.proposedActions,d=>d === undefined || idList.indexOf(d.id) !== -1);
 };
 
 
