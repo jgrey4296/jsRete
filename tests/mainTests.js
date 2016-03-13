@@ -817,6 +817,45 @@ exports.ReteTests = {
     },
 
     //remove rule test
+    removeRuleTest : function(test){
+        var rn = makeRete(),
+            aRule = new rn.Rule(),
+            exampleData = {
+                num : 5,
+                str : "test"
+            };
+
+        aRule.newCondition("positive",{
+            tests : [["num","EQ",5]],
+            bindings : []
+        })
+            .newAction("assert","testAction",{
+                values : [["message","blah"]]
+            });
+
+        //Preconditions:
+        test.ok(_.keys(rn.actions).length === 0);
+        test.ok(rn.rootAlpha.children.length === 0);
+        test.ok(rn.dummyBetaMemory.children.length === 0);
+        test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 0);
+
+        //add the rule
+        var ruleAction = rn.addRule(aRule)[1];
+
+        //postConditions:
+        test.ok(_.keys(rn.actions).length === 1);
+        test.ok(rn.rootAlpha.children.length === 1);
+        test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 1);
+
+        //remove the rule:
+        rn.removeRule(ruleAction);
+
+        test.ok(rn.rootAlpha.children.length === 0);
+        test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 0);
+        
+        
+        test.done();
+    }
     
     
 };
