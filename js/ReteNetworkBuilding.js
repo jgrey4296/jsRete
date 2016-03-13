@@ -40,7 +40,7 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
         
         if(condition.tags.conditionType === 'positive'){
             //Build a positive condition:
-            currentNode = buildOrShareBetaMemoryNode(currentNode,reteNet);
+            //currentNode = buildOrShareBetaMemoryNode(currentNode,reteNet);
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareJoinNode(currentNode,alphaMemory,tests,reteNet);
         }else if(condition.tags.conditionType === 'negative'){
@@ -128,7 +128,7 @@ var buildOrShareBetaMemoryNode = function(parent,reteNet){
     "use strict";
     //if passed in the dummy top node, OR any sort of memory node,
     //be it NCC,Negative,NCCPartner
-    if(parent instanceof RDS.BetaMemory || parent instanceof RDS.NCCPartnerNode || parent instanceof RDS.NegativeNode || parent instanceof RDS.NCCNode){
+    if(parent instanceof RDS.BetaMemory || parent instanceof RDS.NCCPartnerNode || parent instanceof RDS.NegativeNode || parent instanceof RDS.NCCNode || parent instanceof RDS.JoinNode){
         return parent;
     }
     
@@ -284,6 +284,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
 
 /**
    Pulls tokens down from parent upon new creation
+   @note Possible race conditions?
    @param newNode
    @function updateNewNodeWithMatchesFromAbove
 */
