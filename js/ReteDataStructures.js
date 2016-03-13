@@ -233,7 +233,7 @@ var JoinNode = function(parent,alphaMemory,tests){
         this.alphaMemory.referenceCount += 1;
     }
     this.nearestAncestor = null;
-    
+    this.items = [];
 };
 
 /**
