@@ -25,11 +25,13 @@ var RDS = require('./ReteDataStructures'),
    @function alphaMemoryActivation
 */
 var alphaMemoryActivation = function(alphaMem,wme){
-    var newItem = new RDS.AlphaMemoryItem(wme,alphaMem);
+    "use strict";
+    let newItem = new RDS.AlphaMemoryItem(wme,alphaMem);
     alphaMem.items.unshift(newItem);
     wme.alphaMemoryItems.unshift(newItem);
     //console.log("AlphaMemory activated:",alphaMem,wme);
-    alphaMem.children.forEach(child=>rightActivate(child,wme));
+    let alphaMemChildren = _.clone(alphaMem.children);
+    alphaMemChildren.forEach(child=>rightActivate(child,wme));
 };
 
 /**
@@ -93,13 +95,15 @@ var alphaNodeActivation = function(alphaNode,wme){
    @function betaMemoryActivation
 */
 var betaMemoryActivation = function(betaMemory,token){
+    "use strict";
     //trigger a beta memory to store a new token
     //bindings are from the join node, holding results of the NEW binding tests
     //old bindings are still in the token, the constructor of Token will combine the two
     //sets of bindings
-    var newToken = token;
+    let newToken = token;
     betaMemory.items.unshift(newToken);
-    betaMemory.children.forEach(child=>leftActivate(child,newToken));
+    let betaMemoryChildren = _.clone(betaMemory.children);
+    betaMemoryChildren.forEach(child=>leftActivate(child,newToken));
 };
 
 
@@ -110,6 +114,7 @@ var betaMemoryActivation = function(betaMemory,token){
    @function joinNodeLeftActivation
 */
 var joinNodeLeftActivation = function(node,token){
+    "use strict";
     //Trigger a join node with a new token
     //will pull all wmes needed from the linked alphaMemory
     //If necessary, relink or unlink the
@@ -118,8 +123,8 @@ var joinNodeLeftActivation = function(node,token){
         ReteUtil.relinkToAlphaMemory(node);
         if(node.alphaMemory.items.length === 0){
             //unlink beta memory if alphamemory is empty
-            var index = node.parent.children.map(d=>d.id).indexOf(node.id);
-            var unlinked = node.parent.children.splice(index,1);
+            let index = node.parent.children.map(d=>d.id).indexOf(node.id),
+                unlinked = node.parent.children.splice(index,1);
             node.parent.unlinkedChildren.push(unlinked[0]);
         }
     }
@@ -129,11 +134,12 @@ var joinNodeLeftActivation = function(node,token){
     //to beta memory /negative node children
     //to be combined into tokens
     node.alphaMemory.items.forEach(function(item){
-        var currWME = item.wme;
-        var joinTestResult = ReteTestExecution.performJoinTests(node,token,currWME);
+        let currWME = item.wme,
+            joinTestResult = ReteTestExecution.performJoinTests(node,token,currWME);
         if(joinTestResult !== undefined && joinTestResult !== false){
-            node.children.forEach(child=>leftActivate(child,token,currWME,joinTestResult));
-            
+            let newToken = new RDS.Token(token,currWME,node,joinTestResult);
+            node.items.unshift(newToken);
+            node.children.forEach(child=>leftActivate(child,newToken));            
         }
     });//end of looping all wmes in alphamemory
 };
@@ -147,12 +153,13 @@ var joinNodeLeftActivation = function(node,token){
 //Trigger a join node with a new wme
 //pulling all necessary tokens from the parent as needed
 var joinNodeRightActivation = function(node,wme){
+    "use strict";
     //relink or unlink as necessary
     if(node.alphaMemory.items.length === 1){
         ReteUtil.relinkToBetaMemory(node);
         if(node.parent.items.length === 0){
-            var index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
-            var unlinked = node.alphaMemory.children.splice(index,1);
+            let index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id),
+                unlinked = node.alphaMemory.children.splice(index,1);
             node.alphaMemory.unlinkedChildren.push(unlinked[0]);
         }
     }
@@ -164,9 +171,12 @@ var joinNodeRightActivation = function(node,wme){
             return false;
         }
         //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
-        var joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
+        let joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
         if(joinTestResult !== undefined && joinTestResult !== false){
-            node.children.forEach(currNode=>leftActivate(currNode,currToken,wme,joinTestResult));
+            let newToken = new RDS.Token(currToken,wme,node,joinTestResult);
+            node.items.unshift(newToken);
+            let nodeChildren = _.clone(node.children);
+            nodeChildren.forEach(d=>leftActivate(d,newToken));
         }
     });
 };
@@ -255,6 +265,7 @@ var rightActivate = function(node,wme){
    @function negativeNodeLeftActivation
 */
 var negativeNodeLeftActivation = function(node,newToken){
+    "use strict";
     //Trigger a negative node from a new token
     //brings in bindings, creates a new token as necessary,
     //combining bindings to.
@@ -278,7 +289,8 @@ var negativeNodeLeftActivation = function(node,newToken){
 
     //if no wmes block the token, pass it on down the network
     if(newToken.negJoinResults.length === 0){
-        node.children.forEach(child=>leftActivate(child,newToken));
+        let nodeChildren = _.clone(node.children);
+        nodeChildren.forEach(child=>leftActivate(child,newToken));
     }
     
 };
@@ -320,6 +332,7 @@ var negativeNodeRightActivation = function(node,wme){
    @function nccNodeLeftActivation
 */
 var nccNodeLeftActivation = function(nccNode,token){
+    "use strict";
     //from a new token, trigger the subnetwork?
     //Create and store the incoming token from prior join node
     if(!(nccNode instanceof RDS.NCCNode)){
@@ -346,7 +359,8 @@ var nccNodeLeftActivation = function(nccNode,token){
     //if the new token has no blocking tokens,
     //continue on
     if(newToken.nccResults.length === 0){
-        nccNode.children.forEach(child=>leftActivate(child,newToken));
+        let nccNodeChildren = _.clone(nccNode.children);
+        nccNodeChildren.forEach(child=>leftActivate(child,newToken));
     }
 };
 
@@ -404,10 +418,12 @@ var nccPartnerNodeLeftActivation = function(partner,token){
    @function activateIfNegatedJRIsUnblocked
 */
 var activateIfNegatedJRIsUnblocked = function(nJR){
+    "use strict";
     var currJoinResult = nJR;
     //if the negation clears, activate it
     if(currJoinResult.owner.negJoinResults.length === 0){
-        currJoinResult.owner.owningNode.children.forEach(child=>leftActivate(child,currJoinResult.owner));
+        let owningNodeChildren = _.clone(currJoinResult.owner.owningNode.children);
+        owningNodeChildren.forEach(child=>leftActivate(child,currJoinResult.owner));
     }
 };
 
@@ -551,7 +567,7 @@ var deleteNodeAndAnyUnusedAncestors = function(node){
     }
     
     //clean up tokens
-    if((node instanceof RDS.BetaMemory && node.dummy === undefined) || (node instanceof RDS.NegativeNode) || (node instanceof RDS.NCCNode)){
+    if((node instanceof RDS.BetaMemory && node.dummy === undefined) || (node instanceof RDS.NegativeNode) || (node instanceof RDS.NCCNode) || (node instanceof RDS.JoinNode)){
         while(node.items.length > 0){
             let curr = node.items.pop();
             deleteTokenAndDescendents(curr).forEach(d=>invalidatedActions.add(d));
@@ -628,6 +644,7 @@ var deleteDescendentsOfToken = function(token){
    @function deleteTokenAndDescendents
 */
 var deleteTokenAndDescendents = function(token){
+    "use strict";
    /* purpose To remove a token and clean it 
    delete a token and all the tokens that rely on it
    a bit of a frankenstein. Deletes the token,
@@ -661,7 +678,8 @@ var deleteTokenAndDescendents = function(token){
        && token.parentToken.nccResults.length === 0){
         //Activate newly unblocked Token
         //todo: should this be nccnode AND/OR negNode?
-        token.owningNode.nccNode.children.forEach(d=>leftActivate(d,token.parentToken));
+        let nccNodeChildren = _.clone(token.owningNode.nccNode.children);
+        nccNodeChildren.forEach(d=>leftActivate(d,token.parentToken));
     }
 
     //get the queued actions linked with the token, and return them for cleanup
