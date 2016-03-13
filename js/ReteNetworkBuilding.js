@@ -59,11 +59,9 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
             throw new Error("Unrecognised condition type");
         }
     });
-    
-    //Everything is build, tack on a final memory and return that
-    //to have action connected to.
-    let finalBetaMemory = buildOrShareBetaMemoryNode(currentNode,reteNet);
-    return finalBetaMemory;
+
+    //build a final memory node if current isn't one
+    return buildOrShareBetaMemoryNode(currentNode,reteNet);
 };
 
 /**
