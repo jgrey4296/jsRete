@@ -81,9 +81,9 @@ var Token = function(parentToken,wme,owningNode,bindings){
     this.parentToken = parentToken; //ie:owner
     this.wme = wme;
     this.owningNode = owningNode;
-    this.children = []; //list of nodes
-    this.negJoinResults = [];//list of NegativeJoinResults
-    this.nccResults = []; //list of Token
+    this.children = []; //list of tokens
+    this.negJoinResults = [];//list of blocking NegativeJoinResults
+    this.nccResults = []; //list of blocking Tokens
     this.proposedActions = []; //current proposed actions
     
     if(this.parentToken){
@@ -165,7 +165,8 @@ var AlphaMemory = function(parent){
     //If adding to a node other than a test node,
     if(this.parent && !(this.parent instanceof AlphaNode)){
         //add to children
-        this.parent.children.unshift(this);
+        //this.parent.children.unshift(this);
+        throw new Error("Adding alpha memory as child of not a test");
     }else if(this.parent && this.parent instanceof AlphaNode && this.parent.outputMemory === undefined){
         //if an alphanode, set the ouputmemory field
         this.parent.outputMemory = this;
@@ -220,7 +221,7 @@ var JoinNode = function(parent,alphaMemory,tests){
     //Join Node combines tokens with wmes
     //tests are the binding tuples from a condition
     ReteNode.call(this,parent);
-    this.tyoe = "JoinNode";
+    this.type = "JoinNode";
     this.alphaMemory = alphaMemory;
     if(tests){
         this.tests = tests;
@@ -232,6 +233,7 @@ var JoinNode = function(parent,alphaMemory,tests){
         this.alphaMemory.referenceCount += 1;
     }
     this.nearestAncestor = null;
+    
 };
 
 /**
@@ -308,13 +310,16 @@ var NegativeNode = function(parent,alphaMemory,tests){
 */
 var NCCNode = function(parent){
     //NCC : gates token progression based on a subnetwork
-    //don't pass parent in
+    //don't pass parent in so you can PUSH instead of SHIFT
     ReteNode.call(this);
     this.type = "NCCNode";
     this.parent = parent;
     if(this.parent && this.parent.children){
         this.parent.children.push(this);
     }
+    /**
+       @type {Array.<RDS.Token>}
+     */
     this.items = [];
     this.partner = null;
 };
@@ -327,6 +332,7 @@ var NCCNode = function(parent){
    @class NCCPartnerNode
 */
 var NCCPartnerNode = function(parent,num){
+    //get the parent if parent is a beta memory to stop redundant node usage
     ReteNode.call(this,parent);
     this.type = "NCCPartnerNode";
     this.nccNode = null;
