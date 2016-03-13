@@ -53,6 +53,7 @@ var relinkToBetaMemory = function(node){
     //in said memory
     //remove from the unlinked children list
     //and add it into the children
+    if(node.parent.unlinkedChildren.length === 0) { return; }
     var index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
     if(index > -1){
         node.parent.unlinkedChildren.splice(index,1);
@@ -92,7 +93,7 @@ var ifEmptyBetaMemoryUnlink = function(node){
     //NCCNode, and NCCPartnerNode
 
     //BETAMEMORY
-    if(node && node instanceof RDS.BetaMemory){
+    if(node && (node instanceof RDS.BetaMemory || node instanceof RDS.JoinNode) ){
         //and that betaMemory has no other items
         if(node.items.length === 0){
             //for all the node's children
@@ -211,12 +212,13 @@ var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
    @function
  */
 var retrieveWMEValueFromDotString = function(wme,dotString){
+    "use strict";
     //get from the node stored in wme.data the value
     //that the dotString address specifies
-    var address = dotString.split("."),
+    let address = dotString.split("."),
         currLocation = wme.data;
     while(address.length > 0){
-        var curr = address.shift();
+        let curr = address.shift();
         if(currLocation[curr] !== undefined){
             currLocation = currLocation[curr];
         }else{
