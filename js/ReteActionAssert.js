@@ -35,7 +35,7 @@ AssertAction.propose = function(token,reteNet){
     var newWMEData = reteNet.utils.createNewWMEData(this,token);
     reteNet.utils.applyArithmetic(this,newWMEData);
     reteNet.utils.applyRegex(this,newWMEData);
-        //Expand out to object structure
+    //Expand out to object structure
     //ie: {values.a:5, tags.type: rule} -> {values:{a:5},tags:{type:rule}}
     var complexFormData = reteNet.utils.objDescToObject(newWMEData);
     
