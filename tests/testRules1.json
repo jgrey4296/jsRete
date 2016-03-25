@@ -1,0 +1,196 @@
+[
+    {
+        "id": 0,
+        "name": "__root",
+        "relatedObjects": [],
+        "children": {
+            "3": "test1",
+            "6": "test2"
+        },
+        "parents": {},
+        "values": {},
+        "tags": {
+            "type": "graphnode"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false
+    },
+    {
+        "id": 3,
+        "name": "test1",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "0": "__root"
+        },
+        "_originalParent": 0,
+        "values": {},
+        "tags": {
+            "type": "rule"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "conditions": {
+            "4": "condition"
+        },
+        "actions": {
+            "5": "action"
+        }
+    },
+    {
+        "id": 4,
+        "name": "condition",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "3": "test1"
+        },
+        "_originalParent": 3,
+        "values": {},
+        "tags": {
+            "type": "condition",
+            "conditionType": "positive"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "constantTests": [
+            {
+                "field": "values.a",
+                "operator": "GT",
+                "value": "5"
+            }
+        ],
+        "bindings": {
+            "a": [
+                "values.a",
+                []
+            ]
+        },
+        "expectationNode": null,
+        "conditions": {}
+    },
+    {
+        "id": 5,
+        "name": "action",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "3": "test1"
+        },
+        "_originalParent": 3,
+        "values": {
+            "message": "The value of a was ${a}"
+        },
+        "tags": {
+            "type": "action",
+            "actionType": "assert"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "arithmeticActions": {},
+        "regexActions": {},
+        "expectationNode": null,
+        "timing": {
+            "invalidateOffset": 0,
+            "performOffset": 0,
+            "unperformOffset": 0
+        },
+        "priority": 0
+    },
+    {
+        "id": 6,
+        "name": "test2",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "0": "__root"
+        },
+        "_originalParent": 0,
+        "values": {},
+        "tags": {
+            "type": "rule"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "conditions": {
+            "7": "condition"
+        },
+        "actions": {
+            "8": "action"
+        }
+    },
+    {
+        "id": 7,
+        "name": "condition",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "6": "test2"
+        },
+        "_originalParent": 6,
+        "values": {},
+        "tags": {
+            "type": "condition",
+            "conditionType": "positive"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "constantTests": [
+            {
+                "field": "values.b",
+                "operator": "GT",
+                "value": "10"
+            }
+        ],
+        "bindings": {
+            "b": [
+                "values.b",
+                []
+            ]
+        },
+        "expectationNode": null,
+        "conditions": {}
+    },
+    {
+        "id": 8,
+        "name": "action",
+        "relatedObjects": [],
+        "children": {},
+        "parents": {
+            "6": "test2"
+        },
+        "_originalParent": 6,
+        "values": {
+            "message": "The value of b was ${b}"
+        },
+        "tags": {
+            "type": "action",
+            "actionType": "assert"
+        },
+        "annotations": {},
+        "expectedBy": {},
+        "producedBy": {},
+        "minimised": false,
+        "arithmeticActions": {},
+        "regexActions": {},
+        "expectationNode": null,
+        "timing": {
+            "invalidateOffset": 0,
+            "performOffset": 0,
+            "unperformOffset": 0
+        },
+        "priority": 0
+    }
+]
