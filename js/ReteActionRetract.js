@@ -28,19 +28,24 @@ var RetractAction = {
    @function
  */
 RetractAction.propose = function(token,reteNet){
+    "use strict";
     //get all wmes the token touches:
-    var wmes = [];
-    var currToken = token;
+    let wmes = [],
+        currToken = token,
+        varRegex = /^\${(\w+)}/;
     while(currToken && currToken.wme !== undefined){
         wmes.push(currToken.wme);
         currToken = currToken.parentToken;
     }
     //Get the keys of the action that have 'wme' in them
-    var wmeKeys = _.keys(this.values).filter(d=>/^wme([0-9]*)/.test(d)),
+    let wmeKeys = _.keys(this.values).filter(d=>/^wme([0-9]*)/.test(d)),
         //get the ones of those that related to a binding in the token
-        wmeIdBindings = wmeKeys.map(d=>this.values[d]).filter(d=>/^\$/.test(d)),
+        wmeIdBindings = wmeKeys.map(d=>this.values[d]).filter(d=>varRegex.test(d)),
         //get the value for those bindings
-        wmeIds = wmeIdBindings.map(d=>token.bindings[d.slice(1)]);
+        wmeIds = wmeIdBindings.map(function(d){
+            let match = varRegex.exec(d);
+            return token.bindings[match[1]];
+        });
     //console.log("Token bindings :",token.bindings);
     //console.log("Retrieved wme ids for retraction:",wmeIds);
     // //filter the wmeList by the wmeIDs:

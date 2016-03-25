@@ -136,6 +136,7 @@ var ReteNet = function(actionsToRegister){
         "removeRule" : [],
         "schedule" : [],
         "stepTimeActions" : [],
+        "registerAction" : []
     };
 
     //Register actions passed in:
@@ -235,7 +236,6 @@ ReteNet.prototype.retractWME = function(wme){
             wme = this.allWMEs[wme];
             //if given a graph node with a related wme
         }else if(wme.wmeId !== undefined && this.allWMEs[wme.wmeId] !== undefined){
-            console.log("Retrieving wme using wmeId:",wme.wmeId);
             wme = this.allWMEs[wme.wmeId];
         }else{
             console.log("Unknown:",wme);
@@ -466,7 +466,7 @@ ReteNet.prototype.removeRule = function(rule){
    @see module:ReteActions
 */
 ReteNet.prototype.registerAction = function(actionObj){
-    console.log("Registering Rete Action:",actionObj);
+    this.fireListener('registerAction',actionObj);
     if(actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
         throw new Error("Action Registration Failure");
     }

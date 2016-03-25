@@ -320,15 +320,15 @@ var applyArithmetic = function(action,data){
     "use strict";
     //perform arithmetic:
     _.keys(action.arithmeticActions).forEach(function(key){        
-        var arithDesc = action.arithmeticActions[key];
-        var currVal = Number(data[key]),
+        let arithDesc = action.arithmeticActions[key],
+            currVal = Number(data[key]),
             //look up the function:
             //because the representation form is: a : ["+", 5]
             arithFunc = ArithmeticActions[arithDesc[0]],
             //Get the value if its a binding
             applyVal = typeof arithDesc[1] === 'number' ? arithDesc[1] : arithDesc[1].match(/\$/) ? parseInt(data.bindings[arithDesc[1].slice(1)]) : parseInt(arithDesc[1]);
         if(arithFunc === undefined) { throw new Error("Undefined arithmetic function"); }
-        if(isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number"); }
+        if(isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number: " + currVal + " " + applyVal); }
         data[key] = arithFunc(currVal,applyVal);
     });
 };
@@ -356,10 +356,11 @@ var applyRegex = function(action,data){
    @param {Object} valueObject
  */
 var spliceInValues = function(baseString,valueObject){
+    "use strict";
     let match = (/\${(\w+)}/g).exec(baseString);
     while(match !== null){
         if(valueObject[match[1]] !== undefined){
-            baseString = spliceStr(baseString,match.index,valueObject[match[1]]);
+            baseString = spliceStr(baseString,match.index,valueObject[match[1]],match[0].length);
         }else{
             throw new Error("Unrecognised binding: " + match[1]);
         }
@@ -374,9 +375,10 @@ var spliceInValues = function(baseString,valueObject){
    @param {String} orig the original string
    @param {Int} index the start point to splice from
    @param {String} addition The string to splce in
+   @param {Int} cutLength The amount after the index to ignore before using the remaining string
  */
-var spliceStr = function(orig,index,addition){
-    return orig.slice(0,index) + add + orig.slice(index+addition.length);
+var spliceStr = function(orig,index,addition,cutLength){
+    return orig.slice(0,index) + addition + orig.slice(index+cutLength);
 };
 
 //------------------------------

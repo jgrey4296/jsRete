@@ -20,10 +20,11 @@ var RDS = require('./ReteDataStructures'),
    @returns {False | Object}
 */
 var performJoinTests = function(joinNode,token,wme){
+    "use strict";
     //returns False if no match, dict of all updated bindings otherwise
     var newBindings = {},
         successState = true,
-        varRegex = new RegExp(/^[#\$]/);
+        varRegex = new RegExp(/^\${(\w+)}/);
     //Populate with current bindings from token
     _.keys(token.bindings).forEach(function(key){
         newBindings[key] = token.bindings[key];
@@ -45,13 +46,15 @@ var performJoinTests = function(joinNode,token,wme){
             
             //Compare using any defined binding tests
             bindingComparisons.forEach(function(d){
-                var comparator = ReteComparisonOps[d[0]],
-                    varName = d[1];
+                let comparator = ReteComparisonOps[d[0]],
+                    varName = d[1],
+                    match = varRegex.exec(varName);
                 //if it fails, fail the test
                 //use the value in the test, minus the $ at the beginning:
-                if(!varRegex.test(varName)) { throw new Error("Non-bound var name"); }
-                
-                if(!comparator(newValue,newBindings[varName.slice(1)])){
+                if(match === null) { throw new Error("No bound var name"); }
+                //if(!varRegex.test(varName)) { throw new Error("Non-bound var name"); }
+                                
+                if(!comparator(newValue,newBindings[match[1]])){
                     throw new Error("Test failed");
                 }
             });
