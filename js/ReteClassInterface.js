@@ -344,7 +344,7 @@ ReteNet.prototype.addToSchedule = function(action){
 */
 ReteNet.prototype.stepTime = function(){
     //get all actions scheduled at the current timepoint
-    var actions = _.values(this.schedule),
+    let actions = _.values(this.schedule),
         actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
     //todo : group by tags:
     
@@ -354,8 +354,8 @@ ReteNet.prototype.stepTime = function(){
     this.fireListener('stepTimeActions',actionsForTimePoint);
     //perform those actions, storing objects describing the changes
     var changes = actionsForTimePoint.map(function(d){
-        var performanceFunction = this.actionFunctions[d.actionType].perform;
-        var effects = performanceFunction(d,this);
+        let performanceFunction = this.actionFunctions[d.actionType].perform,
+            effects = performanceFunction(d,this);
         this.enactedActions.push(d);
         return effects;
     },this);
@@ -386,7 +386,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
         return ruleId.map(d=>this.addRule(d,components));
     }
     if(ruleId instanceof this.Rule){
-        var convertedComponents = this.convertRulesToComponents(ruleId);
+        let convertedComponents = this.convertRulesToComponents(ruleId);
         return this.addRule(ruleId.id,convertedComponents);
     }
     if(!Number.isInteger(ruleId) || components[ruleId] === undefined){
@@ -394,14 +394,15 @@ ReteNet.prototype.addRule = function(ruleId,components){
     }
     //-----------
     //Add a single rule:
-    var rule = components[ruleId],
+    let rule = components[ruleId],
+        ruleLinks = _.pairs(rule.linkedNodes),
         //TODO: support rules as conditions by flattening the conditions repeatedly
-        conditions = _.keys(rule.conditions).map(d=>components[d]),
+        conditions = ruleLinks.filter(d=>/condition/.test(d[1])).map(d=>components[d[0]]),
         //build network with a dummy node for the parent
         finalMemoryNode = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
         //Get the action descriptions that are triggered by the rule:
         //TODO: support rules as actions by repeatedly flattening
-        actionDescriptions = _.keys(rule.actions).map(d=>components[d]),
+        actionDescriptions = ruleLinks.filter(d=>/action/.test(d[0])).map(d=>components[d[0]]),
         //Bind proposalFuncs with actionDescriptions
         boundActionDescriptions = actionDescriptions.map(function(d){
             if(this.actionFunctions[d.tags.actionType] === undefined){
@@ -434,7 +435,7 @@ ReteNet.prototype.removeRule = function(rule){
         return;
     }
     //delete from bottom up
-    var action = rule instanceof RDS.ActionNode ? rule : this.actions[rule.id],
+    let action = rule instanceof RDS.ActionNode ? rule : this.actions[rule.id],
         invalidatedActions = ReteActivationsAndDeletion.deleteNodeAndAnyUnusedAncestors(action);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 
@@ -502,13 +503,28 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
     if(!(rules instanceof Array)){
         rules = [rules];
     }
-    var actions = _.flatten(rules.map(d=>_.values(d.actions))),
+    let actions = _.flatten(rules.map(d=>_.values(d.actions))),
         conditions = _.flatten(rules.map(d=>_.values(d.conditions))),
         all = actions.concat(conditions).concat(rules),
         components = all.reduce(function(m,v){
             m[v.id] = v;
             return m;
         },{});
+    //convert to linkednode style for every component:
+    _.values(components).forEach(function(d){
+        d.linkedNodes = {};
+        //add actions
+        d.linkedNodes = _.keys(d.actions).reduce(function(m,v){
+            m[v] = "action";
+            return m;
+        },d.linkedNodes);
+        //add conditions
+        d.linkedNodes = _.keys(d.conditions).reduce(function(m,v){
+            m[v] = 'condition';
+            return m;
+        },d.linkedNodes);
+    });
+    
     return components;
 };
 
@@ -517,7 +533,7 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
  */
 ReteNet.prototype.cleanup = function(){
     //retract all wmes
-    _.values(this.allWoMEs).forEach(d=>this.retractWME(d));
+    _.values(this.allWMEs).forEach(d=>this.retractWME(d));
     this.allWMEs = {};
     //remove all rules
     this.removeRule(_.values(this.allRules));
