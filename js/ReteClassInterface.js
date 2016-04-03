@@ -343,6 +343,7 @@ ReteNet.prototype.addToSchedule = function(action){
    @returns {Array} An array of the effects of this timestep
 */
 ReteNet.prototype.stepTime = function(){
+    "use strict";
     //get all actions scheduled at the current timepoint
     let actions = _.values(this.schedule),
         actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
@@ -365,7 +366,7 @@ ReteNet.prototype.stepTime = function(){
         if(d.timing.invalidateTime === this.currentTime){
             delete this.proposedActions[d.id];
         }
-    });
+    },this);
     
     this.currentTime++;
 
@@ -381,6 +382,7 @@ ReteNet.prototype.stepTime = function(){
    
 */
 ReteNet.prototype.addRule = function(ruleId,components){
+    "use strict";
     this.fireListener("addRule",components);
     if(ruleId instanceof Array){
         return ruleId.map(d=>this.addRule(d,components));
@@ -397,12 +399,12 @@ ReteNet.prototype.addRule = function(ruleId,components){
     let rule = components[ruleId],
         ruleLinks = _.pairs(rule.linkedNodes),
         //TODO: support rules as conditions by flattening the conditions repeatedly
-        conditions = ruleLinks.filter(d=>/condition/.test(d[1])).map(d=>components[d[0]]),
+        conditions = ruleLinks.filter(d=>/^condition/.test(d[1])).map(d=>components[d[0]]),
         //build network with a dummy node for the parent
         finalMemoryNode = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
         //Get the action descriptions that are triggered by the rule:
         //TODO: support rules as actions by repeatedly flattening
-        actionDescriptions = ruleLinks.filter(d=>/action/.test(d[0])).map(d=>components[d[0]]),
+        actionDescriptions = ruleLinks.filter(d=>/^action/.test(d[1])).map(d=>components[d[0]]),
         //Bind proposalFuncs with actionDescriptions
         boundActionDescriptions = actionDescriptions.map(function(d){
             if(this.actionFunctions[d.tags.actionType] === undefined){
@@ -500,6 +502,7 @@ ReteNet.prototype.storeNode = function(node){
    @return {Object}
  */
 ReteNet.prototype.convertRulesToComponents = function(rules){
+    "use strict";
     if(!(rules instanceof Array)){
         rules = [rules];
     }

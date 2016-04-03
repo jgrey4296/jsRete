@@ -1,8 +1,9 @@
+"use strict";
 if(typeof define !== 'function'){
-    var define = require('amdefine')(module);
+    let define = require('amdefine')(module);
 }
 
-var _ = require('underscore'),
+let _ = require('underscore'),
     Rete = require('../js/ReteClassInterface'),
     RDS = require('../js/ReteDataStructures'),
     makeRete = function() { return new Rete(); },
@@ -11,25 +12,25 @@ var _ = require('underscore'),
 exports.ReteTests = {
     //check the retenet constructs ok
     initTest : function(test){
-        var rn = makeRete();
+        let rn = makeRete();
         test.ok(rn !== undefined);
         test.done();
     },
     //check wme assertion works in the base case
     assertWME_immediately_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             data = {
                 testInfo : "blah"
             };
 
         test.ok(_.keys(rn.allWMEs).length === 0);
-        var wmeId = rn.assertWME(data);
+        let wmeId = rn.assertWME(data);
         test.ok(rn.allWMEs[wmeId].data.testInfo === "blah");
         test.done();
     },
     //check wme retraction works in the base case
     retractWME_immediately_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             data = {
                 testInfo : "blah"
             },
@@ -42,7 +43,7 @@ exports.ReteTests = {
 
     //simple clear history test, without using actual objects
     clearHistory_test : function(test){
-        var rn = makeRete();
+        let rn = makeRete();
         test.ok(rn.enactedActions !== undefined);
         rn.enactedActions.push(1);
         rn.enactedActions.push(2);
@@ -54,7 +55,7 @@ exports.ReteTests = {
 
     //simple clear proposed actions test,without using actual objects
     clearProposedActions_test : function(test){
-        var rn = makeRete();
+        let rn = makeRete();
         test.ok(rn.proposedActions !== undefined);
         rn.proposedActions[0] = 1;
         rn.proposedActions[1] = 2;
@@ -66,7 +67,7 @@ exports.ReteTests = {
 
     //check the rule/condition/action objects are converted correctly
     rule_component_construction_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule();
 
         aRule.newCondition("positive",{
@@ -82,16 +83,20 @@ exports.ReteTests = {
                 priority : 0
             });
         
-        var components = rn.convertRulesToComponents(aRule);
+        let components = rn.convertRulesToComponents(aRule);
         //Check the components were constructed correctly:
         //Rule + Condition + action = 3
         test.ok(_.keys(components).length === 3);
+        test.ok(components[aRule.id] !== undefined);
+        test.ok(components[_.keys(aRule.conditions)[0]] !== undefined);
+        test.ok(components[_.keys(aRule.actions)[0]] !== undefined);
+        
         test.done();
     },
 
     //using the simpler constructor
     rule_construction_alt_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             exampleData = {
                 num : 5,
@@ -127,7 +132,7 @@ exports.ReteTests = {
     },
     //Another rule test
     addRule_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule("blah"),
             components;
 
@@ -150,18 +155,22 @@ exports.ReteTests = {
         test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 0);
         
         //Add the rule
-        rn.addRule(aRule);
+        let ruleAction = rn.addRule(aRule)[1];
 
         //Check the rule was added correctly:
         test.ok(_.keys(rn.actions).length === 1);
         test.ok(rn.rootAlpha.children.length === 1);
         test.ok(rn.dummyBetaMemory.children.length === 0);
         test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 1);
+
+        test.ok(ruleAction.parent.type === 'JoinNode');
+        test.ok(ruleAction.parent.parent.type === 'BetaMemory');
+        test.ok(ruleAction.parent.parent.dummy);
         test.done();
     },
     //test a rule with an assertion
     ruleFire_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             data = {
                 "first" : 5,
@@ -181,12 +190,13 @@ exports.ReteTests = {
                 priority : 0
             });
         
-        rn.addRule(aRule);
+        let ruleAction = rn.addRule(aRule)[1];
         //Check there are no actions or wmes
+        test.ok(ruleAction !== undefined);
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
         //Assert the wme:
-        var newWMEId = rn.assertWME(data);
+        let newWMEId = rn.assertWME(data);
         //Check the wme is asserted, and the action for it fires
         test.ok(_.keys(rn.allWMEs).length === 1);
         test.ok(rn.allWMEs[newWMEId] !== undefined);
@@ -200,7 +210,7 @@ exports.ReteTests = {
 
     //using the simpler constructor
     assertion_test2 : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             exampleData = {
                 num : 5,
@@ -226,7 +236,7 @@ exports.ReteTests = {
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
         //assert the wme:
-        var newWMEId = rn.assertWME(exampleData);
+        let newWMEId = rn.assertWME(exampleData);
         //Check the wme is asserted, and the action for it fires
         test.ok(_.keys(rn.allWMEs).length === 1);
         test.ok(rn.allWMEs[newWMEId] !== undefined);
@@ -239,7 +249,7 @@ exports.ReteTests = {
 
     //Assert and then retract a wme
     ruleFire_and_retraction_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             data = {
                 "first" : 5,
@@ -266,7 +276,7 @@ exports.ReteTests = {
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.ok(_.keys(rn.allWMEs).length === 0);
         //Assert the wme:
-        var newWMEId = rn.assertWME(data);
+        let newWMEId = rn.assertWME(data);
         //Check the wme is asserted, and the action for it fires
         test.ok(_.keys(rn.allWMEs).length === 1);
         test.ok(rn.allWMEs[newWMEId] !== undefined);
@@ -275,7 +285,7 @@ exports.ReteTests = {
         //test.ok(_.reject(rn.proposedActions,d=>d===undefined).length === 1);
         test.ok(_.keys(rn.proposedActions).length === 1);
         //check alphamemory items, tokens, etc:
-        var wme = rn.allWMEs[newWMEId];
+        let wme = rn.allWMEs[newWMEId];
         test.ok(wme.alphaMemoryItems.length === 1);
         test.ok(wme.tokens.length === 1);
         //Retract the wme:
@@ -291,7 +301,7 @@ exports.ReteTests = {
 
     //add a rule, assert a fact, check the proposed action that results
     ruleFire_proposedAction_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             data = {
                 "first" : 5,
@@ -316,7 +326,7 @@ exports.ReteTests = {
         rn.assertWME(data);
         //Inspect the resulting proposed action:
         test.ok(_.values(rn.proposedActions).length === 1);
-        var proposedAction = _.values(rn.proposedActions)[0];
+        let proposedAction = _.values(rn.proposedActions)[0];
         test.ok(proposedAction !== undefined);
         test.ok(proposedAction.payload.output !== undefined);
         test.ok(proposedAction.payload.output === 10);
@@ -325,7 +335,7 @@ exports.ReteTests = {
 
     //Create and test a rule with a negative node
     ruleFire_negative_node_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             data = {
                 "first" : 5,
@@ -353,18 +363,18 @@ exports.ReteTests = {
         //Add the rule
         rn.addRule(aRule);
         //Assert a wme
-        var wmeId = rn.assertWME(data),
+        let wmeId = rn.assertWME(data),
             wme = rn.allWMEs[wmeId];
         test.ok(wme.negJoinResults.length === 1);
         //Inspect the resulting proposed actions:
-        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        //let proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
         test.ok(_.keys(rn.proposedActions).length === 0);
         test.done();
     },    
 
     //store wme test
     store_wme_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             testWME = new rn.WME({testValue : 5});
         test.ok(_.keys(rn.allWMEs).length === 0);
         rn.storeWME(testWME);
@@ -374,7 +384,7 @@ exports.ReteTests = {
     
     //add to schedule test
     addToScheduleTest : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             //create a proposed action
             propAction = new rn.ProposedAction(rn,"assert",{},new RDS.Token(),rn.currentTime,{
                 invalidateOffset : 0,
@@ -407,13 +417,13 @@ exports.ReteTests = {
 
     //Test simple registered action
     simpleRegsterActionTest : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             exampleDataForWME = {
                 num : 5
             },
-            //The var to modify to test the action
-            testVar = 0;
+            //The let to modify to test the action
+            testLet = 0;
         //Register a dummy action
         rn.registerAction({
             name : "registeredTestAction",
@@ -428,7 +438,7 @@ exports.ReteTests = {
             },
             perform : function(proposedAction,reteNet){
                 if(proposedAction.actionType === "registeredTestAction"){
-                    testVar += 5;
+                    testLet += 5;
                 }
             }
         });
@@ -457,13 +467,13 @@ exports.ReteTests = {
         //step time:
         rn.stepTime();
         //The performance should have changed the 
-        test.ok(testVar === 5);
+        test.ok(testLet === 5);
         test.done();
     },
 
     //Assert schedule test:
     assertScheduleTest : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             testData = {
                 num : 5,
@@ -484,7 +494,7 @@ exports.ReteTests = {
 
         rn.addRule(aRule);
         rn.assertWME(testData);
-        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        //let proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
         test.ok(_.keys(rn.proposedActions).length === 1);
         rn.scheduleAction(_.values(rn.proposedActions)[0]);
         //test.ok(_.reject(rn.allWMEs,d=>d===undefined).length === 1);
@@ -497,7 +507,7 @@ exports.ReteTests = {
 
     //schedulings test
     schedule_perform_offset_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             testData = {
                 num : 5,
@@ -518,7 +528,7 @@ exports.ReteTests = {
 
         rn.addRule(aRule);
         rn.assertWME(testData);
-        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        //let proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
         test.ok(_.keys(rn.proposedActions).length === 1);
         rn.scheduleAction(_.values(rn.proposedActions)[0].id);
         test.ok(_.keys(rn.allWMEs).length === 1);
@@ -535,7 +545,7 @@ exports.ReteTests = {
 
     //test the retraction of a wme
     retractTest : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             testData = {
                 num : 5,
@@ -555,10 +565,10 @@ exports.ReteTests = {
             });
 
         rn.addRule(aRule);
-        var newWMEId = rn.assertWME(testData),
+        let newWMEId = rn.assertWME(testData),
         //Get the wme:
             theWME = rn.allWMEs[newWMEId];
-        //var proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
+        //let proposedActions = _.reject(rn.proposedActions,d=>d===undefined);
         test.ok(_.keys(rn.proposedActions).length === 1);
         //schedule the action
         rn.scheduleAction(_.values(rn.proposedActions)[0]);
@@ -575,7 +585,7 @@ exports.ReteTests = {
     },
     //test the firing of two rules
     twoRule_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             rule1 = new rn.Rule(),
             rule2 = new rn.Rule(),
             wmeData = {
@@ -621,7 +631,7 @@ exports.ReteTests = {
         test.ok(_.keys(rn.proposedActions).length === 1);
         rn.scheduleAction(_.keys(rn.proposedActions)[0]);
         //enact the actions
-        var changes = rn.stepTime();
+        let changes = rn.stepTime();
         //check for the changes
         test.ok(_.keys(rn.allWMEs).length === 3);
         test.ok(changes.length === 2);
@@ -629,7 +639,7 @@ exports.ReteTests = {
     },
     //test the prioritised firing order of two rules
     twoRule_offset_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             rule1 = new rn.Rule(),
             rule2 = new rn.Rule(),
             wmeData = {
@@ -676,7 +686,7 @@ exports.ReteTests = {
         rn.scheduleAction(_.keys(rn.proposedActions)[0])
             .scheduleAction(_.keys(rn.proposedActions)[0]);
         //enact the actions
-        var changes = rn.stepTime();
+        let changes = rn.stepTime();
         //changes should NOT take plus until 1 and 2 timesteps have passed
         //check for the changes
         test.ok(_.keys(rn.allWMEs).length === 1);
@@ -694,7 +704,7 @@ exports.ReteTests = {
 
     //test the priority of schedule tasks
     twoRule_priority_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             rule1 = new rn.Rule(),
             rule2 = new rn.Rule(),
             wmeData = {
@@ -741,12 +751,12 @@ exports.ReteTests = {
         rn.scheduleAction(_.keys(rn.proposedActions)[0])
             .scheduleAction(_.keys(rn.proposedActions)[0]);
         //use listeners to check:
-        var assertRecord = [];
+        let assertRecord = [];
         rn.registerListener('assert',function(d){
             assertRecord.push(d);
         });
         //enact the actions
-        var changes = rn.stepTime();
+        let changes = rn.stepTime();
         //String wme should come before num wme
         test.ok(assertRecord[0].str === 'Gello');
         test.ok(assertRecord[0].num === undefined);
@@ -759,7 +769,7 @@ exports.ReteTests = {
     //----------------------------------------
     
     singleRule_twoAction_test : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             rule1 = new rn.Rule(),
             wmeData = {
                 num : 5,
@@ -800,13 +810,13 @@ exports.ReteTests = {
         //schedule the actions
         rn.scheduleAction(_.keys(rn.proposedActions)[0]);
         //use listeners to check:
-        var assertRecord = [];
+        let assertRecord = [];
         rn.registerListener('assert',function(d){
             assertRecord.push(d);
         });
         
         //enact the actions
-        var changes = rn.stepTime();
+        let changes = rn.stepTime();
         //String wme should come before num wme
         test.ok(assertRecord[0].str === 'Gello');
         test.ok(assertRecord[0].num === undefined);
@@ -818,7 +828,7 @@ exports.ReteTests = {
 
     //remove rule test
     removeRuleTest : function(test){
-        var rn = makeRete(),
+        let rn = makeRete(),
             aRule = new rn.Rule(),
             exampleData = {
                 num : 5,
@@ -840,7 +850,7 @@ exports.ReteTests = {
         test.ok(rn.dummyBetaMemory.unlinkedChildren.length === 0);
 
         //add the rule
-        var ruleAction = rn.addRule(aRule)[1];
+        let ruleAction = rn.addRule(aRule)[1];
 
         //postConditions:
         test.ok(_.keys(rn.actions).length === 1);

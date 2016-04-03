@@ -52,7 +52,7 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
         }else if(condition.tags.type === 'rule'){
             //for using other rules as composable conditions
-            let ruleConditions = _.pairs(condition.linkedNodes).filter(d=>/condition/.test(d[1])).map(d=>allNodes[d[0]);
+            let ruleConditions = _.pairs(condition.linkedNodes).filter(d=>/^condition/.test(d[1])).map(d=>allNodes[d[0]]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
         }else{
             console.error("Problematic Condition:",condition);
