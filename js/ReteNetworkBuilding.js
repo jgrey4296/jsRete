@@ -52,7 +52,7 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
         }else if(condition.tags.type === 'rule'){
             //for using other rules as composable conditions
-            let ruleConditions = _.keys(condition.conditions).map(d=>allNodes[d]);
+            let ruleConditions = _.pairs(condition.linkedNodes).filter(d=>/condition/.test(d[1])).map(d=>allNodes[d[0]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
         }else{
             console.error("Problematic Condition:",condition);
@@ -253,7 +253,8 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
         throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
     }
     //build a network for the conditions
-    let conditions = _.keys(condition.conditions).map(d=>allNodes[d]),
+    let conditionIdPairs = _.pairs(condition.linkedNodes).filter(d=>/condition/.test(d[1])),
+        conditions = conditionIdPairs.map(d=>allNodes[d[0]]),
         //build the subnetwork
         bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,conditions,rootAlpha,allNodes,reteNet);
     //find an existing NCCNode with partner to use
@@ -266,7 +267,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
     
     //else: build NCC and Partner nodes
     let newNCC = new RDS.NCCNode(parent),
-        newNCCPartner = new RDS.NCCPartnerNode(bottomOfSubNetwork,_.keys(condition.conditions).length);
+        newNCCPartner = new RDS.NCCPartnerNode(bottomOfSubNetwork,conditionIdPairs.length);
 
     newNCC.partner = newNCCPartner;
     newNCCPartner.nccNode = newNCC;
