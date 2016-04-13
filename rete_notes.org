@@ -1,0 +1,25 @@
+* Javascript Rete Production System
+** References
+See Doorenbos CMU Dissertation 'Production Matching for Large Learning Systems'
+For Further reference, see Forgy's work, and the Soar Papers for various discussion of Rete Optimisation
+** Implementation Notes
+The implementation is in CommonJS module format, using a primarily functional approach to the Rete net.
+This means there is an almost 1 to 1 relationship between Doorenbos Pseudocode and the implementation here,
+except for where Javascript enables easier, or at least different, behaviour. 
+
+*** Library Structure
+The Library is structured to provide a single class interface for actual use, while internally operating 
+through a number of interacting modules. All Internal Data Structures (ie: Alpha Nodes, 
+Beta Nodes, Memories, tokens etc) are located in ReteDataStructures. 
+Externally important objects (the 'Rete Class' itself, and the constructors for rule, condition, 
+and action definition) can be found in ReteClassInterface, and RuleCtors.
+
+The Core actions the implementation can perform are in ReteActionAssert, ReteActionRetract,
+ReteAction_AddRule, and ReteAction_removeRule, collected together in ReteActions.
+To add more actions, for integration with other systems, takes the writing of a propose and perform pair 
+of functions.
+
+Arithmetic actions are defined in ReteArithmeticActions, and are straightforward, as are ReteComparisonOperators.
+
+
+*** TODO Adding new actions
