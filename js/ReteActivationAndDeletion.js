@@ -41,12 +41,13 @@ var alphaMemoryActivation = function(alphaMem,wme){
    @function constantTestNodeActivation
 */
 var constantTestNodeActivation = function(alphaNode,wme){
+    "use strict";
     //test the wme using the constant test in the node
-    var testResult = false;
+    let testResult = false;
     if(alphaNode.passThrough){
         testResult = true;
     }else{
-        var wmeFieldValue = ReteUtil.retrieveWMEValueFromDotString(wme,alphaNode.testField),
+        let wmeFieldValue = ReteUtil.retrieveWMEValueFromDotString(wme,alphaNode.testField),
             value = alphaNode.testValue,
             operator = alphaNode.operator;
         if(wmeFieldValue === null){ return false; }
@@ -54,14 +55,12 @@ var constantTestNodeActivation = function(alphaNode,wme){
             if(operator !== 'EQ' && operator !== 'NE'){
                 testResult = ConstantTestOperators[operator](Number(wmeFieldValue),Number(value));
             }else{
-                //console.log("testing:",wmeFieldValue,operator,value,alphaNode,wme);
                 testResult = ConstantTestOperators[operator](wmeFieldValue,value);
             }
             
         }
     }
     if(testResult){
-        //console.log("successful constant test result",testResult,wme,alphaNode);
         if(alphaNode.outputMemory){
             alphaNodeActivation(alphaNode.outputMemory,wme);
         }
@@ -79,6 +78,7 @@ var constantTestNodeActivation = function(alphaNode,wme){
 */
 //Switchable activation function for alpha network stuff
 var alphaNodeActivation = function(alphaNode,wme){
+    //console.log('activating alpha:',alphaNode,'\n\n',wme,'\n\n');
     if(alphaNode instanceof RDS.AlphaMemory){
         alphaMemoryActivation(alphaNode,wme);
     }else if(alphaNode instanceof RDS.AlphaNode){
