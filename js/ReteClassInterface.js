@@ -86,6 +86,7 @@ var ReteNet = function(actionsToRegister){
 
     /**
        All Proposed Actions, from ActionNodes that have fired, indexed by id
+       could otherwise be known as the conflict set.
        @member {Object}
        @see {@link module:ReteDataStructure.ProposedActions}
      */
