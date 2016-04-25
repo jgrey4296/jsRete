@@ -8,7 +8,7 @@ An implementation of [Doorenbos'] (http://oai.dtic.mil/oai/oai?verb=getRecord&me
 [amdefine](https::/github.com/jrburke/amdefine)
 
 ## Basic Usage
-The Individual source files in `js` are written in CommonJS format, and can be required in node easily enough. There is a `makefile` that builds a UMD packaged version however, which is preferable, and which can use amdefine on node. Thus:
+The Individual source files in `js` are written in CommonJS format, and can be required in node easily enough. There is a `makefile` that builds a AMD packaged version however (`Rete.min.js`), which is preferable, and which can use amdefine on node. Thus:
 ```
     var Rete = require('Rete.min');
 ```
@@ -38,8 +38,8 @@ exposes a utility constructor:
 ```
 
 ### Conditions:
-Adding a condition to a rule is split into two components, tests, and bindings. The easiest way is
-to describe these in an object, and use the 'newCondition' method of a rule:
+Adding a condition to a rule is split into two components: tests, and bindings. The easiest way is
+to describe these in an object, and use the `newCondition` method of a rule:
 ```
     aRule.newCondition({
         tests : [['first','EQ',5],
@@ -54,7 +54,7 @@ The `tests` field is an array of triples, of the form `[ OBJECTFIELD, COMPARISON
 Comparison operators can be found in [`js/ReteComparisonOperators`](https://github.com/jgrey4296/jsRete/blob/master/js/ReteComparisonOperators.js), and can be extended by adding binary functions into that object.
 
 The `bindings` field is again an array of triples, but this time the form is `[ BINDNAME, PARAMNAME, BINDTESTS ]`.
-By 'BindTests', I mean further tests on the value being bound. (eg: `...bindings: [['blah','first',['GT','${otherBinding}']]] would only bind `first` to `blah` if the value is greater than the value already bound to `otherBinding`).
+By 'BindTests', I mean further tests on the value being bound. (eg: `...bindings: [['blah','first',['GT','${otherBinding}']]]` would only bind `first` to `blah` if the value is greater than the value already bound to `otherBinding`).
 
 ### Actions
 
@@ -72,14 +72,19 @@ Actions can be specified similarly to conditions:
 `testAction` is the name of the rule. The Object that follows provides `values`,`arith`,`regexs`,`timing` and `priority` fields:
 
 #### values
+The values field holds an array of tuples: `[ name, value ]` that will form the object the action uses. eg: `values : [[ "message", "test message" ]]` will create a proposed action with a `payload` object: `{ message : "test message" }`.
 
 #### arith
+The arith field holds triples of `[ VALUE, OPERATOR, AMOUNT ]`. The modifications specified use the arithmetic operators defined in [`js/ReteArithmeticActions.js`](https://github.com/jgrey4296/jsRete/blob/master/js/ReteArithmeticActions.js) (and can be extended as such). They are applied after the creation of the payload object (ie: the values from the previous section). 
 
 #### regexs
+Regex operations are similar to arithmetic operations, just for string manipulation instead. the regex field is an array of 5-tuples, of the form `[ VALUE, REGEX, OPTIONS, REPLACE]`. The result is essentially value.
 
 #### timing
+The timing array holds values o determine the (i)nvalidate, (p)erform, and (u)nperform offsets. ie: An action is proposed at time `t`, and will be invalidated/removed from the proposed set at time t+i. If the proposed action is chosen to be scheduled at time t', then the action will actually take place at t'+p, and an automated cleaned (eg: retraction) will occur at time t'+p+u.
 
 #### priority
+Priority provides one heuristic for selecting which proposed action form the proposed action set should be performed.
 
 ### The Conflict set
 When a rule's conditions are met, the actions are triggered. Actions do not act immediately, instead they propose an action, which can be found in the retenet's `proposedActions` object. You can inspect these, and call the retenet's `scheduleAction` method using the proposedActions `id` field. 
