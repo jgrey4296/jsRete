@@ -3,7 +3,7 @@ if(typeof define !== 'function'){
     let define = require('amdefine')(module);
 }
 
-let _ = require('underscore'),
+let _ = require('lodash'),
     Rete = require('../js/ReteClassInterface'),
     RDS = require('../js/ReteDataStructures'),
     makeRete = function() { return new Rete(); },

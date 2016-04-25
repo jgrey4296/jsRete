@@ -2,7 +2,7 @@ if(typeof define !== 'function'){
     var define = require('amdefine')(module);
 }
 
-var _ = require('underscore'),
+var _ = require('lodash'),
     Rete = require('../Rete.min'),
     RDS = require('../js/ReteDataStructures'),
     makeRete = function() { return new Rete(); },
