@@ -211,7 +211,6 @@ ReteNet.prototype.clearProposedActions = function(){
  */
 ReteNet.prototype.assertWME = function(wme){
     this.fireListener("assert",wme);
-    //console.log("ASSERTING:",wme);
     if(!(wme instanceof RDS.WME)){
         wme = new RDS.WME(wme,this.currentTime);
         this.storeWME(wme);
