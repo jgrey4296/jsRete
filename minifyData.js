@@ -3,14 +3,15 @@
     baseUrl: "./js",
     paths : {
         requireLib : "../node_modules/requirejs/require",
-        underscore : "../node_modules/underscore/underscore-min"
+        underscore : "../node_modules/underscore/underscore-min",
+        lodash : "../node_modules/lodash/lodash.min"
     },
     shim: {
         underscore : {
             exports : "_"
         }
     },
-    exclude : ['underscore'],
+    exclude : ['lodash'],
     //keepAmdefine : true,
     include : ['../node_modules/almond/almond','ReteClassInterface'],
     cjsTranslate : true,
@@ -20,6 +21,6 @@
     optimize: "none",
     wrap : {
         startFile : "startWrap.js",
-        end : "define('underscore',function() { return _; }); return require('ReteClassInterface'); }));"
+        end : "define('lodash',function() { return _; }); return require('ReteClassInterface'); }));"
     },
 });
