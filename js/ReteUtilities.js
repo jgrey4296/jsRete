@@ -206,7 +206,8 @@ var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
 
 //--------------------
 /**
-   Retrieves a value from an object based on a dot style stringstring
+   Retrieves a value from an object based on a dot style strings
+   eg: "values.object.a" will get { values : { object { a : 5 } } }
    @param wme
    @param dotString
    @function

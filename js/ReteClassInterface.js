@@ -180,7 +180,7 @@ ReteNet.prototype.fireListener = function(name,...vals){
 
 
 /**
-   Stores a wme in the retenet
+   Stores a wme in the retenet, without asserting it.
    @param {WME} wme
    @private
  */
