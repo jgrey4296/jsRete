@@ -9,7 +9,7 @@
 var RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
-    _ = require('underscore');
+    _ = require('lodash');
 "use strict";
 
 /**
@@ -36,7 +36,7 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
         }
         
         //get the binding tests for join nodes
-        let tests = _.pairs(condition.bindings);
+        let tests = _.toPairs(condition.bindings);
         
         if(condition.tags.conditionType === 'positive'){
             //Build a positive condition:
@@ -52,7 +52,7 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
         }else if(condition.tags.type === 'rule'){
             //for using other rules as composable conditions
-            let ruleConditions = _.pairs(condition.linkedNodes).filter(d=>/^condition/.test(d[1])).map(d=>allNodes[d[0]]);
+            let ruleConditions = _.toPairs(condition.linkedNodes).filter(d=>/^condition/.test(d[1])).map(d=>allNodes[d[0]]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
         }else{
             console.error("Problematic Condition:",condition);
@@ -163,7 +163,7 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     "use strict";
     //convert tests if necessary:
     if(!(tests instanceof Array)){
-        tests = _.pairs(tests);
+        tests = _.toPairs(tests);
     }
     
     //see if theres a join node to use already
@@ -209,7 +209,7 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
 */
 var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
     "use strict";
-    if(!(tests instanceof Array)) { tests = _.pairs(tests); }
+    if(!(tests instanceof Array)) { tests = _.toPairs(tests); }
     //see if theres an existing negative node to use
     let children = _.values(parent.children);
     for(var i = 0; i < children.length; i ++){
@@ -253,7 +253,7 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
         throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
     }
     //build a network for the conditions
-    let conditionIdPairs = _.pairs(condition.linkedNodes).filter(d=>/condition/.test(d[1])),
+    let conditionIdPairs = _.toPairs(condition.linkedNodes).filter(d=>/condition/.test(d[1])),
         conditions = conditionIdPairs.map(d=>allNodes[d[0]]),
         //build the subnetwork
         bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,conditions,rootAlpha,allNodes,reteNet);

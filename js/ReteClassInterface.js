@@ -11,7 +11,7 @@
    @requires ReteArithmeticActions
  */
 "use strict";
-var _ = require('underscore'),
+var _ = require('lodash'),
     RDS = require('./ReteDataStructures'),
     ReteNetworkBuilding = require('./ReteNetworkBuilding'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
@@ -397,7 +397,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
     //-----------
     //Add a single rule:
     let rule = components[ruleId],
-        ruleLinks = _.pairs(rule.linkedNodes),
+        ruleLinks = _.toPairs(rule.linkedNodes),
         //TODO: support rules as conditions by flattening the conditions repeatedly
         conditions = ruleLinks.filter(d=>/^condition/.test(d[1])).map(d=>components[d[0]]),
         //build network with a dummy node for the parent

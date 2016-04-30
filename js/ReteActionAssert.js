@@ -8,7 +8,7 @@
 */
 
 var ArithmeticActions = require('./ReteArithmeticActions'),
-    _ = require('underscore'),
+    _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
 

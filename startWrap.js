@@ -1,9 +1,9 @@
 // wrap-start.frag.js
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
-        define(['underscore'], factory);
+        define(['lodash'], factory);
     } else if (typeof exports === 'object') {
-        var _ = require('underscore');
+        var _ = require('lodash');
         module.exports = factory(_);
     } else {
         // change "myLib" to whatever your library is called

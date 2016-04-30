@@ -4,7 +4,7 @@
    @requires underscore
 */
 "use strict";
-var _ = require('underscore'),
+var _ = require('lodash'),
     nextId = 0;
 
 

@@ -2,7 +2,7 @@
    @module ReteUtilities
    @requires underscore
 */
-var _ = require('underscore'),
+var _ = require('lodash'),
     RDS = require('./ReteDataStructures'),
     ArithmeticActions = require('./ReteArithmeticActions');
 "use strict";

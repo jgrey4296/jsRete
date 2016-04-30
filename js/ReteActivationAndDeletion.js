@@ -13,7 +13,7 @@ var RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),
     ReteTestExecution = require('./ReteTestExecution'),
     PossibleActions = require('./ReteActions'),
-    _ = require('underscore');
+    _ = require('lodash');
 
 "use strict";
 

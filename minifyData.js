@@ -3,13 +3,7 @@
     baseUrl: "./js",
     paths : {
         requireLib : "../node_modules/requirejs/require",
-        underscore : "../node_modules/underscore/underscore-min",
         lodash : "../node_modules/lodash/lodash.min"
-    },
-    shim: {
-        underscore : {
-            exports : "_"
-        }
     },
     exclude : ['lodash'],
     //keepAmdefine : true,

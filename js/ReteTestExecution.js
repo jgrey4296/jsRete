@@ -6,7 +6,7 @@
    @requires ReteComparisonOperators
  */
 var RDS = require('./ReteDataStructures'),
-    _ = require('underscore'),
+    _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     ReteComparisonOps = require('./ReteComparisonOperators');
 

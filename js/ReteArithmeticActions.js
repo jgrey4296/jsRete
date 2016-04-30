@@ -2,7 +2,7 @@
    Defines Arithmetic Actions that the retenet can perform
    @module
 */
-var _ = require('underscore');
+var _ = require('lodash');
 "use strict";
 
 module.exports = {
