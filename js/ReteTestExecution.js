@@ -1,7 +1,7 @@
 /**
    @module ReteTestExecution
    @requires ReteDataStructures
-   @requires underscore
+   @requires lodash
    @requires ReteUtilities
    @requires ReteComparisonOperators
  */

@@ -1,7 +1,7 @@
 /**
    Defines the data structures required for the Net
    @module ReteDataStructures
-   @requires underscore
+   @requires lodash
 */
 "use strict";
 var _ = require('lodash'),

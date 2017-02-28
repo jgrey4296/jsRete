@@ -1,6 +1,6 @@
 /**
    @module ReteUtilities
-   @requires underscore
+   @requires lodash
 */
 var _ = require('lodash'),
     RDS = require('./ReteDataStructures'),

@@ -4,7 +4,7 @@
    @requires ReteDataStructures
    @requires ReteUtilities
    @requires ReteActivationAndDeletion
-   @requires underscore
+   @requires lodash
  */
 var RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),

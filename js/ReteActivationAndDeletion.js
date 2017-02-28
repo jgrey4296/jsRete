@@ -6,7 +6,7 @@
    @requires ReteUtilities
    @requires ReteTestExecution
    @requires ReteActions
-   @requires underscore
+   @requires lodash
  */
 var RDS = require('./ReteDataStructures'),
     ConstantTestOperators = require('./ReteComparisonOperators'),

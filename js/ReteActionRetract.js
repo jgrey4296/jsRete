@@ -4,7 +4,7 @@
    @requires ReteArithmeticActions
    @requires ReteUtilities
    @requires ReteDataStructures
-   @requires underscore
+   @requires lodash
 */
 var ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),

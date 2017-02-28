@@ -2,11 +2,11 @@ require.config({
     baseUrl : "/",
     paths : {
         rete : "/Rete.min",
-        underscore : '/libs/underscore-min'
+        lodash: "/libs/lodash"
     }
 });
 
-require(['underscore','rete'],function(_,Rete){
+require(['lodash','rete'],function(_,Rete){
     console.log("Rete Example");
     var rn = new Rete(),
         aRule = new rn.Rule(),
