@@ -2,43 +2,43 @@
    @module ReteUtilities
    @requires lodash
 */
-var _ = require('lodash'),
+let _ = require('lodash'),
     RDS = require('./ReteDataStructures'),
     ArithmeticActions = require('./ReteArithmeticActions');
-"use strict";
+
 
 /**
    Reconnects a joinnode with its alpha memory, once the beta memory is populated
    @param node
    @function relinkToAlphaMemory
 */
-var relinkToAlphaMemory = function(node){
+let relinkToAlphaMemory = function(node){
     //reconnect an unlinked join node to its alpha memory when there are
     //wmes in said alpha memory
-    if(!(node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode)){
+    if (!(node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode)){
         throw new Error("trying to relink alpha on something other than a join node or negative node");
     }
-    var ancestor = node.nearestAncestor,
+    let ancestor = node.nearestAncestor,
         indices = node.alphaMemory.children.map(d=>d.id);
 
     //While the ancestor is a child of the alpha memory
-    while(ancestor && indices.indexOf(ancestor.id) === -1){
+    while (ancestor && indices.indexOf(ancestor.id) === -1){
         //go up an ancestor if it is unlinked to
         ancestor = findNearestAncestorWithAlphaMemory(ancestor,node.alphaMemory.id);
     }
     
     //When finished, if the ancestor exists:
-    if(ancestor !== null){
-        var index = node.alphaMemory.children.map(d=>d.id).indexOf(ancestor.id);
+    if (ancestor !== null){
+        let index = node.alphaMemory.children.map(d=>d.id).indexOf(ancestor.id);
         //add the node into the child list in front of the ancestor
         node.alphaMemory.children.splice(index,0,node);
-    }else{
+    } else {
         //otherwise just add at the end
         node.alphaMemory.children.push(node);
     }
 
     //remove from the unlinkedChildren Field
-    var nodeIndex = node.alphaMemory.unlinkedChildren.map(d=>d.id).indexOf(node.id);
+    let nodeIndex = node.alphaMemory.unlinkedChildren.map(d=>d.id).indexOf(node.id);
     node.alphaMemory.unlinkedChildren.splice(nodeIndex,1);
         
 };
@@ -48,14 +48,14 @@ var relinkToAlphaMemory = function(node){
    @param node
    @function relinkToBetaMemory
 */
-var relinkToBetaMemory = function(node){
+let relinkToBetaMemory = function(node){
     //relink an unlinked join node to its betamemory when there are tokens
     //in said memory
     //remove from the unlinked children list
     //and add it into the children
-    if(node.parent.unlinkedChildren.length === 0) { return; }
-    var index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
-    if(index > -1){
+    if (node.parent.unlinkedChildren.length === 0) { return; }
+    let index = node.parent.unlinkedChildren.map(d=>d.id).indexOf(node.id);
+    if (index > -1){
         node.parent.unlinkedChildren.splice(index,1);
         node.parent.children.unshift(node);
     }
@@ -67,14 +67,14 @@ var relinkToBetaMemory = function(node){
    @param alphaMemory
    @function unlinkAlphaMemory
 */
-var unlinkAlphaMemory = function(alphaMemory){
+let unlinkAlphaMemory = function(alphaMemory){
     //if the alphaMem has no items: UNLINK
-    if(alphaMemory.items.length === 0){
-        alphaMemory.children.forEach(function(amChild){
-            if(amChild instanceof RDS.JoinNode){
-                var index = amChild.parent.children.map(d=>d.id).indexOf(amChild.id);
+    if (alphaMemory.items.length === 0){
+        alphaMemory.children.forEach((amChild) => {
+            if (amChild instanceof RDS.JoinNode){
+                let index = amChild.parent.children.map(d=>d.id).indexOf(amChild.id);
                 //splice out
-                var removed = amChild.parent.children.splice(index,1);
+                let removed = amChild.parent.children.splice(index,1);
                 //and store
                 amChild.parent.unlinkedChildren.push(removed[0]);
             }
@@ -88,29 +88,28 @@ var unlinkAlphaMemory = function(alphaMemory){
    @param node
    @function ifEmptyBetaMemoryUnlink
 */
-var ifEmptyBetaMemoryUnlink = function(node){
+let ifEmptyBetaMemoryUnlink = function(node){
     //Now Essentially switch on: BetaMemory, NegativeNode,
     //NCCNode, and NCCPartnerNode
 
     //BETAMEMORY
-    if(node && (node instanceof RDS.BetaMemory || node instanceof RDS.JoinNode) ){
+    if (node && (node instanceof RDS.BetaMemory || node instanceof RDS.JoinNode) ){
         //and that betaMemory has no other items
-        if(node.items.length === 0){
+        if (node.items.length === 0){
             //for all the node's children
-            node.children.forEach(function(jn){
-                if(!(jn instanceof RDS.JoinNode)){ return; }
-                var index = jn.alphaMemory.children.map(d=>d.id).indexOf(jn.id);
-                if(index !== -1){
-                    var removed = jn.alphaMemory.children.splice(index,1);
+            node.children.forEach((jn) => {
+                if (!(jn instanceof RDS.JoinNode)){ return; }
+                let index = jn.alphaMemory.children.map(d=>d.id).indexOf(jn.id);
+                if (index !== -1){
+                    let removed = jn.alphaMemory.children.splice(index,1);
                     //push it in the unlinked children list
                     jn.alphaMemory.unlinkedChildren.push(removed[0]);
                 }
             });
         }
         return true;
-    }else{
-        return false;
-    }        
+    }
+    return false;
 };
 
 /**
@@ -118,13 +117,13 @@ var ifEmptyBetaMemoryUnlink = function(node){
    @param node
    @function ifEmptyNegNodeUnlink
 */
-var ifEmptyNegNodeUnlink = function(node){
-    if(node && node instanceof RDS.NegativeNode){
+let ifEmptyNegNodeUnlink = function(node){
+    if (node && node instanceof RDS.NegativeNode){
         //with elements
-        if(node.items.length === 0){
+        if (node.items.length === 0){
             //unlink alpha memory
-            var index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
-            var removed = node.alphaMemory.children.splice(index,1);
+            let index = node.alphaMemory.children.map(d=>d.id).indexOf(node.id);
+            let removed = node.alphaMemory.children.splice(index,1);
             node.alphaMemory.unlinkedChildren.push(removed[0]);
         }
     }
@@ -137,12 +136,12 @@ var ifEmptyNegNodeUnlink = function(node){
    @function compareConstantNodeToTest
 */
 //taking an alpha node and a ConstantTest
-var compareConstantNodeToTest = function(node,constantTestSpec){
-    if(node.testField !== constantTestSpec.field
+let compareConstantNodeToTest = function(node,constantTestSpec){
+    if (node.testField !== constantTestSpec.field
        || node.testValue !== constantTestSpec.value){
         return false;
     }
-    if(node.operator !== constantTestSpec.operator){
+    if (node.operator !== constantTestSpec.operator){
         return false;
     }
     return true;
@@ -154,27 +153,27 @@ var compareConstantNodeToTest = function(node,constantTestSpec){
    @param secondTestSet
    @function compareJoinTests
 */
-var CompareJoinTests = function(firstTestSet,secondTestSet){
-    try{
+let CompareJoinTests = function(firstTestSet,secondTestSet){
+    try {
         //compare lengths
-        if(firstTestSet.length !== secondTestSet.length) { throw "unequal lengths"; }
-        for(var i = 0; i < firstTestSet.length; i++){
-            var fTest = firstTestSet[i],
+        if (firstTestSet.length !== secondTestSet.length) { throw "unequal lengths"; }
+        for (let i = 0; i < firstTestSet.length; i++){
+            let fTest = firstTestSet[i],
                 sTest = secondTestSet[i];
             //compare the bound names
-            if(fTest[0] !== sTest[0]) { throw "different bound names"; }
+            if (fTest[0] !== sTest[0]) { throw "different bound names"; }
             
             //compare the source names
-            if(fTest[1][0] !== sTest[1][0]) { throw "different source names"; }
+            if (fTest[1][0] !== sTest[1][0]) { throw "different source names"; }
             
             //compare the bind tests
-            if(fTest[1][1].length !== sTest[1][1].length) { throw "different binding tests length"; }
-            for(var j = 0; fTest[1][1].length; j++){
-                if(fTest[1][1][j][0] !== sTest[1][1][j][0]) { throw "different comp operator"; }
-                if(fTest[1][1][j][1] !== sTest[1][1][j][1]) { throw "different comp value"; }
+            if (fTest[1][1].length !== sTest[1][1].length) { throw "different binding tests length"; }
+            for (let j = 0; fTest[1][1].length; j++){
+                if (fTest[1][1][j][0] !== sTest[1][1][j][0]) { throw "different comp operator"; }
+                if (fTest[1][1][j][1] !== sTest[1][1][j][1]) { throw "different comp value"; }
             }
         }
-    }catch(e){
+    } catch (e) {
         return false;
     }
     return true;
@@ -186,22 +185,22 @@ var CompareJoinTests = function(firstTestSet,secondTestSet){
    @param alphaMemory
    @function findNearestAncestorWithAlphaMemory
 */
-var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
+let findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
     //recursive
 
     //base conditions:
-    if(node.dummy){ return null;}
-    if(node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode){
-        if(node.alphaMemory.id === alphaMemory.id){
+    if (node.dummy){ return null;}
+    if (node instanceof RDS.JoinNode || node instanceof RDS.NegativeNode){
+        if (node.alphaMemory.id === alphaMemory.id){
             return node;
         }
     }
     //switch recursion into the partner clause
-    if(node instanceof RDS.NCCNode){
+    if (node instanceof RDS.NCCNode){
         return findNearestAncestorWithAlphaMemory(node.partner.parent,alphaMemory);
     }
     //recurse:
-    return findNearestAncestorWithAlphaMemory(node.parent,alphaMemory);        
+    return findNearestAncestorWithAlphaMemory(node.parent,alphaMemory);
 };
 
 //--------------------
@@ -212,17 +211,17 @@ var findNearestAncestorWithAlphaMemory = function(node,alphaMemory){
    @param dotString
    @function
  */
-var retrieveWMEValueFromDotString = function(wme,dotString){
-    "use strict";
+let retrieveWMEValueFromDotString = function(wme,dotString){
+    
     //get from the node stored in wme.data the value
     //that the dotString address specifies
     let address = dotString.split("."),
         currLocation = wme.data;
-    while(address.length > 0){
+    while (address.length > 0){
         let curr = address.shift();
-        if(currLocation[curr] !== undefined){
+        if (currLocation[curr] !== undefined){
             currLocation = currLocation[curr];
-        }else{
+        } else {
             return null;
         }
     }
@@ -237,14 +236,12 @@ var retrieveWMEValueFromDotString = function(wme,dotString){
    @function
 */
 
-var cleanupInvalidatedActions = function(invalidatedActions){
-    if(invalidatedActions.length === 0 || invalidatedActions[0].reteNet === undefined){
+let cleanupInvalidatedActions = function(invalidatedActions){
+    if (invalidatedActions.length === 0 || invalidatedActions[0].reteNet === undefined){
         return;
     }
-    var reteNet = invalidatedActions[0].reteNet,
-        proposedActions = reteNet.proposedActions,
+    let reteNet = invalidatedActions[0].reteNet,
         idList = invalidatedActions.map(d=>d.id);
-    //console.log("Cleaning up:",[idList,invalidatedActions,proposedActions]);
     
     //filter out the ids from the proposedActions list
     //also removing them from the owning tokens
@@ -258,7 +255,7 @@ var cleanupInvalidatedActions = function(invalidatedActions){
    @param baseObject
    @function objDescToObject
 */
-var objDescToObject = function(objDesc,baseObject){
+let objDescToObject = function(objDesc,baseObject){
     /* can work on arbitrary depths, will overwrite primitives if later an object is needed
        
        ie: {"values.a" : 5, "values.b" : 10,
@@ -267,17 +264,17 @@ var objDescToObject = function(objDesc,baseObject){
        {"values": {"a": 5, "b": 10},
        "tags" : {"type" : "rule", "character": "bob"}}
     */
-    var newObj = baseObject || {},
+    let newObj = baseObject || {},
         //take the starting object and for all keys
-        finalObj = _.keys(objDesc).reduce(function(m,v){
+        finalObj = _.keys(objDesc).reduce((m,v) => {
             //split the keys apart
-            var keys = v.split(/\./),
+            let keys = v.split(/\./),
                 currObj = m,
                 currKey;
             //add an object for each key
-            while(keys.length > 1){
+            while (keys.length > 1){
                 currKey = keys.shift();
-                if(currObj[currKey] === undefined
+                if (currObj[currKey] === undefined
                    || typeof currObj[currKey] !== 'object'){
                     currObj[currKey] = {};
                 }
@@ -295,17 +292,17 @@ var objDescToObject = function(objDesc,baseObject){
    @param {Action} action
    @param {Token} token
  */
-var createNewWMEData = function(action,token){
-    "use strict";
+let createNewWMEData = function(action,token){
+    
     //initialise from the action's 'values' object
-    let newWMEData = _.reduce(_.keys(action.values),function(memo,key){
+    let newWMEData = _.reduce(_.keys(action.values),(memo,key) => {
         let v = action.values[key];
         //splice in bindings into the values
         memo[key] = spliceInValues(v,token.bindings);
         return memo;
     },{bindings: {} }),
     //copy in the bindings
-        dataPlusBindings = _.reduce(_.keys(token.bindings),function(m,v){
+        dataPlusBindings = _.reduce(_.keys(token.bindings),(m,v) => {
             m.bindings[v] = token.bindings[v];
             return m;
         },newWMEData);
@@ -317,19 +314,19 @@ var createNewWMEData = function(action,token){
    @param {Action} action
    @param {Object} data
  */
-var applyArithmetic = function(action,data){
-    "use strict";
+let applyArithmetic = function(action,data){
+    
     //perform arithmetic:
-    _.keys(action.arithmeticActions).forEach(function(key){        
+    _.keys(action.arithmeticActions).forEach((key) => {
         let arithDesc = action.arithmeticActions[key],
             currVal = Number(data[key]),
             //look up the function:
             //because the representation form is: a : ["+", 5]
             arithFunc = ArithmeticActions[arithDesc[0]],
             //Get the value if its a binding
-            applyVal = typeof arithDesc[1] === 'number' ? arithDesc[1] : arithDesc[1].match(/\$/) ? parseInt(data.bindings[arithDesc[1].slice(1)]) : parseInt(arithDesc[1]);
-        if(arithFunc === undefined) { throw new Error("Undefined arithmetic function"); }
-        if(isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number: " + currVal + " " + applyVal); }
+            applyVal = typeof arithDesc[1] === 'number' ? arithDesc[1] : arithDesc[1].match(/\$/) ? parseInt(data.bindings[arithDesc[1].slice(1)], 10) : parseInt(arithDesc[1], 10);
+        if (arithFunc === undefined) { throw new Error("Undefined arithmetic function"); }
+        if (isNaN(currVal) || isNaN(applyVal)) { throw new Error("Arithmetic value should be convertable to a number: " + currVal + " " + applyVal); }
         data[key] = arithFunc(currVal,applyVal);
     });
 };
@@ -339,9 +336,9 @@ var applyArithmetic = function(action,data){
    @param {Action} action
    @param {Object} data
  */
-var applyRegex = function(action,data){
-    "use strict";
-    _.keys(action.regexActions).forEach(function(key){
+let applyRegex = function(action,data){
+    
+    _.keys(action.regexActions).forEach((key) => {
         let regexAction = action.regexActions[key],
             regex = new RegExp(regexAction[0],regexAction[1]),
             replaceValue = spliceInValues(regexAction[2],data.bindings);
@@ -356,13 +353,13 @@ var applyRegex = function(action,data){
    @param {String} baseString
    @param {Object} valueObject
  */
-var spliceInValues = function(baseString,valueObject){
-    "use strict";
+let spliceInValues = function(baseString,valueObject){
+    
     let match = (/\${(\w+)}/g).exec(baseString);
-    while(match !== null){
-        if(valueObject[match[1]] !== undefined){
+    while (match !== null){
+        if (valueObject[match[1]] !== undefined){
             baseString = spliceStr(baseString,match.index,valueObject[match[1]],match[0].length);
-        }else{
+        } else {
             throw new Error("Unrecognised binding: " + match[1]);
         }
         match = (/\${(\w+)}/g).exec(baseString);
@@ -378,12 +375,12 @@ var spliceInValues = function(baseString,valueObject){
    @param {String} addition The string to splce in
    @param {Int} cutLength The amount after the index to ignore before using the remaining string
  */
-var spliceStr = function(orig,index,addition,cutLength){
+let spliceStr = function(orig,index,addition,cutLength){
     return orig.slice(0,index) + addition + orig.slice(index+cutLength);
 };
 
 //------------------------------
-var moduleInterface = {
+let moduleInterface = {
     "unlinkAlphaMemory" : unlinkAlphaMemory,
     "relinkToAlphaMemory" : relinkToAlphaMemory,
     "ifEmptyBetaMemoryUnlink" : ifEmptyBetaMemoryUnlink,
@@ -399,5 +396,4 @@ var moduleInterface = {
     "applyArithmetic" : applyArithmetic,
     "applyRegex" : applyRegex
 };
-module.exports = moduleInterface;    
-
+module.exports = moduleInterface;

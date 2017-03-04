@@ -1,12 +1,12 @@
 
-var ArithmeticActions = require('./ReteArithmeticActions'),
+let ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
 
-"use strict";
 
-var ActionInterface = {
+
+let ActionInterface = {
     "name" : "removeRule",
     propose : null,
     perform : null

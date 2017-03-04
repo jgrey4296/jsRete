@@ -7,7 +7,7 @@
    @requires lodash
 */
 
-var ArithmeticActions = require('./ReteArithmeticActions'),
+let ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
@@ -17,7 +17,7 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
    @implements {module:ReteActionInterface}
    @class AssertAction
  */
-var AssertAction = {
+let AssertAction = {
     "name" : "assert",
     propose : null,
     perform : null
@@ -30,23 +30,23 @@ var AssertAction = {
    @function
  */
 AssertAction.propose = function(token,reteNet){
-    "use strict";
+    
     //create the data object:
-    var newWMEData = reteNet.utils.createNewWMEData(this,token);
+    let newWMEData = reteNet.utils.createNewWMEData(this,token);
     reteNet.utils.applyArithmetic(this,newWMEData);
     reteNet.utils.applyRegex(this,newWMEData);
     //Expand out to object structure
     //ie: {values.a:5, tags.type: rule} -> {values:{a:5},tags:{type:rule}}
-    var complexFormData = reteNet.utils.objDescToObject(newWMEData);
+    let complexFormData = reteNet.utils.objDescToObject(newWMEData);
     
     //To be returned to activateActionNode
-    var proposedAction = new reteNet.ProposedAction(reteNet,"assert", complexFormData, token,
+    let proposedAction = new reteNet.ProposedAction(reteNet,"assert", complexFormData, token,
                                                 reteNet.currentTime,
                                                 this.timing,
                                                 this.priority
                                                 );
 
-    return proposedAction;        
+    return proposedAction;
 };
 
 /**
@@ -57,14 +57,14 @@ AssertAction.propose = function(token,reteNet){
    @return {Object}
  */
 AssertAction.perform = function(proposedAction,reteNet){
-    "use strict";
+    
     //check the type matches
-    if(proposedAction.actionType !== 'assert') { throw new Error("Expected Assert"); }
+    if (proposedAction.actionType !== 'assert') { throw new Error("Expected Assert"); }
     //Perform the action:
-    var newWMEID = reteNet.assertWME(proposedAction.payload,proposedAction.retractTime);
+    let newWMEID = reteNet.assertWME(proposedAction.payload,proposedAction.retractTime);
 
     //schedule the retraction:
-    if(proposedAction.timing.unperformOffset > 0){
+    if (proposedAction.timing.unperformOffset > 0){
         //schedule a retract, with no invalidate time (its not being proposed)
         //and the perform time being the original actions unperformoffset
         reteNet.addToSchedule(new RDS.ProposedAction(reteNet,"retract",newWMEID,null,reteNet.currentTime,{

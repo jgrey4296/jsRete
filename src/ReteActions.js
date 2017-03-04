@@ -2,7 +2,7 @@
    Aggregates ReteNet Actions that implement {@link module:ReteActionInterface}
    @module ReteActions
 */
-var ArithmeticActions = require('./ReteArithmeticActions'),
+let ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures'),
@@ -11,12 +11,12 @@ var ArithmeticActions = require('./ReteArithmeticActions'),
     AddRuleAction = require('./ReteAction_AddRule'),
     RemoveRuleAction = require('./ReteAction_removeRule');
 
-"use strict";
+
 
 //Action node possible actions:
 //Stores both performance functions and proposal functions
 //in the form: { name : {name: "", performFunc : func, propseFunc : func } }
-var ActionInterface = {};
+let ActionInterface = {};
 
 //Performance functions take a retenet, and a payload
 //proposal functions are bound to an action description, and take a token and a retenet

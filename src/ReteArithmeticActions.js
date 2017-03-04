@@ -2,8 +2,8 @@
    Defines Arithmetic Actions that the retenet can perform
    @module
 */
-var _ = require('lodash');
-"use strict";
+let _ = require('lodash');
+
 
 module.exports = {
     /** Add two values */
@@ -21,7 +21,7 @@ module.exports = {
     /** Divide two values */
     "/" : function(a,b){
         return a / b;
-    },
+    }
 };
 
 

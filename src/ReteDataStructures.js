@@ -3,8 +3,8 @@
    @module ReteDataStructures
    @requires lodash
 */
-"use strict";
-var _ = require('lodash'),
+
+let _ = require('lodash'),
     nextId = 0;
 
 
@@ -22,7 +22,7 @@ var _ = require('lodash'),
    queue/invalidate time absolute,
    assertTime/retractTime relative to when action is enacted
 */
-var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,priority,tags){
+let ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,priority,tags){
     this.id = nextId++;
     this.type = "ProposedAction";
     this.reteNet = reteNet;
@@ -50,13 +50,13 @@ var ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,p
    @param assertTime
    @class WME
 */
-var WME = function(data,assertTime){
+let WME = function(data,assertTime){
     this.id = nextId++;
     this.type = "WME";
     this.data = data;
     //The lifetime of the wme. Asserted at time lifeTime[0],
     //retracted at time lifeTime[1]:
-    if(assertTime === undefined) { assertTime = 0; }
+    if (assertTime === undefined) { assertTime = 0; }
     this.lifeTime = [assertTime];
     //Alpha memories the wme is part of
     this.alphaMemoryItems = [];
@@ -74,7 +74,7 @@ var WME = function(data,assertTime){
    @param bindings
    @class Token
 */
-var Token = function(parentToken,wme,owningNode,bindings){
+let Token = function(parentToken,wme,owningNode,bindings){
     this.id = nextId++;
     this.type = "Token";
     //bindings are updated as the token progresses
@@ -86,10 +86,10 @@ var Token = function(parentToken,wme,owningNode,bindings){
     this.nccResults = []; //list of blocking Tokens
     this.proposedActions = []; //current proposed actions
     
-    if(this.parentToken){
+    if (this.parentToken){
         this.parentToken.children.unshift(this);
     }
-    if(this.wme && this.wme.tokens){
+    if (this.wme && this.wme.tokens){
         this.wme.tokens.unshift(this);
     }
 
@@ -97,7 +97,7 @@ var Token = function(parentToken,wme,owningNode,bindings){
     //then copy in new bindings
     this.bindings = {};
 
-    if(this.parentToken && this.parentToken.bindings){
+    if (this.parentToken && this.parentToken.bindings){
         _.keys(this.parentToken.bindings).forEach(function(d){
             this.bindings[d] = this.parentToken.bindings[d];
         },this);
@@ -118,7 +118,7 @@ var Token = function(parentToken,wme,owningNode,bindings){
 */
 //Utility storage of wme and its alphaMemory together
 //used in alphamemory and WME
-var AlphaMemoryItem = function(wme,alphaMem){
+let AlphaMemoryItem = function(wme,alphaMem){
     this.id = nextId++;
     this.type = "AlphaMemoryItem";
     this.wme = wme;
@@ -134,20 +134,20 @@ var AlphaMemoryItem = function(wme,alphaMem){
    @class AlphaNode
 */
 
-var AlphaNode = function(parent,constantTestSpec){
+let AlphaNode = function(parent,constantTestSpec){
     this.id = nextId++;
     this.type = "AlphaNode";
     this.parent = parent;
-    if(this.parent && this.parent.children){
+    if (this.parent && this.parent.children){
         this.parent.children.unshift(this);
     }
     this.children = [];
     this.outputMemory = undefined;
-    if(constantTestSpec){
+    if (constantTestSpec){
         this.testField = constantTestSpec.field;
         this.testValue = constantTestSpec.value;
         this.operator = constantTestSpec.operator;
-    }else{
+    } else {
         this.passThrough = true;
     }
 };
@@ -157,20 +157,20 @@ var AlphaNode = function(parent,constantTestSpec){
    @param parent
    @class AlphaMemory
 */
-var AlphaMemory = function(parent){
+let AlphaMemory = function(parent){
     this.id = nextId++;
     this.type = "AlphaMemory";
     this.items = [];
     this.parent = parent;
     //If adding to a node other than a test node,
-    if(this.parent && !(this.parent instanceof AlphaNode)){
+    if (this.parent && !(this.parent instanceof AlphaNode)){
         //add to children
         //this.parent.children.unshift(this);
         throw new Error("Adding alpha memory as child of not a test");
-    }else if(this.parent && this.parent instanceof AlphaNode && this.parent.outputMemory === undefined){
+    } else if (this.parent && this.parent instanceof AlphaNode && this.parent.outputMemory === undefined){
         //if an alphanode, set the ouputmemory field
         this.parent.outputMemory = this;
-    }else{
+    } else {
         throw new Error("trying to create an alpha memory for a node that already has one");
     }
     this.children = [];
@@ -182,30 +182,30 @@ var AlphaMemory = function(parent){
    Provides a base definition of a node in the rete network
    @class ReteNode
 
-*/    
+*/
 //Base node for the beta network
-var ReteNode = function(parent){
+let ReteNode = function(parent){
     this.id = nextId++;
     this.type = "ReteNode";
     this.children = [];
     this.unlinkedChildren = [];
     this.parent = parent;
-    if(this.parent && this.parent.children){
+    if (this.parent && this.parent.children){
         this.parent.children.unshift(this);
     }
 };
 
 /**
    A Node to store tokens in the rete network
-   @param parent 
+   @param parent
    @class BetaMemory
    @augments ReteNode
 */
-var BetaMemory = function(parent){
+let BetaMemory = function(parent){
     ReteNode.call(this,parent);
     this.type = "BetaMemory";
     this.items = [];
-    if(parent === undefined){
+    if (parent === undefined){
         this.dummy = true;
         this.items.push(new Token());
         this.items[0].owningNode = this;
@@ -217,18 +217,18 @@ var BetaMemory = function(parent){
    @class JoinNode
    @augments ReteNode
 */
-var JoinNode = function(parent,alphaMemory,tests){
+let JoinNode = function(parent,alphaMemory,tests){
     //Join Node combines tokens with wmes
     //tests are the binding tuples from a condition
     ReteNode.call(this,parent);
     this.type = "JoinNode";
     this.alphaMemory = alphaMemory;
-    if(tests){
+    if (tests){
         this.tests = tests;
-    }else{
+    } else {
         this.tests = [];
     }
-    if(this.alphaMemory && this.alphaMemory.children){
+    if (this.alphaMemory && this.alphaMemory.children){
         this.alphaMemory.children.unshift(this);
         this.alphaMemory.referenceCount += 1;
     }
@@ -246,8 +246,8 @@ var JoinNode = function(parent,alphaMemory,tests){
    @augments ReteNode
    @class ActionNode
 */
-var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNet){
-    //Container object for a general graphnode action description    
+let ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNet){
+    //Container object for a general graphnode action description
     ReteNode.call(this,parent);
     this.type = "ActionNode";
     this.name = ruleName;
@@ -264,17 +264,17 @@ var ActionNode = function(parent,actionDescriptions,boundActions,ruleName,reteNe
    @param wme the wme
    @class NegativeJoinResult
 */
-var NegativeJoinResult = function(owner,wme){
+let NegativeJoinResult = function(owner,wme){
     //Storage for a token blocked by a wme
     //Updates the owner token and wme as part of its construction
     this.id = nextId++;
     this.type = "Negative Join Result";
     this.owner = owner;
-    if(this.owner){
+    if (this.owner){
         this.owner.negJoinResults.unshift(this);
     }
     this.wme = wme;
-    if(this.wme){
+    if (this.wme){
         this.wme.negJoinResults.unshift(this);
     }
 };
@@ -288,12 +288,12 @@ var NegativeJoinResult = function(owner,wme){
    @class NegativeNode
    @augments ReteNode
 */
-var NegativeNode = function(parent,alphaMemory,tests){
+let NegativeNode = function(parent,alphaMemory,tests){
     ReteNode.call(this,parent);
     this.type = "Negative Node";
     this.items = [];
     this.alphaMemory = alphaMemory;
-    if(this.alphaMemory){
+    if (this.alphaMemory){
         this.alphaMemory.referenceCount++;
         this.alphaMemory.children.unshift(this);
     }
@@ -308,13 +308,13 @@ var NegativeNode = function(parent,alphaMemory,tests){
    @augments ReteNode
    @see {@link NCCondition}
 */
-var NCCNode = function(parent){
+let NCCNode = function(parent){
     //NCC : gates token progression based on a subnetwork
     //don't pass parent in so you can PUSH instead of SHIFT
     ReteNode.call(this);
     this.type = "NCCNode";
     this.parent = parent;
-    if(this.parent && this.parent.children){
+    if (this.parent && this.parent.children){
         this.parent.children.push(this);
     }
     /**
@@ -331,7 +331,7 @@ var NCCNode = function(parent){
    @param num
    @class NCCPartnerNode
 */
-var NCCPartnerNode = function(parent,num){
+let NCCPartnerNode = function(parent,num){
     //get the parent if parent is a beta memory to stop redundant node usage
     ReteNode.call(this,parent);
     this.type = "NCCPartnerNode";
@@ -344,7 +344,7 @@ var NCCPartnerNode = function(parent,num){
 
 
 //--------------------
-var DataStructures = {
+let DataStructures = {
     "WME"              : WME,
     "Token"            : Token,
     "AlphaMemory"      : AlphaMemory,

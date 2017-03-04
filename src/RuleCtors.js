@@ -3,13 +3,13 @@
    @module RuleCtors
 */
 
-var nextId = 0;
+let nextId = 0;
 
 /**
    Rule Ctor. Holds conditions and actions
    @class
 */
-var Rule = function(name){
+let Rule = function(name){
     this.id = nextId++;
     this.name = name || "anon";
     this.tags = { type : "rule" };
@@ -23,15 +23,15 @@ var Rule = function(name){
    @param testsAndBindings
    @method
    @returns this
- */
+*/
 Rule.prototype.newCondition = function(type,testsAndBindings){
     //testsAndBindings = { tests : [ [var,op,val]...], bindings : [ [var,val,[op,var]]] }
-    var newCondition = new Condition(type);
+    let newCondition = new Condition(type);
     //Add all tests
-    if(testsAndBindings.tests !== undefined){
+    if (testsAndBindings.tests !== undefined){
         testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
     }
-    if(testsAndBindings.bindings !== undefined){
+    if (testsAndBindings.bindings !== undefined){
         testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
     }
     this.addCondition(newCondition);
@@ -45,23 +45,23 @@ Rule.prototype.newCondition = function(type,testsAndBindings){
    @param valuesArithRegexsAndTiming
    @method
    @returns this
- */
+*/
 Rule.prototype.newAction = function(type,name,valuesArithRegexsAndTiming){
     //valuesArithRegexsAndTiming = { values : [], arith : [], regexs : [], timing : [], priority : n}
-    var newAction = new Action(type,name);
-    if(valuesArithRegexsAndTiming.values !== undefined){
+    let newAction = new Action(type,name);
+    if (valuesArithRegexsAndTiming.values !== undefined){
         valuesArithRegexsAndTiming.values.forEach(d=>newAction.addValue(...d));
     }
-    if(valuesArithRegexsAndTiming.arith !== undefined){
+    if (valuesArithRegexsAndTiming.arith !== undefined){
         valuesArithRegexsAndTiming.arith.forEach(d=>newAction.addArithmetic(...d));
     }
-    if(valuesArithRegexsAndTiming.regexs !== undefined){
+    if (valuesArithRegexsAndTiming.regexs !== undefined){
         valuesArithRegexsAndTiming.regexs.forEach(d=>newAction.addRegex(...d));
     }
-    if(valuesArithRegexsAndTiming.priority !== undefined){
+    if (valuesArithRegexsAndTiming.priority !== undefined){
         newAction.priority = valuesArithRegexsAndTiming.priority;
     }
-    if(valuesArithRegexsAndTiming.timing !== undefined){
+    if (valuesArithRegexsAndTiming.timing !== undefined){
         newAction.addTiming(...valuesArithRegexsAndTiming.timing);
     }
     this.addAction(newAction);
@@ -82,30 +82,30 @@ Rule.prototype.addAction = function(action){
    Condition Ctor. Holds tests, bindings, and other conditions
    @param type
    @class
- */
-var Condition = function(type){
+*/
+let Condition = function(type){
     this.id = nextId++;
     this.name = "conditon";
     type = type === undefined ? "positive" : type;
-    switch(type){
-    case "positive":
-        this.tags = { type : "condition",
-                      conditionType : 'positive' };
-        break;
-    case "negative":
-        this.tags = { type : "condition",
-                      conditionType : 'negative' };
-        break;
-    case "ncc":
-        this.tags = { type : 'condition',
-                      conditionType : "negConjCondition" };
-        break;
-    default:
-        throw new Error("Unrecognised condition");
+    switch (type) {
+        case "positive":
+            this.tags = { type : "condition",
+                          conditionType : 'positive' };
+            break;
+        case "negative":
+            this.tags = { type : "condition",
+                          conditionType : 'negative' };
+            break;
+        case "ncc":
+            this.tags = { type : 'condition',
+                          conditionType : "negConjCondition" };
+            break;
+        default:
+            throw new Error("Unrecognised condition");
     }
     this.constantTests = [];
     this.bindings = {};
-    this.conditions = {};    
+    this.conditions = {};
 };
 
 /**
@@ -114,7 +114,7 @@ var Condition = function(type){
    @param op
    @param val
    @method
- */
+*/
 Condition.prototype.addTest = function(field,op,val){
     this.constantTests.push({
         field : field,
@@ -130,7 +130,7 @@ Condition.prototype.addTest = function(field,op,val){
    @param dataName
    @param tests
    @method
- */
+*/
 Condition.prototype.addBinding = function(boundName,dataName,tests){
     //tests as pairs of op and value/boundName
     this.bindings[boundName] = [dataName,tests];
@@ -141,10 +141,10 @@ Condition.prototype.addBinding = function(boundName,dataName,tests){
    @param type
    @param testsAndBindings
    @method
- */
+*/
 Condition.prototype.newCondition = function(type,testsAndBindings){
-    if(this.type !== 'negConjCondition') { throw new Error("Only NCC's can have sub conditions"); }
-    var newCondition = new Condition(type);
+    if (this.type !== 'negConjCondition') { throw new Error("Only NCC's can have sub conditions"); }
+    let newCondition = new Condition(type);
     testsAndBindings.tests.forEach(d=>newCondition.addTest(...d));
     testsAndBindings.bindings.forEach(d=>newCondition.addBinding(...d));
     this.conditions[newCondition.id] = newCondition;
@@ -156,8 +156,8 @@ Condition.prototype.newCondition = function(type,testsAndBindings){
    @param actionType
    @param name
    @class
- */
-var Action = function(actionType,name){
+*/
+let Action = function(actionType,name){
     this.id = nextId++;
     this.name = name || "anon";
     this.tags = { actionType : actionType || "assert" };
@@ -178,7 +178,7 @@ var Action = function(actionType,name){
    @param varName
    @param value
    @method
- */
+*/
 Action.prototype.addValue = function(varName,value){
     this.values[varName] = value;
     return this;
@@ -215,7 +215,7 @@ Action.prototype.addRegex = function(varName,regex,options,replaceValue){
    @param perform
    @param unperform
    @method
- */
+*/
 Action.prototype.addTiming = function(invalid,perform,unperform){
     this.timing = {
         invalidateOffset : invalid,

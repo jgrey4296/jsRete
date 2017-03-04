@@ -1,12 +1,12 @@
 
-var ArithmeticActions = require('./ReteArithmeticActions'),
+let ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
 
-"use strict";
 
-var ActionInterface = {
+
+let ActionInterface = {
     "name" : "addRule",
     propose : null,
     perform : null
@@ -25,7 +25,7 @@ ActionInterface.propose = function(token,reteNet){
 
 //ProposedAction -> Performance
 ActionInterface.perform = function(proposedAction,reteNet){
-    "use strict";
+    
     console.log("No-op");
 };
 

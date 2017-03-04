@@ -5,10 +5,10 @@
 
 //Define an object of comparisons able to
 //be used in constant tests
-"use strict";
+
 //See general utils file for converting to string
 //TODO: These can be changed to their actual representations, similar to reteArithActions
-var ConstantTestOperators = {
+let ConstantTestOperators = {
     "EQ" : function(a,b){
         return a===b;
     },
@@ -28,7 +28,7 @@ var ConstantTestOperators = {
         return a !== b;
     },
     "MATCH" : function(a,b){
-        var regex = new RegExp(b);
+        let regex = new RegExp(b);
         return regex.test(a);
     }
 };

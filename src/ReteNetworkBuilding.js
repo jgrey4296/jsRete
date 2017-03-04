@@ -6,11 +6,11 @@
    @requires ReteActivationAndDeletion
    @requires lodash
  */
-var RDS = require('./ReteDataStructures'),
+let RDS = require('./ReteDataStructures'),
     ReteUtil = require('./ReteUtilities'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
     _ = require('lodash');
-"use strict";
+
 
 /**
    To add all given conditions to the network
@@ -22,39 +22,39 @@ var RDS = require('./ReteDataStructures'),
    @function buildOrShareNetworkForConditions
 
 */
-var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allNodes,reteNet){
-    "use strict";
+let buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allNodes,reteNet){
+    
     let currentNode = parent,
         alphaMemory;
     //for each condition
-    conditions.forEach(function(condition){
-        if(condition.tags.type !== 'rule' && condition.tags.type !== 'condition'){
+    conditions.forEach((condition) => {
+        if (condition.tags.type !== 'rule' && condition.tags.type !== 'condition'){
             throw new Error("trying to add something that isnt a condition");
         }
-        if(condition.tags.type === 'condition' && condition.tags.conditionType === undefined){
+        if (condition.tags.type === 'condition' && condition.tags.conditionType === undefined){
             throw new Error("Trying to add a condition without a conditionType");
         }
         
         //get the binding tests for join nodes
         let tests = _.toPairs(condition.bindings);
         
-        if(condition.tags.conditionType === 'positive'){
+        if (condition.tags.conditionType === 'positive'){
             //Build a positive condition:
             //currentNode = buildOrShareBetaMemoryNode(currentNode,reteNet);
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareJoinNode(currentNode,alphaMemory,tests,reteNet);
-        }else if(condition.tags.conditionType === 'negative'){
+        } else if (condition.tags.conditionType === 'negative'){
             //Build a negative condition:
             alphaMemory = buildOrShareAlphaMemory(condition,rootAlpha,allNodes,reteNet);
             currentNode = buildOrShareNegativeNode(currentNode,alphaMemory,tests,reteNet);
-        }else if(condition.tags.conditionType === 'negConjCondition'){
+        } else if (condition.tags.conditionType === 'negConjCondition'){
             //Build a Negated Conjunctive Condition
             currentNode = buildOrShareNCCNodes(currentNode,condition,rootAlpha,allNodes,reteNet);
-        }else if(condition.tags.type === 'rule'){
+        } else if (condition.tags.type === 'rule'){
             //for using other rules as composable conditions
             let ruleConditions = _.toPairs(condition.linkedNodes).filter(d=>/^condition/.test(d[1])).map(d=>allNodes[d[0]]);
             currentNode = buildOrShareNetworkForConditions(currentNode,ruleConditions,rootAlpha,allNodes,reteNet);
-        }else{
+        } else {
             console.error("Problematic Condition:",condition);
             throw new Error("Unrecognised condition type");
         }
@@ -71,12 +71,12 @@ var buildOrShareNetworkForConditions = function(parent,conditions,rootAlpha,allN
    @param reteNet
    @function buildOrShareConstantTestNode
 */
-var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
-    "use strict";
+let buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
+    
     let children = _.values(parent.children);
-    for(var i = 0; i < children.length; i++){
+    for (let i = 0; i < children.length; i++){
         let node = children[i];
-        if(ReteUtil.compareConstantNodeToTest(node,constantTestSpec)){
+        if (ReteUtil.compareConstantNodeToTest(node,constantTestSpec)){
             return node;
         }
     }
@@ -94,20 +94,20 @@ var buildOrShareConstantTestNode = function(parent,constantTestSpec,reteNet){
    @param allNodes
    @param reteNet
    @function buildOrShareAlphaMemory
-*/   
-var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
-    "use strict";
+*/
+let buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
+    
     //Rule{Conditions[]}, Condition{constantTests:[],bindings:[[]]}
     let currentNode = root,
         constantTests = condition.constantTests;//[{field:,op:,value:}]
     
-    currentNode = constantTests.reduce(function(m,v){
+    currentNode = constantTests.reduce((m,v) => {
         return buildOrShareConstantTestNode(m,v,reteNet);
     },currentNode);
     
     //see if there is an existing memory for this condition.
     //if so, return existing alphamemory
-    if(currentNode.outputMemory !== undefined){
+    if (currentNode.outputMemory !== undefined){
         return currentNode.outputMemory;
     }
     //else: create the alpha memory
@@ -124,20 +124,20 @@ var buildOrShareAlphaMemory = function(condition,root,allNodes,reteNet){
    @param reteNet
    @function buildOrShareBetaMemoryNode
 */
-var buildOrShareBetaMemoryNode = function(parent,reteNet){
-    "use strict";
+let buildOrShareBetaMemoryNode = function(parent,reteNet){
+    
     //if passed in the dummy top node, OR any sort of memory node,
     //be it NCC,Negative,NCCPartner
-    if(parent instanceof RDS.BetaMemory || parent instanceof RDS.NCCPartnerNode || parent instanceof RDS.NegativeNode || parent instanceof RDS.NCCNode || parent instanceof RDS.JoinNode){
+    if (parent instanceof RDS.BetaMemory || parent instanceof RDS.NCCPartnerNode || parent instanceof RDS.NegativeNode || parent instanceof RDS.NCCNode || parent instanceof RDS.JoinNode){
         return parent;
     }
     
     //if theres an available beta memory to use,
     //return that
     let children = _.values(parent.children);
-    for(var i = 0; i < children.length; i++){
+    for (let i = 0; i < children.length; i++){
         let child = children[i];
-        if(child instanceof RDS.BetaMemory){
+        if (child instanceof RDS.BetaMemory){
             return child;
         }
     }
@@ -159,18 +159,18 @@ var buildOrShareBetaMemoryNode = function(parent,reteNet){
    @param reteNet
    @function buildOrShareJonNode
 */
-var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
-    "use strict";
+let buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
+    
     //convert tests if necessary:
-    if(!(tests instanceof Array)){
+    if (!(tests instanceof Array)){
         tests = _.toPairs(tests);
     }
     
     //see if theres a join node to use already
     let allChildren = parent.children.concat(parent.unlinkedChildren);
-    for(var i = 0; i < allChildren.length; i++){
+    for (let i = 0; i < allChildren.length; i++){
         let child = allChildren[i];
-        if(child instanceof RDS.JoinNode && child.alphaMemory && child.alphaMemory.id === alphaMemory.id && ReteUtil.compareJoinTests(child.tests,tests)){
+        if (child instanceof RDS.JoinNode && child.alphaMemory && child.alphaMemory.id === alphaMemory.id && ReteUtil.compareJoinTests(child.tests,tests)){
             //return it
             return child;
         }
@@ -182,12 +182,12 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     newJoinNode.nearestAncestor = ReteUtil.findNearestAncestorWithAlphaMemory(parent,alphaMemory);
 
     //if either parent memory is empty, unlink
-    if(parent.items.length === 0){
+    if (parent.items.length === 0){
         //BETA IS EMPTY: UNLINK RIGHT
         let index = alphaMemory.children.map(d=>d.id).indexOf(newJoinNode.id),
             removed = alphaMemory.children.splice(index,1);
         alphaMemory.unlinkedChildren.unshift(removed[0]);
-    }else if(alphaMemory.items.length === 0){
+    } else if (alphaMemory.items.length === 0){
         //ALPHA IS EMPTY: UNLINK LEFT
         let newNodeIndex = parent.children.map(d=>d.id).indexOf(newJoinNode.id),
             removedNode = parent.children.splice(newNodeIndex,1);
@@ -207,14 +207,14 @@ var buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
    @param reteNet
    @function buildOrShareNegativeNode
 */
-var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
-    "use strict";
-    if(!(tests instanceof Array)) { tests = _.toPairs(tests); }
+let buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
+    
+    if (!(tests instanceof Array)) { tests = _.toPairs(tests); }
     //see if theres an existing negative node to use
     let children = _.values(parent.children);
-    for(var i = 0; i < children.length; i ++){
+    for (let i = 0; i < children.length; i ++){
         let child = children[i];
-        if(child instanceof RDS.NegativeNode
+        if (child instanceof RDS.NegativeNode
            && child.alphaMemory
            && child.alphaMemory.id === alphaMemory.id
            && ReteUtil.compareJoinTests(child.tests,tests)){
@@ -226,7 +226,7 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
     //update with matches
     updateNewNodeWithMatchesFromAbove(newNegativeNode);
     //unlink if it has no tokens
-    if(newNegativeNode.items.length === 0){
+    if (newNegativeNode.items.length === 0){
         let index = alphaMemory.children.map(d=>d.id).indexOf(newNegativeNode.id),
             removed = alphaMemory.children.splice(index,1);
         alphaMemory.unlinkedChildren.push(removed[0]);
@@ -247,9 +247,9 @@ var buildOrShareNegativeNode = function(parent,alphaMemory,tests,reteNet){
    @function buildOrShareNCCNodes
 
 */
-var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet){
-    "use strict";
-    if(condition.tags.conditionType !== 'negConjCondition'){
+let buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet){
+    
+    if (condition.tags.conditionType !== 'negConjCondition'){
         throw new Error("BuildOrShareNCCNodes only takes NCCCondition");
     }
     //build a network for the conditions
@@ -258,9 +258,9 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
         //build the subnetwork
         bottomOfSubNetwork = buildOrShareNetworkForConditions(parent,conditions,rootAlpha,allNodes,reteNet);
     //find an existing NCCNode with partner to use
-    for(var i = 0; i < parent.children.length; i++){
+    for (let i = 0; i < parent.children.length; i++){
         let child = parent.children[i];
-        if(child instanceof RDS.NCCNode && child.partner.parent && child.partner.parent.id === bottomOfSubNetwork.id){
+        if (child instanceof RDS.NCCNode && child.partner.parent && child.partner.parent.id === bottomOfSubNetwork.id){
             return child;
         }
     }
@@ -289,37 +289,37 @@ var buildOrShareNCCNodes = function(parent,condition,rootAlpha,allNodes,reteNet)
    @param newNode
    @function updateNewNodeWithMatchesFromAbove
 */
-var updateNewNodeWithMatchesFromAbove = function(newNode){
+let updateNewNodeWithMatchesFromAbove = function(newNode){
     //essentially a 4 state switch:
     //betaMemory, joinNode, negativeNode, NCC
-    "use strict";
+    
     let parent = newNode.parent;
-    if(parent instanceof RDS.BetaMemory){
-        for(let i = 0; i < parent.items.length; i++){
+    if (parent instanceof RDS.BetaMemory){
+        for (let i = 0; i < parent.items.length; i++){
             ReteActivationsAndDeletion.leftActivate(newNode,parent.items[i]);
         }
-    }else if(parent instanceof RDS.JoinNode){
+    } else if (parent instanceof RDS.JoinNode){
         let savedChildren = parent.children,
             items = _.values(parent.alphaMemory.items);
         parent.children = [newNode];
-        for(let i = 0; i < items.length; i++){
+        for (let i = 0; i < items.length; i++){
             let item = items[i];
             ReteActivationsAndDeletion.rightActivate(parent,item.wme);
         }
         parent.children = savedChildren;
-    }else if(parent instanceof RDS.NegativeNode){
+    } else if (parent instanceof RDS.NegativeNode){
         let items = _.values(parent.items);
-        for(let i = 0; i < items.length; i++){
+        for (let i = 0; i < items.length; i++){
             let token = items[i];
-            if(token.negJoinResults.length === 0){
+            if (token.negJoinResults.length === 0){
                 ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
-    }else if(parent instanceof RDS.NCCNode){
+    } else if (parent instanceof RDS.NCCNode){
         let items = _.values(parent.items);
-        for(let i = 0; i < items.length; i++){
+        for (let i = 0; i < items.length; i++){
             let token = parent.items[i];
-            if(token.nccResults.length === 0){
+            if (token.nccResults.length === 0){
                 ReteActivationsAndDeletion.leftActivate(newNode,token);
             }
         }
@@ -328,8 +328,8 @@ var updateNewNodeWithMatchesFromAbove = function(newNode){
 
 
 
-var moduleInterface = {
-    "buildOrShareNetworkForConditions" : buildOrShareNetworkForConditions,
+let moduleInterface = {
+    "buildOrShareNetworkForConditions" : buildOrShareNetworkForConditions
 };
 module.exports =  moduleInterface;
 

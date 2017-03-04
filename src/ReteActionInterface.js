@@ -2,17 +2,17 @@
    Describes the interface for ReteActions
    @module ReteActionInterface
 */
-var ArithmeticActions = require('./ReteArithmeticActions'),
+let ArithmeticActions = require('./ReteArithmeticActions'),
     _ = require('lodash'),
     ReteUtil = require('./ReteUtilities'),
     RDS = require('./ReteDataStructures');
 
-"use strict";
+
 
 /**
    @interface
  */
-var ActionInterface = {
+let ActionInterface = {
     /** @member */
     "name" : "NO-OP",
     propose : null,
@@ -27,7 +27,7 @@ var ActionInterface = {
 ActionInterface.propose = function(token,reteNet){
     //Token + Action Description -> ProposedAction
     //Propose the list of all wmes to retract 
-    var proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", toRetract, token,
+    let proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", toRetract, token,
                                                 reteNet.currentTime,
                                                 this.timing);
 

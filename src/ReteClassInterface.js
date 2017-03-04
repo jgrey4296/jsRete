@@ -10,8 +10,8 @@
    @requires ReteComparisonOperators
    @requires ReteArithmeticActions
  */
-"use strict";
-var _ = require('lodash'),
+
+let _ = require('lodash'),
     RDS = require('./ReteDataStructures'),
     ReteNetworkBuilding = require('./ReteNetworkBuilding'),
     ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
@@ -26,11 +26,11 @@ var _ = require('lodash'),
    @constructor
    @param actionsToRegister
 */
-var ReteNet = function(actionsToRegister){
-    if(actionsToRegister === undefined){
+let ReteNet = function(actionsToRegister){
+    if (actionsToRegister === undefined){
         actionsToRegister = [];
     }
-    /** 
+    /**
         The starting BetaMemory of the retenet
         @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
         @private
@@ -46,7 +46,7 @@ var ReteNet = function(actionsToRegister){
     /**
        The available actions the retenet can perform
        {name: string ,perform : function, propose : function };
-       @member {Object} 
+       @member {Object}
        @see {@link module:ReteActions}
     */
     this.actionFunctions = _.clone(ReteActions);
@@ -93,20 +93,20 @@ var ReteNet = function(actionsToRegister){
     this.proposedActions = {};
     /**
        All Actions that were schedule and then performed
-       @member {Array} 
+       @member {Array}
        @see {@link module:ReteDataStructures.ProposedActions}
      */
     this.enactedActions = [];
 
     /**
        All nodes of the ReteNet, enabling inspection
-       @member {Object}        
+       @member {Object}
      */
     this.allReteNodes = {};
     /**
        All ReteNodes, indexed by type
        todo: make this a weak map?
-       @member {Object} 
+       @member {Object}
      */
     this.allReteNodesByType = {};
 
@@ -159,7 +159,7 @@ var ReteNet = function(actionsToRegister){
    @method
  */
 ReteNet.prototype.registerListener = function(name,fn){
-    if(this.listeners[name] !== undefined){
+    if (this.listeners[name] !== undefined){
         this.listeners[name].push(fn);
     }
 };
@@ -171,7 +171,7 @@ ReteNet.prototype.registerListener = function(name,fn){
    @method
  */
 ReteNet.prototype.fireListener = function(name,...vals){
-    if(this.listeners[name] === undefined){
+    if (this.listeners[name] === undefined){
         throw new Error(`Unrecognised listener fired: ${name}`);
     }
     //call the registered functions
@@ -212,7 +212,7 @@ ReteNet.prototype.clearProposedActions = function(){
  */
 ReteNet.prototype.assertWME = function(wme){
     this.fireListener("assert",wme);
-    if(!(wme instanceof RDS.WME)){
+    if (!(wme instanceof RDS.WME)){
         wme = new RDS.WME(wme,this.currentTime);
         this.storeWME(wme);
     }
@@ -230,21 +230,21 @@ ReteNet.prototype.retractWME = function(wme){
     this.fireListener("retract",wme);
     //console.log("retracting immediately:",wme);
     //if not given the wme directly
-    if(!(wme instanceof RDS.WME)){
+    if (!(wme instanceof RDS.WME)){
         //if given a wme id
-        if(Number.isInteger(wme) && this.allWMEs[wme] !== undefined){
+        if (Number.isInteger(wme) && this.allWMEs[wme] !== undefined){
             wme = this.allWMEs[wme];
             //if given a graph node with a related wme
-        }else if(wme.wmeId !== undefined && this.allWMEs[wme.wmeId] !== undefined){
+        } else if (wme.wmeId !== undefined && this.allWMEs[wme.wmeId] !== undefined){
             wme = this.allWMEs[wme.wmeId];
-        }else{
+        } else {
             console.log("Unknown:",wme);
             throw new Error("Unknown wme to retract");
         }
     }
     //console.log("Retracting:",wme);
     ReteActivationsAndDeletion.removeAlphaMemoryItemsForWME(wme);
-    var invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
+    let invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
     ReteActivationsAndDeletion.deleteAllNegJoinResultsForWME(wme);
     //Record when the wme was retracted
@@ -261,10 +261,10 @@ ReteNet.prototype.retractWME = function(wme){
    @method
  */
 ReteNet.prototype.modifyWME = function(wme,modifyFunction){
-    var retractedWME = this.retractWME(wme),
+    let retractedWME = this.retractWME(wme),
         data = retractedWME.data,
         modifiedData = modifyFunction(data);
-    if(modifiedData === undefined || modifiedData === null) {
+    if (modifiedData === undefined || modifiedData === null) {
         throw new Error("Modify function must return the new data");
     }
     return this.assertWME(modifiedData);
@@ -280,11 +280,11 @@ ReteNet.prototype.proposeAction = function(action){
     //Call the listeners:
     this.fireListener("propose",action);
     
-    if(action instanceof Array){
+    if (action instanceof Array){
         action.forEach(d=>this.proposeAction(d));
         return;
     }
-    if(this.proposedActions[action.id] !== undefined){
+    if (this.proposedActions[action.id] !== undefined){
         throw new Error("Proposing a duplicate action");
     }
     //console.log("Proposing:",action);
@@ -292,20 +292,20 @@ ReteNet.prototype.proposeAction = function(action){
 };
 
 /**
-   Schedule an action by it's ID, ALSO scheduling any parallel actions   
+   Schedule an action by it's ID, ALSO scheduling any parallel actions
    @param  {module:ReteDataStructures.ProposedAction|Int} actionId The action to propose
    @method
  */
 ReteNet.prototype.scheduleAction = function(actionId){
     this.fireListener("schedule",actionId);
-    if(actionId instanceof this.ProposedAction){
+    if (actionId instanceof this.ProposedAction){
         this.scheduleAction(actionId.id);
         return;
     }
-    if(this.proposedActions[actionId] === undefined){
+    if (this.proposedActions[actionId] === undefined){
         throw new Error("Invalid action specified: " + actionId);
     }
-    var action = this.proposedActions[actionId],
+    let action = this.proposedActions[actionId],
         parallelActions = action.parallelActions.map(d=>this.proposedActions[d]);
 
     this.addToSchedule(action);
@@ -320,14 +320,14 @@ ReteNet.prototype.scheduleAction = function(actionId){
    @private
  */
 ReteNet.prototype.addToSchedule = function(action){
-    if(action.actionType === undefined || action.payload === undefined || action.timing === undefined){
+    if (action.actionType === undefined || action.payload === undefined || action.timing === undefined){
         throw new Error("Scheduling action failure");
     }
-    if(this.schedule[action.actionType] === undefined){
+    if (this.schedule[action.actionType] === undefined){
         this.schedule[action.actionType] = [];
     }
-    var performTime = this.currentTime + action.timing.performOffset;
-    if(this.schedule[action.actionType][performTime] === undefined){
+    let performTime = this.currentTime + action.timing.performOffset;
+    if (this.schedule[action.actionType][performTime] === undefined){
         this.schedule[action.actionType][performTime] = [];
     }
     this.schedule[action.actionType][performTime].push(action);
@@ -343,7 +343,7 @@ ReteNet.prototype.addToSchedule = function(action){
    @returns {Array} An array of the effects of this timestep
 */
 ReteNet.prototype.stepTime = function(){
-    "use strict";
+    
     //get all actions scheduled at the current timepoint
     let actions = _.values(this.schedule),
         actionsForTimePoint = _.reject(_.flatten(actions.map(d=>d[this.currentTime])),d=>d===undefined);
@@ -354,7 +354,7 @@ ReteNet.prototype.stepTime = function(){
     
     this.fireListener('stepTimeActions',actionsForTimePoint);
     //perform those actions, storing objects describing the changes
-    var changes = actionsForTimePoint.map(function(d){
+    let changes = actionsForTimePoint.map(function(d){
         let performanceFunction = this.actionFunctions[d.actionType].perform,
             effects = performanceFunction(d,this);
         this.enactedActions.push(d);
@@ -363,7 +363,7 @@ ReteNet.prototype.stepTime = function(){
 
     //cleanup invalidated actions
     _.values(this.proposedActions).forEach(function(d){
-        if(d.timing.invalidateTime === this.currentTime){
+        if (d.timing.invalidateTime === this.currentTime){
             delete this.proposedActions[d.id];
         }
     },this);
@@ -382,16 +382,16 @@ ReteNet.prototype.stepTime = function(){
    
 */
 ReteNet.prototype.addRule = function(ruleId,components){
-    "use strict";
+    
     this.fireListener("addRule",components);
-    if(ruleId instanceof Array){
+    if (ruleId instanceof Array){
         return ruleId.map(d=>this.addRule(d,components));
     }
-    if(ruleId instanceof this.Rule){
+    if (ruleId instanceof this.Rule){
         let convertedComponents = this.convertRulesToComponents(ruleId);
         return this.addRule(ruleId.id,convertedComponents);
     }
-    if(!Number.isInteger(ruleId) || components[ruleId] === undefined){
+    if (!Number.isInteger(ruleId) || components[ruleId] === undefined){
         throw new Error("Unrecognised rule id specified");
     }
     //-----------
@@ -407,7 +407,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
         actionDescriptions = ruleLinks.filter(d=>/^action/.test(d[1])).map(d=>components[d[0]]),
         //Bind proposalFuncs with actionDescriptions
         boundActionDescriptions = actionDescriptions.map(function(d){
-            if(this.actionFunctions[d.tags.actionType] === undefined){
+            if (this.actionFunctions[d.tags.actionType] === undefined){
                 throw new Error("Unrecognised action type");
             }
             return _.bind(this.actionFunctions[d.tags.actionType].propose,d);
@@ -430,9 +430,9 @@ ReteNet.prototype.addRule = function(ruleId,components){
    @method
  */
 ReteNet.prototype.removeRule = function(rule){
-    "use strict";
+    
     this.fireListener("removeRule",rule);
-    if(rule instanceof Array){
+    if (rule instanceof Array){
         rule.forEach(d=>this.removeRule(d));
         return;
     }
@@ -442,20 +442,20 @@ ReteNet.prototype.removeRule = function(rule){
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
 
     //delete from the allrules record
-    if(this.allRules[action.ruleId] !== undefined){
+    if (this.allRules[action.ruleId] !== undefined){
         delete this.allRules[action.ruleId];
     }
 
     //Remove all nodes scheduled for cleanup
     _.keys(this.allReteNodes).forEach(function(d){
-        if(this.allReteNodes[d].cleanup === true){
+        if (this.allReteNodes[d].cleanup === true){
             let currNode = this.allReteNodes[d];
             delete this.allReteNodesByType[currNode.type][currNode.id];
             delete this.allReteNodes[d];
         }
     },this);
     
-    if(this.actions[rule.id] !== undefined){
+    if (this.actions[rule.id] !== undefined){
         delete this.actions[rule.id];
     }
 };
@@ -463,17 +463,17 @@ ReteNet.prototype.removeRule = function(rule){
 
 
 /**
-   register a join action proposal and performance function   
+   register a join action proposal and performance function
    @param {{name : string, propose : function, perform : function}} actionObj
    @method
    @see module:ReteActions
 */
 ReteNet.prototype.registerAction = function(actionObj){
     this.fireListener('registerAction',actionObj);
-    if(actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
+    if (actionObj.name === undefined || actionObj.perform === undefined || actionObj.propose === undefined){
         throw new Error("Action Registration Failure");
     }
-    if(this.actionFunctions[actionObj.name] !== undefined){
+    if (this.actionFunctions[actionObj.name] !== undefined){
         throw new Error("Registration Attempt for existing Action");
     }
     this.actionFunctions[actionObj.name] = actionObj;
@@ -489,40 +489,40 @@ ReteNet.prototype.registerAction = function(actionObj){
 ReteNet.prototype.storeNode = function(node){
     this.allReteNodes[node.id] = node;
 
-    if(this.allReteNodesByType[node.type] === undefined){
+    if (this.allReteNodesByType[node.type] === undefined){
         this.allReteNodesByType[node.type] = {};
     }
     this.allReteNodesByType[node.type][node.id] = node;
 };
 
 /**
-   Converts rules to an object of their components for easy addition 
+   Converts rules to an object of their components for easy addition
    @param {module:RuleCtors.Rule | Array} rules
    @method
    @return {Object}
  */
 ReteNet.prototype.convertRulesToComponents = function(rules){
-    "use strict";
-    if(!(rules instanceof Array)){
+    
+    if (!(rules instanceof Array)){
         rules = [rules];
     }
     let actions = _.flatten(rules.map(d=>_.values(d.actions))),
         conditions = _.flatten(rules.map(d=>_.values(d.conditions))),
         all = actions.concat(conditions).concat(rules),
-        components = all.reduce(function(m,v){
+        components = all.reduce((m,v) => {
             m[v.id] = v;
             return m;
         },{});
     //convert to linkednode style for every component:
-    _.values(components).forEach(function(d){
+    _.values(components).forEach((d) => {
         d.linkedNodes = {};
         //add actions
-        d.linkedNodes = _.keys(d.actions).reduce(function(m,v){
+        d.linkedNodes = _.keys(d.actions).reduce((m,v) => {
             m[v] = "action";
             return m;
         },d.linkedNodes);
         //add conditions
-        d.linkedNodes = _.keys(d.conditions).reduce(function(m,v){
+        d.linkedNodes = _.keys(d.conditions).reduce((m,v) => {
             m[v] = 'condition';
             return m;
         },d.linkedNodes);
