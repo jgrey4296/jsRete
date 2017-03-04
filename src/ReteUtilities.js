@@ -2,10 +2,9 @@
    @module ReteUtilities
    @requires lodash
 */
-let _ = require('lodash'),
-    RDS = require('./ReteDataStructures'),
-    ArithmeticActions = require('./ReteArithmeticActions');
-
+import _ from 'lodash';
+import * as RDS from './ReteDataStructures';
+import * as ArithmeticActions from './ReteArithmeticActions';
 
 /**
    Reconnects a joinnode with its alpha memory, once the beta memory is populated
@@ -380,20 +379,19 @@ let spliceStr = function(orig,index,addition,cutLength){
 };
 
 //------------------------------
-let moduleInterface = {
-    "unlinkAlphaMemory" : unlinkAlphaMemory,
-    "relinkToAlphaMemory" : relinkToAlphaMemory,
-    "ifEmptyBetaMemoryUnlink" : ifEmptyBetaMemoryUnlink,
-    "ifEmptyNegNodeUnlink" : ifEmptyNegNodeUnlink,
-    "relinkToBetaMemory" : relinkToBetaMemory,
-    "compareJoinTests" : CompareJoinTests,
-    "compareConstantNodeToTest" : compareConstantNodeToTest,
-    "findNearestAncestorWithAlphaMemory" : findNearestAncestorWithAlphaMemory,
-    "retrieveWMEValueFromDotString" : retrieveWMEValueFromDotString,
-    "cleanupInvalidatedActions" : cleanupInvalidatedActions,
-    "objDescToObject" : objDescToObject,
-    "createNewWMEData" : createNewWMEData,
-    "applyArithmetic" : applyArithmetic,
-    "applyRegex" : applyRegex
+export {
+    unlinkAlphaMemory,
+    relinkToAlphaMemory,
+    ifEmptyBetaMemoryUnlink,
+    ifEmptyNegNodeUnlink,
+    relinkToBetaMemory,
+    CompareJoinTests,
+    compareConstantNodeToTest,
+    findNearestAncestorWithAlphaMemory,
+    retrieveWMEValueFromDotString,
+    cleanupInvalidatedActions,
+    objDescToObject,
+    createNewWMEData,
+    applyArithmetic,
+    applyRegex
 };
-module.exports = moduleInterface;

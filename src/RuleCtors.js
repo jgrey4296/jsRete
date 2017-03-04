@@ -226,8 +226,8 @@ Action.prototype.addTiming = function(invalid,perform,unperform){
 };
 
 
-module.exports = {
-    Rule : Rule,
-    Condition : Condition,
-    Action : Action
+export {
+    Rule,
+    Condition,
+    Action
 };

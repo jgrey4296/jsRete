@@ -6,12 +6,10 @@
    @requires ReteDataStructures
    @requires lodash
 */
-let ArithmeticActions = require('./ReteArithmeticActions'),
-    _ = require('lodash'),
-    ReteUtil = require('./ReteUtilities'),
-    RDS = require('./ReteDataStructures');
-
-
+import _ from 'lodash';
+import * as ArithmeticActions from './ReteArithmeticActions';
+import * as ReteUtil from './ReteUtilities';
+import * as RDS from './ReteDataStructures';
 
 /**
    @class RetractAction
@@ -82,4 +80,4 @@ RetractAction.perform = function(proposedAction,reteNet){
 };
 
 /** The Retract Action Definition */
-module.exports = RetractAction;
+export { RetractAction };

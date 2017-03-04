@@ -4,12 +4,11 @@
    @requires lodash
    @requires ReteUtilities
    @requires ReteComparisonOperators
- */
-let RDS = require('./ReteDataStructures'),
-    _ = require('lodash'),
-    ReteUtil = require('./ReteUtilities'),
-    ReteComparisonOps = require('./ReteComparisonOperators');
-
+*/
+import _ from 'lodash';
+import * as RDS from './ReteDataStructures';
+import * as ReteUtil from './ReteUtilities';
+import * as ReteComparisonOps from './ReteComparisonOperators';
 
 /**
    Compare a token and wme, using defined bindings from a joinNode
@@ -77,7 +76,6 @@ let performJoinTests = function(joinNode,token,wme){
 };
 
 
-let moduleInterface = {
-    "performJoinTests" : performJoinTests
+export {
+    performJoinTests
 };
-module.exports =  moduleInterface;

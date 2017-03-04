@@ -5,11 +5,12 @@
    @requires ReteUtilities
    @requires ReteActivationAndDeletion
    @requires lodash
- */
-let RDS = require('./ReteDataStructures'),
-    ReteUtil = require('./ReteUtilities'),
-    ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
-    _ = require('lodash');
+*/
+import _ from 'lodash';
+import * as RDS from './ReteDataStructures';
+import * as ReteUtil from './ReteUtilities';
+import * as ReteActivationAndDeletion from './ReteActivationAndDeletion';
+
 
 
 /**
@@ -296,7 +297,7 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
     let parent = newNode.parent;
     if (parent instanceof RDS.BetaMemory){
         for (let i = 0; i < parent.items.length; i++){
-            ReteActivationsAndDeletion.leftActivate(newNode,parent.items[i]);
+            ReteActivationAndDeletion.leftActivate(newNode,parent.items[i]);
         }
     } else if (parent instanceof RDS.JoinNode){
         let savedChildren = parent.children,
@@ -304,7 +305,7 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
         parent.children = [newNode];
         for (let i = 0; i < items.length; i++){
             let item = items[i];
-            ReteActivationsAndDeletion.rightActivate(parent,item.wme);
+            ReteActivationAndDeletion.rightActivate(parent,item.wme);
         }
         parent.children = savedChildren;
     } else if (parent instanceof RDS.NegativeNode){
@@ -312,7 +313,7 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
         for (let i = 0; i < items.length; i++){
             let token = items[i];
             if (token.negJoinResults.length === 0){
-                ReteActivationsAndDeletion.leftActivate(newNode,token);
+                ReteActivationAndDeletion.leftActivate(newNode,token);
             }
         }
     } else if (parent instanceof RDS.NCCNode){
@@ -320,7 +321,7 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
         for (let i = 0; i < items.length; i++){
             let token = parent.items[i];
             if (token.nccResults.length === 0){
-                ReteActivationsAndDeletion.leftActivate(newNode,token);
+                ReteActivationAndDeletion.leftActivate(newNode,token);
             }
         }
     }
@@ -328,8 +329,7 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
 
 
 
-let moduleInterface = {
-    "buildOrShareNetworkForConditions" : buildOrShareNetworkForConditions
+export {
+    buildOrShareNetworkForConditions
 };
-module.exports =  moduleInterface;
 

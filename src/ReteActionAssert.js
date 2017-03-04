@@ -6,12 +6,10 @@
    @requires ReteDataStructures
    @requires lodash
 */
-
-let ArithmeticActions = require('./ReteArithmeticActions'),
-    _ = require('lodash'),
-    ReteUtil = require('./ReteUtilities'),
-    RDS = require('./ReteDataStructures');
-
+import _ from 'lodash';
+import * as ArithmeticActions from './ReteArithmeticActions';
+import * as ReteUtil from './ReteUtilities';
+import * as RDS from './ReteDataStructures';
 
 /**
    @implements {module:ReteActionInterface}
@@ -80,4 +78,4 @@ AssertAction.perform = function(proposedAction,reteNet){
 };
 
 /** The Assert Action Definition */
-module.exports = AssertAction;
+export { AssertAction };

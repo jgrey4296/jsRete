@@ -3,9 +3,9 @@
    @module ReteDataStructures
    @requires lodash
 */
+import _ from 'lodash';
 
-let _ = require('lodash'),
-    nextId = 0;
+let nextId = 0;
 
 
 /**
@@ -346,22 +346,21 @@ let NCCPartnerNode = function(parent,num){
 
 
 //--------------------
-let DataStructures = {
-    "WME"              : WME,
-    "Token"            : Token,
-    "AlphaMemory"      : AlphaMemory,
-    "AlphaMemoryItem"  : AlphaMemoryItem,
-    "AlphaNode"        : AlphaNode,
-    "ReteNode"         : ReteNode,
-    "BetaMemory"       : BetaMemory,
-    "JoinNode"         : JoinNode,
-    "NegativeJoinResult":NegativeJoinResult,
-    "NegativeNode"     : NegativeNode,
-    "NCCNode"          : NCCNode,
-    "NCCPartnerNode"   : NCCPartnerNode,
-    "ActionNode"       : ActionNode,
-    "ProposedAction"   : ProposedAction
+export {
+    WME,
+    Token,
+    AlphaMemory,
+    AlphaMemoryItem,
+    AlphaNode,
+    ReteNode,
+    BetaMemory,
+    JoinNode,
+    NegativeJoinResult,
+    NegativeNode,
+    NCCNode,
+    NCCPartnerNode,
+    ActionNode,
+    ProposedAction
 };
 
-module.exports = DataStructures;
 

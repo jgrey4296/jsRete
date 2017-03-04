@@ -42,4 +42,4 @@ ConstantTestOperators['!=='] = ConstantTestOperators.NE;
 ConstantTestOperators['~='] = ConstantTestOperators.MATCH;
 
 
-module.exports = ConstantTestOperators;
+export { ConstantTestOperators };

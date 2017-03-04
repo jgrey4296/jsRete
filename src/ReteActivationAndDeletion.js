@@ -7,12 +7,13 @@
    @requires ReteTestExecution
    @requires ReteActions
    @requires lodash
- */
-let RDS = require('./ReteDataStructures'),
-    ConstantTestOperators = require('./ReteComparisonOperators'),
-    ReteUtil = require('./ReteUtilities'),
-    ReteTestExecution = require('./ReteTestExecution'),
-    _ = require('lodash');
+*/
+import  _ from 'lodash';
+import * as RDS from './ReteDataStructures';
+import * as ConstantTestOperators from './ReteComparisonOperators';
+import * as ReteUtil from './ReteUtilities';
+import * as ReteTestExecution from './ReteTestExecution';
+
 
 
 
@@ -757,15 +758,14 @@ let deleteAlphaNode = function(alphaNode){
 };
 
 
-let moduleInterface = {
-    "deleteDescendentsOfToken" : deleteDescendentsOfToken,
-    "removeAlphaMemoryItemsForWME" : removeAlphaMemoryItemsForWME,
-    "deleteAllTokensForWME" : deleteAllTokensForWME,
-    "deleteAllNegJoinResultsForWME" : deleteAllNegJoinResultsForWME,
-    "deleteNodeAndAnyUnusedAncestors" : deleteNodeAndAnyUnusedAncestors,
-    "leftActivate" : leftActivate,
-    "rightActivate" : rightActivate,
-    "alphaNodeActivation" : alphaNodeActivation,
-    "activateIfNegatedJRIsUnblocked" : activateIfNegatedJRIsUnblocked
+export {
+    deleteDescendentsOfToken,
+    removeAlphaMemoryItemsForWME,
+    deleteAllTokensForWME,
+    deleteAllNegJoinResultsForWME,
+    deleteNodeAndAnyUnusedAncestors,
+    leftActivate,
+    rightActivate,
+    alphaNodeActivation,
+    activateIfNegatedJRIsUnblocked
 };
-module.exports = moduleInterface;

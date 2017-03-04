@@ -1,10 +1,8 @@
 
-let ArithmeticActions = require('./ReteArithmeticActions'),
-    _ = require('lodash'),
-    ReteUtil = require('./ReteUtilities'),
-    RDS = require('./ReteDataStructures');
-
-
+import _ from 'lodash';
+import * as ArithmeticActions from './ReteArithmeticActions';
+import * as ReteUtil from './ReteUtilities';
+import * as RDS from './ReteDataStructures';
 
 let ActionInterface = {
     "name" : "addRule",
@@ -30,5 +28,4 @@ ActionInterface.perform = function(proposedAction,reteNet){
     console.log("No-op");
 };
 
-
-module.exports = ActionInterface;
+export { ActionInterface };
