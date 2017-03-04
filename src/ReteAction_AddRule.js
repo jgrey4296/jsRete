@@ -14,9 +14,10 @@ let ActionInterface = {
 
 //Token + Action Description -> ProposedAction
 ActionInterface.propose = function(token,reteNet){
-    "use strict";
-    //Propose the list of all wmes to retract 
-    var proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", toRetract, token,
+    
+    //Propose the list of all wmes to retract
+    //TODO: Check this
+    let proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", token.wme, token,
                                                 reteNet.currentTime,
                                                 this.timing);
 
