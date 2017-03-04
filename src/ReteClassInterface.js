@@ -11,15 +11,16 @@
    @requires ReteArithmeticActions
  */
 
-let _ = require('lodash'),
-    RDS = require('./ReteDataStructures'),
-    ReteNetworkBuilding = require('./ReteNetworkBuilding'),
-    ReteActivationsAndDeletion = require('./ReteActivationAndDeletion'),
-    ReteUtil = require('./ReteUtilities'),
-    RuleCtors = require('./RuleCtors'),
-    ReteActions = require('./ReteActions'),
-    ComparisonOperators = require('./ReteComparisonOperators'),
-    ArithmeticOperators = require('./ReteArithmeticActions');
+import _ from "lodash";
+import * as RDS from "./ReteDataStructures";
+import * as ReteNetworkBuilding from "./ReteNetworkBuilding";
+import * as ReteActivationsAndDeletion from "./ReteActivationAndDeletion";
+import * as ReteUtil from "./ReteUtilities";
+import * as RuleCtors from "./RuleCtors";
+import * as ReteActions from "./ReteActions";
+import * as ComparisonOperators from "./ReteComparisonOperators";
+import * as ArithmeticOperators from "./ReteArithmeticActions";
+
 
 /**
    The General controller for a retenet
@@ -542,4 +543,5 @@ ReteNet.prototype.cleanup = function(){
     this.removeRule(_.values(this.allRules));
 };
 
-module.exports = ReteNet;
+
+export { ReteNet };
