@@ -15,19 +15,23 @@
     "babel-core": "^6.23.1",
     "babel-eslint": "^7.1.1",
     "babel-loader": "^6.3.2",
+    "babel-polyfill": "^6.23.0",
     "babel-preset-env": "^1.2.0",
+    "babel-register": "^6.23.0",
+    "chai": "^3.5.0",
     "delete": "^0.3.2",
     "eslint": "^3.17.0",
     "eslint-loader": "^1.6.3",
     "flow-babel-webpack-plugin": "^1.0.1",
     "flow-bin": "^0.40.0",
+    "mocha": "^3.2.0",
     "nodeunit": "^0.11.0",
     "webpack": "^2.2.1"
   },
   "scripts": {
     "start": "node_modules/.bin/webpack --config webpack.config.babel.js",
     "flow": "node_modules/.bin/flow",
-    "test": "node_modules/.bin/nodeunit tests/mainTests.js",
+    "test": "node_modules/.bin/mocha --require babel-polyfill --compilers js:babel-register",
     "clean": "rm -r dist; exit 0"
   },
   "repository": {
