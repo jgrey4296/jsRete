@@ -31,16 +31,18 @@ let ProposedAction = function(reteNet,type,payload,token,proposeTime,timingObj,p
     this.token = token; //Source Token that spawned this action
     this.timing = {
         proposeTime : proposeTime,//when PA is created
-        invalidateTime : proposeTime+timingObj.invalidateOffset, //when it becomes invalid
-        performOffset : timingObj.performOffset, //PerformTime+pO is when it happens
-        unperformOffset : timingObj.unperformOffset //PerformTime+uPO when to remove
+        invalidateTime : proposeTime+ (timingObj ? timingObj.invalidateOffset : 0), //when it becomes invalid
+        performOffset : timingObj ? timingObj.performOffset : 0, //PerformTime+pO is when it happens
+        unperformOffset : timingObj ? timingObj.unperformOffset : 0 //PerformTime+uPO when to remove
     };
     this.priority = priority || 0;
     this.tags = tags || {};
     //todo: possibly include metrics for selection of actions?
     //todo: check for circular reference cleanup
     //update Token:
-    this.token.proposedActions.push(this);
+    if (this.token && this.token.proposedActions){
+        this.token.proposedActions.push(this);
+    }
 };
 
 
