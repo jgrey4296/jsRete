@@ -4,8 +4,8 @@ if(typeof define !== 'function'){
 }
 
 let _ = require('lodash'),
-    Rete = require('../js/ReteClassInterface'),
-    RDS = require('../js/ReteDataStructures'),
+    Rete = require('../src/ReteClassInterface'),
+    RDS = require('../src/ReteDataStructures'),
     makeRete = function() { return new Rete(); },
     globalRete = makeRete();
 
