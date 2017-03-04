@@ -1,0 +1,43 @@
+{
+  "name": "retejs",
+  "version": "0.0.1",
+  "description": "A Javascript ReteNet",
+  "main": "dist/rete.js",
+  "module": "src/ReteClassInterface.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-eslint": "^7.1.1",
+    "babel-loader": "^6.3.2",
+    "babel-preset-env": "^1.2.0",
+    "delete": "^0.3.2",
+    "eslint": "^3.17.0",
+    "eslint-loader": "^1.6.3",
+    "flow-babel-webpack-plugin": "^1.0.1",
+    "flow-bin": "^0.40.0",
+    "nodeunit": "^0.11.0",
+    "webpack": "^2.2.1"
+  },
+  "scripts": {
+    "start": "node_modules/.bin/webpack --config webpack.config.babel.js",
+    "flow": "node_modules/.bin/flow",
+    "test": "node_modules/.bin/nodeunit tests/mainTests.js",
+    "clean": "rm -r dist; exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgrey4296/jsRete.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jgrey4296/jsRete/issues"
+  },
+  "homepage": "https://github.com/jgrey4296/jsRete#readme"
+}
