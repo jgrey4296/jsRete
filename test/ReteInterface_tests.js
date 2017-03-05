@@ -16,6 +16,7 @@ describe ("RetNet Interface", function() {
     });
 
     afterEach(function(){
+        this.reteNet.cleanup()
         this.reteNet = null;
     });
     
