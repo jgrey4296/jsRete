@@ -231,7 +231,6 @@ ReteNet.prototype.assertWME = function(wme){
 */
 ReteNet.prototype.retractWME = function(wme){
     this.fireListener("retract",wme);
-    //console.log("retracting immediately:",wme);
     //if not given the wme directly
     if (!(wme instanceof RDS.WME)){
         //if given a wme id
@@ -245,15 +244,20 @@ ReteNet.prototype.retractWME = function(wme){
             throw new Error("Unknown wme to retract");
         }
     }
-    //console.log("Retracting:",wme);
+    //Alpha Network retraction:
     ReteActivationsAndDeletion.removeAlphaMemoryItemsForWME(wme);
+    //Beta Network retraction:
     let invalidatedActions = ReteActivationsAndDeletion.deleteAllTokensForWME(wme);
+    //Resulting proposed action retraction:
     ReteUtil.cleanupInvalidatedActions(invalidatedActions);
+    //Negative Node updates
     ReteActivationsAndDeletion.deleteAllNegJoinResultsForWME(wme);
     //Record when the wme was retracted
     wme.lifeTime[1] = this.currentTime;
 
+    //Remove it from the fact base
     delete this.allWMEs[wme.id];
+    //And give it to the user if they want it
     return wme;
 };
 
@@ -280,7 +284,6 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
    @method
 */
 ReteNet.prototype.proposeAction = function(action){
-    //Call the listeners:
     this.fireListener("propose",action);
     
     if (action instanceof Array){
@@ -290,7 +293,6 @@ ReteNet.prototype.proposeAction = function(action){
     if (this.proposedActions[action.id] !== undefined){
         throw new Error("Proposing a duplicate action");
     }
-    //console.log("Proposing:",action);
     this.proposedActions[action.id] = action;
 };
 
@@ -434,7 +436,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
 
 
 /**
-   Remove rule(s) from the retenet, bottom up, by {@link:module.ReteDataStructures.ActionNode}
+   Remove rule(s) from the retenet, bottom up from {@link:module.ReteDataStructures.ActionNode}
    @param {module:ReteDataStructures.ActionNode | Array} rule The rule(s) to remove from the net
    @method
 */

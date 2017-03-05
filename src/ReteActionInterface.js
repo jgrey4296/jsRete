@@ -11,7 +11,6 @@ import * as RDS from './ReteDataStructures';
    @interface
  */
 let ActionInterface = {
-    /** @member */
     "name" : "NO-OP",
     propose : null,
     perform : null

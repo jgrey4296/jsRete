@@ -22,7 +22,7 @@ let AssertAction = {
 };
 
 /**
-   Propose the Assertion
+   Propose the Assertion, will be bound to an action description @alias{RuleCtors:Action}
    @param {module:ReteDataStructures.Token} token The token that is emitted by the network
    @param {module:ReteClassInterface.ReteNet} reteNet The top level reteNet
    @function

@@ -29,7 +29,6 @@ let alphaMemoryActivation = function(alphaMem,wme){
     let newItem = new RDS.AlphaMemoryItem(wme,alphaMem);
     alphaMem.items.unshift(newItem);
     wme.alphaMemoryItems.unshift(newItem);
-    //console.log("AlphaMemory activated:",alphaMem,wme);
     let alphaMemChildren = _.clone(alphaMem.children);
     alphaMemChildren.forEach(child=>rightActivate(child,wme));
 };
@@ -66,7 +65,6 @@ let constantTestNodeActivation = function(alphaNode,wme){
         }
         alphaNode.children.forEach(child=>alphaNodeActivation(child,wme));
     }
-    //console.log("ConstantTest Result:",alphaNode,wme,testResult);
     return testResult;
 };
 
@@ -78,7 +76,6 @@ let constantTestNodeActivation = function(alphaNode,wme){
 */
 //Switchable activation function for alpha network stuff
 let alphaNodeActivation = function(alphaNode,wme){
-    //console.log('activating alpha:',alphaNode,'\n\n',wme,'\n\n');
     if (alphaNode instanceof RDS.AlphaMemory){
         alphaMemoryActivation(alphaNode,wme);
     } else if (alphaNode instanceof RDS.AlphaNode){
@@ -170,7 +167,6 @@ let joinNodeRightActivation = function(node,wme){
         if (currToken.negJoinResults.length > 0 || currToken.nccResults.length > 0){
             return false;
         }
-        //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
         let joinTestResult = performJoinTests(node,currToken,wme);
         if (joinTestResult !== undefined && joinTestResult !== false){
             let newToken = new RDS.Token(currToken,wme,node,joinTestResult);
@@ -270,7 +266,6 @@ let negativeNodeLeftActivation = function(node,newToken){
     //combining bindings too.
 
     //Relink
-    //console.log("Negative node left activation");
     if (node.items.length === 0){
         ReteUtil.relinkToAlphaMemory(node);
     }
