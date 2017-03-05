@@ -9,13 +9,15 @@ let nextId = 0;
    Rule Ctor. Holds conditions and actions
    @class
 */
-let Rule = function(name){
-    this.id = nextId++;
-    this.name = name || "anon";
-    this.tags = { type : "rule" };
-    this.conditions = {};
-    this.actions = {};
-};
+class Rule {
+    constructor(name){
+        this.id = nextId++;
+        this.name = name || "anon";
+        this.tags = { type : "rule" };
+        this.conditions = {};
+        this.actions = {};
+    }
+}
 
 /**
    Creates a condition and adds it to the rule
@@ -83,30 +85,32 @@ Rule.prototype.addAction = function(action){
    @param type
    @class
 */
-let Condition = function(type){
-    this.id = nextId++;
-    this.name = "conditon";
-    type = type === undefined ? "positive" : type;
-    switch (type) {
-        case "positive":
-            this.tags = { type : "condition",
-                          conditionType : 'positive' };
-            break;
-        case "negative":
-            this.tags = { type : "condition",
-                          conditionType : 'negative' };
-            break;
-        case "ncc":
-            this.tags = { type : 'condition',
-                          conditionType : "negConjCondition" };
-            break;
-        default:
-            throw new Error("Unrecognised condition");
+class Condition {
+    constructor(type){
+        this.id = nextId++;
+        this.name = "conditon";
+        type = type === undefined ? "positive" : type;
+        switch (type) {
+            case "positive":
+                this.tags = { type : "condition",
+                              conditionType : 'positive' };
+                break;
+            case "negative":
+                this.tags = { type : "condition",
+                              conditionType : 'negative' };
+                break;
+            case "ncc":
+                this.tags = { type : 'condition',
+                              conditionType : "negConjCondition" };
+                break;
+            default:
+                throw new Error("Unrecognised condition");
+        }
+        this.constantTests = [];
+        this.bindings = {};
+        this.conditions = {};
     }
-    this.constantTests = [];
-    this.bindings = {};
-    this.conditions = {};
-};
+}
 
 /**
    Adds a test to the condition
@@ -157,21 +161,23 @@ Condition.prototype.newCondition = function(type,testsAndBindings){
    @param name
    @class
 */
-let Action = function(actionType,name){
-    this.id = nextId++;
-    this.name = name || "anon";
-    this.tags = { actionType : actionType || "assert" };
-    this.values = {};
-    this.arithmeticActions = {};
-    this.regexActions = {};
-    //Specify the timing of the proposed action to create:
-    this.timing = {
-        invalidateOffset : 0,
-        performOffset : 0,
-        unperformOffset : 0
-    };
-    this.priority = 0;
-};
+class Action {
+    constructor (actionType,name){
+        this.id = nextId++;
+        this.name = name || "anon";
+        this.tags = { actionType : actionType || "assert" };
+        this.values = {};
+        this.arithmeticActions = {};
+        this.regexActions = {};
+        //Specify the timing of the proposed action to create:
+        this.timing = {
+            invalidateOffset : 0,
+            performOffset : 0,
+            unperformOffset : 0
+        };
+        this.priority = 0;
+    }
+}
 
 /**
    Add a value to the action
