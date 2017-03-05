@@ -162,7 +162,14 @@ describe ("RetNet Interface", function() {
             this.reteNet.allWMEs[wmeId].data.should.deep.equal(data);
 
             _.keys(this.reteNet.proposedActions).should.have.length(1);
-
+            
+            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
+            theProposedAction.should.be.an.instanceof(RDS.ProposedAction);
+            theProposedAction.actionType.should.equal('assert');
+            theProposedAction.payload.should.deep.equal({ "bindings": { "blah" : 5 }, "output" : 10 });
+            theProposedAction.token.should.be.an.instanceof(RDS.Token);
+            
+            
         });
         
     });
