@@ -4,7 +4,7 @@
 */
 import _ from 'lodash';
 import * as RDS from './ReteDataStructures';
-import * as ArithmeticActions from './ReteArithmeticActions';
+import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
 
 /**
    Reconnects a joinnode with its alpha memory, once the beta memory is populated

@@ -8,7 +8,7 @@
 import _ from 'lodash';
 import * as RDS from './ReteDataStructures';
 import * as ReteUtil from './ReteUtilities';
-import * as ReteComparisonOps from './ReteComparisonOperators';
+import { ConstantTestOperators as ReteComparisonOps } from './ReteComparisonOperators';
 
 /**
    Compare a token and wme, using defined bindings from a joinNode
