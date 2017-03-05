@@ -13,13 +13,13 @@
 
 import _ from "lodash";
 import * as RDS from "./ReteDataStructures";
-import * as ReteNetworkBuilding from "./ReteNetworkBuilding";
+import { buildOrShareNetworkForConditions } from "./ReteNetworkBuilding";
 import * as ReteActivationsAndDeletion from "./ReteActivationAndDeletion";
 import * as ReteUtil from "./ReteUtilities";
-import * as RuleCtors from "./RuleCtors";
-import * as ReteActions from "./ReteActions";
-import * as ComparisonOperators from "./ReteComparisonOperators";
-import * as ArithmeticOperators from "./ReteArithmeticActions";
+import { Rule } from "./RuleCtors";
+import { ReteActions } from "./ReteActions";
+import { ComparisonOperators } from "./ReteComparisonOperators";
+import { ArithmeticOperators } from "./ReteArithmeticActions";
 
 
 /**
@@ -53,7 +53,7 @@ let ReteNet = function(actionsToRegister){
     this.actionFunctions = _.clone(ReteActions);
 
     /** @alias {module:RuleCtors.Rule} */
-    this.Rule = RuleCtors.Rule;
+    this.Rule = Rule;
     /** @see {module:ReteComparisonOperators} */
     this.ComparisonOperators = ComparisonOperators;
     /** @see {module:ReteArithmeticActions} */
@@ -402,7 +402,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
         //TODO: support rules as conditions by flattening the conditions repeatedly
         conditions = ruleLinks.filter(d=>/^condition/.test(d[1])).map(d=>components[d[0]]),
         //build network with a dummy node for the parent
-        finalMemoryNode = ReteNetworkBuilding.buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
+        finalMemoryNode = buildOrShareNetworkForConditions(this.dummyBetaMemory,conditions,this.rootAlpha,components,this),
         //Get the action descriptions that are triggered by the rule:
         //TODO: support rules as actions by repeatedly flattening
         actionDescriptions = ruleLinks.filter(d=>/^action/.test(d[1])).map(d=>components[d[0]]),

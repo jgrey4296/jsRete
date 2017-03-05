@@ -3,7 +3,7 @@
    @module ReteActionInterface
 */
 import _ from 'lodash';
-import * as ArithmeticActions from './ReteArithmeticActions';
+import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
 import * as ReteUtil from './ReteUtilities';
 import * as RDS from './ReteDataStructures';
 

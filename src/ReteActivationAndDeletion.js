@@ -10,9 +10,9 @@
 */
 import  _ from 'lodash';
 import * as RDS from './ReteDataStructures';
-import * as ConstantTestOperators from './ReteComparisonOperators';
+import { ConstantTestOperators } from './ReteComparisonOperators';
 import * as ReteUtil from './ReteUtilities';
-import * as ReteTestExecution from './ReteTestExecution';
+import { performJoinTests } from './ReteTestExecution';
 
 
 
@@ -135,7 +135,7 @@ let joinNodeLeftActivation = function(node,token){
     //to be combined into tokens
     node.alphaMemory.items.forEach((item) => {
         let currWME = item.wme,
-            joinTestResult = ReteTestExecution.performJoinTests(node,token,currWME);
+            joinTestResult = performJoinTests(node,token,currWME);
         if (joinTestResult !== undefined && joinTestResult !== false){
             let newToken = new RDS.Token(token,currWME,node,joinTestResult);
             node.items.unshift(newToken);
@@ -171,7 +171,7 @@ let joinNodeRightActivation = function(node,wme){
             return false;
         }
         //console.log("--------\nComparing: ",currToken.bindings,"\n To: ",wme.data,"\n using: ",node.tests);
-        let joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
+        let joinTestResult = performJoinTests(node,currToken,wme);
         if (joinTestResult !== undefined && joinTestResult !== false){
             let newToken = new RDS.Token(currToken,wme,node,joinTestResult);
             node.items.unshift(newToken);
@@ -278,7 +278,7 @@ let negativeNodeLeftActivation = function(node,newToken){
 
     node.alphaMemory.items.forEach((item) => {
         let currWme = item.wme,
-            joinTestResult = ReteTestExecution.performJoinTests(node,newToken,currWme);
+            joinTestResult = performJoinTests(node,newToken,currWme);
         if (joinTestResult){
             //adds itself to the token and
             //wme as necessary to block the token
@@ -310,7 +310,7 @@ let negativeNodeRightActivation = function(node,wme){
         if (currToken.negJoinResults.length > 0 || currToken.nccResults.length > 0){
             return false;
         }
-        let joinTestResult = ReteTestExecution.performJoinTests(node,currToken,wme);
+        let joinTestResult = performJoinTests(node,currToken,wme);
         if (joinTestResult !== undefined && joinTestResult !== false){
             if (currToken.negJoinResults.length === 0){
                 //todo: fix this

@@ -1,6 +1,6 @@
 
 import _ from 'lodash';
-import * as ArithmeticActions from './ReteArithmeticActions';
+import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
 import * as ReteUtil from './ReteUtilities';
 import * as RDS from './ReteDataStructures';
 
@@ -28,4 +28,4 @@ ActionInterface.perform = function(proposedAction,reteNet){
     console.log("No-op");
 };
 
-export { ActionInterface };
+export { ActionInterface as AddRuleAction };

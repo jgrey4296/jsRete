@@ -28,4 +28,4 @@ let moduleInterface = {
     '/' : div
 };
 
-export { moduleInterface };
+export { moduleInterface as ArithmeticOperators};

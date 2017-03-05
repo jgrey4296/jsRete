@@ -3,13 +3,13 @@
    @module ReteActions
 */
 import _ from 'lodash';
-import * as ArithmeticActions from './ReteArithmeticActions';
+import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
 import * as ReteUtil from './ReteUtilities';
 import * as RDS from './ReteDataStructures';
-import * as AssertAction from './ReteActionAssert';
-import * as RetractAction from './ReteActionRetract';
-import * as AddRuleAction from './ReteAction_AddRule';
-import * as RemoveRuleAction from './ReteAction_removeRule';
+import { AssertAction } from './ReteActionAssert';
+import { RetractAction } from './ReteActionRetract';
+import { AddRuleAction } from './ReteAction_addRule';
+import { RemoveRuleAction } from './ReteAction_removeRule';
 
 
 
@@ -39,5 +39,5 @@ ActionInterface[AddRuleAction.name] = AddRuleAction;
 //** @action removeRule
 ActionInterface[RemoveRuleAction.name] = RemoveRuleAction;
 
-export { ActionInterface };
+export { ActionInterface  as ReteActions};
 
