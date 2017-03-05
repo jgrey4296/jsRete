@@ -294,6 +294,12 @@ ReteNet.prototype.proposeAction = function(action){
     this.proposedActions[action.id] = action;
 };
 
+ReteNet.prototype.unproposeAction = function(actionId){
+    if (this.proposedActions[actionId] !== undefined){
+        delete this.proposedActions[actionId];
+    }
+};
+
 /**
    Schedule an action by it's ID, ALSO scheduling any parallel actions
    @param  {module:ReteDataStructures.ProposedAction|Int} actionId The action to propose
