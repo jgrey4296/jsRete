@@ -27,127 +27,129 @@ import { ArithmeticOperators } from "./ReteArithmeticActions";
    @constructor
    @param actionsToRegister
 */
-let ReteNet = function(actionsToRegister){
-    if (actionsToRegister === undefined){
-        actionsToRegister = [];
-    }
-    /**
-        The starting BetaMemory of the retenet
-        @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
-        @private
-    */
-    this.dummyBetaMemory = new RDS.BetaMemory();
-    /**
-       The starting alpha node of the retenet
-       @member {module:ReteDataStructures.AlphaNode} rootAlpha
-       @private
-     */
-    this.rootAlpha = new RDS.AlphaNode();
+class ReteNet {
+    constructor(actionsToRegister){
+        if (actionsToRegister === undefined){
+            actionsToRegister = [];
+        }
+        /**
+           The starting BetaMemory of the retenet
+           @member {module:ReteDataStructures.BetaMemory} dummyBetaMemory
+           @private
+        */
+        this.dummyBetaMemory = new RDS.BetaMemory();
+        /**
+           The starting alpha node of the retenet
+           @member {module:ReteDataStructures.AlphaNode} rootAlpha
+           @private
+        */
+        this.rootAlpha = new RDS.AlphaNode();
 
-    /**
-       The available actions the retenet can perform
-       {name: string ,perform : function, propose : function };
-       @member {Object}
-       @see {@link module:ReteActions}
-    */
-    this.actionFunctions = _.clone(ReteActions);
+        /**
+           The available actions the retenet can perform
+           {name: string ,perform : function, propose : function };
+           @member {Object}
+           @see {@link module:ReteActions}
+        */
+        this.actionFunctions = _.clone(ReteActions);
 
-    /** @alias {module:RuleCtors.Rule} */
-    this.Rule = Rule;
-    /** @see {module:ReteComparisonOperators} */
-    this.ComparisonOperators = ComparisonOperators;
-    /** @see {module:ReteArithmeticActions} */
-    this.ArithmeticOperators = ArithmeticOperators;
-    /** @see {module:ReteDataStructures.ProposedAction} */
-    this.ProposedAction = RDS.ProposedAction;
-    /** @see {module:ReteDataStructures.WME} */
-    this.WME = RDS.WME;
-    /** @see {module:ReteDataStructures.Token} */
-    this.Token = RDS.Token;
-    /** @see {module:ReteUtilities} */
-    this.utils = ReteUtil;
-    /**
-       All rules loaded into the ReteNet
-       @member {Object}
-       @see {@link module:RuleCtors.Rule}
-     */
-    this.allRules = {};
-    /**
-       Constructed ActionNodes of the ReteNet
-       @member {Object}
-       @see {@link module:ReteDataStructures.ActionNode}
-     */
-    this.actions = {};
-    /**
-       All WMEs that exist in the ReteNet
-       @member {Object}
-       @see {@link module:ReteDataStructures.WME}
-     */
-    this.allWMEs = {};
+        /** @alias {module:RuleCtors.Rule} */
+        this.Rule = Rule;
+        /** @see {module:ReteComparisonOperators} */
+        this.ComparisonOperators = ComparisonOperators;
+        /** @see {module:ReteArithmeticActions} */
+        this.ArithmeticOperators = ArithmeticOperators;
+        /** @see {module:ReteDataStructures.ProposedAction} */
+        this.ProposedAction = RDS.ProposedAction;
+        /** @see {module:ReteDataStructures.WME} */
+        this.WME = RDS.WME;
+        /** @see {module:ReteDataStructures.Token} */
+        this.Token = RDS.Token;
+        /** @see {module:ReteUtilities} */
+        this.utils = ReteUtil;
+        /**
+           All rules loaded into the ReteNet
+           @member {Object}
+           @see {@link module:RuleCtors.Rule}
+        */
+        this.allRules = {};
+        /**
+           Constructed ActionNodes of the ReteNet
+           @member {Object}
+           @see {@link module:ReteDataStructures.ActionNode}
+        */
+        this.actions = {};
+        /**
+           All WMEs that exist in the ReteNet
+           @member {Object}
+           @see {@link module:ReteDataStructures.WME}
+        */
+        this.allWMEs = {};
 
-    /**
-       All Proposed Actions, from ActionNodes that have fired, indexed by id
-       could otherwise be known as the conflict set.
-       @member {Object}
-       @see {@link module:ReteDataStructure.ProposedActions}
-     */
-    this.proposedActions = {};
-    /**
-       All Actions that were schedule and then performed
-       @member {Array}
-       @see {@link module:ReteDataStructures.ProposedActions}
-     */
-    this.enactedActions = [];
+        /**
+           All Proposed Actions, from ActionNodes that have fired, indexed by id
+           could otherwise be known as the conflict set.
+           @member {Object}
+           @see {@link module:ReteDataStructure.ProposedActions}
+        */
+        this.proposedActions = {};
+        /**
+           All Actions that were schedule and then performed
+           @member {Array}
+           @see {@link module:ReteDataStructures.ProposedActions}
+        */
+        this.enactedActions = [];
 
-    /**
-       All nodes of the ReteNet, enabling inspection
-       @member {Object}
-     */
-    this.allReteNodes = {};
-    /**
-       All ReteNodes, indexed by type
-       todo: make this a weak map?
-       @member {Object}
-     */
-    this.allReteNodesByType = {};
+        /**
+           All nodes of the ReteNet, enabling inspection
+           @member {Object}
+        */
+        this.allReteNodes = {};
+        /**
+           All ReteNodes, indexed by type
+           todo: make this a weak map?
+           @member {Object}
+        */
+        this.allReteNodesByType = {};
 
-    /**
-       The current time step of the retenet
-       @member {Int}
-     */
-    this.currentTime = 1;
-    /**
-       The Actions that have been scheduled
-       @member {Object}
-     */
-    this.schedule = {
-        assertions : [],
-        retractions : [],
-        modifications: []
+        /**
+           The current time step of the retenet
+           @member {Int}
+        */
+        this.currentTime = 1;
+        /**
+           The Actions that have been scheduled
+           @member {Object}
+        */
+        this.schedule = {
+            assertions : [],
+            retractions : [],
+            modifications: []
+        };
+
+        /**
+           Listeners that have been registered for various occurences
+           @member {Object}
+        */
+        this.listeners = {
+            "propose" : [],
+            "assert" : [],
+            "retract" : [],
+            "addRule" : [],
+            "removeRule" : [],
+            "schedule" : [],
+            "stepTimeActions" : [],
+            "registerAction" : []
+        };
+
+        //Register actions passed in:
+        actionsToRegister.forEach(function(d){
+            this.registerAction(d);
+        },this);
+        
+        
     };
-
-    /**
-       Listeners that have been registered for various occurences
-       @member {Object}
-     */
-    this.listeners = {
-        "propose" : [],
-        "assert" : [],
-        "retract" : [],
-        "addRule" : [],
-        "removeRule" : [],
-        "schedule" : [],
-        "stepTimeActions" : [],
-        "registerAction" : []
-    };
-
-    //Register actions passed in:
-    actionsToRegister.forEach(function(d){
-        this.registerAction(d);
-    },this);
-    
-    
-};
+}
 //--------------------
 //METHODS:
 //--------------------
