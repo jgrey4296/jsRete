@@ -167,6 +167,7 @@ describe ("RetNet Interface", function() {
             theProposedAction.actionType.should.equal('assert');
             theProposedAction.payload.should.deep.equal({ "bindings": { "blah" : 5 }, "output" : 10 });
             theProposedAction.token.should.be.an.instanceof(RDS.Token);
+            theProposedAction.actionStringIdentifier.should.equal("testAction")
         });
 
         it("Should modify bindings", function(){
@@ -178,7 +179,7 @@ describe ("RetNet Interface", function() {
                 bindings : [['myStrBinding','str',[]],
                             ['myNumBinding','num',[]]]
             })
-                .newAction("assert","testAction",{
+                .newAction("assert","modifyAction",{
                     values : [['actNum','${myNumBinding}'],
                               ['actStr','${myStrBinding}']],
                     arith : [['actNum','+',5]],
@@ -198,9 +199,86 @@ describe ("RetNet Interface", function() {
                                                                          "myNumBinding": 5 },
                                                           "actNum" : 10,
                                                           "actStr" : "TesT" });
+            theProposedAction.actionStringIdentifier.should.equal("modifyAction");
 
         });
-        
+
+        it("Should clean up proposed actions when the dependent wme is retracted", function(){
+            let aRule = new this.reteNet.Rule(),
+                data = { "first": 5, "second": 10 };
+
+            
+            aRule.newCondition("positive",{
+                tests : [["first","EQ",5],
+                         ["second","EQ",10]],
+                bindings : [["blah","first",[]]]
+            })
+                .newAction("assert","testAction",{
+                    values : [["output","${blah}"]],
+                    arith : [["output","+",5]],
+                    regexs : [],
+                    timing : [0,0,0],
+                    priority : 0
+                });
+
+            this.reteNet.addRule(aRule);
+            let wmeId = this.reteNet.assertWME(data);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            this.reteNet.retractWME(wmeId);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            _.keys(this.reteNet.allWMEs).should.have.length(0);
+        });
+
+        it("Should be able to handle negative nodes", function(){
+            let aRule1 = new this.reteNet.Rule(),
+                aRule2 = new this.reteNet.Rule(),
+                data = {
+                    'first' : 5,
+                    'second' : 10,
+                    'blah' : 'bloo'
+                };
+            
+            aRule1.newCondition("positive",{
+                tests : [['first','EQ',5],
+                         ['second','EQ',10]],
+                bindings : [['aBinding','first',[]]]
+            })
+                .newAction("assert","testPositiveAction",{
+                    values : [['output','${aBinding}']],
+                    arith : [['output','+',5]],
+                    regexs : [],
+                    timing : [0,0,0],
+                    priority : 0
+                });
+
+            aRule2.newCondition("positive",{
+                tests : [ ['second','EQ',10]],
+                bindings : [['aBinding','first',[]]]
+            })
+                .newCondition("negative",{
+                    tests : [['first','EQ',5]],
+                    bindings : [],
+                })
+                .newAction("assert","testNegAction",{
+                    values : [['output','${aBinding}']],
+                    arith : [['output','+',5]],
+                    regexs : [],
+                    timing : [0,0,0],
+                    priority : 0
+                });
+
+            this.reteNet.addRule(aRule1);
+            this.reteNet.addRule(aRule2);
+
+            let wmeId = this.reteNet.assertWME(data),
+                wme = this.reteNet.allWMEs[wmeId];
+            expect(wme).to.exist;
+            wme.negJoinResults.should.have.length(1);
+
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
+            theProposedAction.actionStringIdentifier.should.equal("testPositiveAction");
+        });
         
     });
     
