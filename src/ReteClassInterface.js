@@ -9,7 +9,7 @@
    @requires ReteActions
    @requires ReteComparisonOperators
    @requires ReteArithmeticActions
- */
+*/
 
 import _ from "lodash";
 import * as RDS from "./ReteDataStructures";
@@ -158,7 +158,7 @@ let ReteNet = function(actionsToRegister){
    @param {string} name The occurrence type to listen for
    @param {function} fn The function to trigger when the occurrence happens
    @method
- */
+*/
 ReteNet.prototype.registerListener = function(name,fn){
     if (this.listeners[name] !== undefined){
         this.listeners[name].push(fn);
@@ -170,7 +170,7 @@ ReteNet.prototype.registerListener = function(name,fn){
    @param {string} name The name of the occurrence that happened
    @param ...vals The parameters to pass to the listener functions
    @method
- */
+*/
 ReteNet.prototype.fireListener = function(name,...vals){
     if (this.listeners[name] === undefined){
         throw new Error(`Unrecognised listener fired: ${name}`);
@@ -184,7 +184,7 @@ ReteNet.prototype.fireListener = function(name,...vals){
    Stores a wme in the retenet, without asserting it.
    @param {WME} wme
    @private
- */
+*/
 ReteNet.prototype.storeWME = function(wme){
     this.allWMEs[wme.id] = wme;
 };
@@ -192,7 +192,7 @@ ReteNet.prototype.storeWME = function(wme){
 /**
    Clears the history of actions that have been performed
    @method
- */
+*/
 ReteNet.prototype.clearHistory = function(){
     this.enactedActions = [];
 };
@@ -200,7 +200,7 @@ ReteNet.prototype.clearHistory = function(){
 /**
    Clear the proposed actions list
    @method
- */
+*/
 ReteNet.prototype.clearProposedActions = function(){
     this.proposedActions = {};
 };
@@ -210,7 +210,7 @@ ReteNet.prototype.clearProposedActions = function(){
    @param {WME/Object} wme The wme or data to assert
    @return {Int} WME.id
    @method
- */
+*/
 ReteNet.prototype.assertWME = function(wme){
     this.fireListener("assert",wme);
     if (!(wme instanceof RDS.WME)){
@@ -226,7 +226,7 @@ ReteNet.prototype.assertWME = function(wme){
    Retract a wme immediately
    @param {wme/id} wme The wme object or id to retract
    @method
- */
+*/
 ReteNet.prototype.retractWME = function(wme){
     this.fireListener("retract",wme);
     //console.log("retracting immediately:",wme);
@@ -260,7 +260,7 @@ ReteNet.prototype.retractWME = function(wme){
    @param {WME/id} wme The wme to retract
    @param {function} modifyFunction The function that changes the data of the wme
    @method
- */
+*/
 ReteNet.prototype.modifyWME = function(wme,modifyFunction){
     let retractedWME = this.retractWME(wme),
         data = retractedWME.data,
@@ -276,7 +276,7 @@ ReteNet.prototype.modifyWME = function(wme,modifyFunction){
    Propose an action, typically from an action node
    @param {module:ReteDataStructures.ProposedAction} action
    @method
- */
+*/
 ReteNet.prototype.proposeAction = function(action){
     //Call the listeners:
     this.fireListener("propose",action);
@@ -296,7 +296,7 @@ ReteNet.prototype.proposeAction = function(action){
    Schedule an action by it's ID, ALSO scheduling any parallel actions
    @param  {module:ReteDataStructures.ProposedAction|Int} actionId The action to propose
    @method
- */
+*/
 ReteNet.prototype.scheduleAction = function(actionId){
     this.fireListener("schedule",actionId);
     if (actionId instanceof this.ProposedAction){
@@ -319,7 +319,7 @@ ReteNet.prototype.scheduleAction = function(actionId){
    @param {module:ReteDataStructures.ProposedAction} action
    @method
    @private
- */
+*/
 ReteNet.prototype.addToSchedule = function(action){
     if (action.actionType === undefined || action.payload === undefined || action.timing === undefined){
         throw new Error("Scheduling action failure");
@@ -429,7 +429,7 @@ ReteNet.prototype.addRule = function(ruleId,components){
    Remove rule(s) from the retenet, bottom up, by {@link:module.ReteDataStructures.ActionNode}
    @param {module:ReteDataStructures.ActionNode | Array} rule The rule(s) to remove from the net
    @method
- */
+*/
 ReteNet.prototype.removeRule = function(rule){
     
     this.fireListener("removeRule",rule);
@@ -486,7 +486,7 @@ ReteNet.prototype.registerAction = function(actionObj){
    @param {module:ReteDataStructures.ReteNode} node
    @method
    @private
- */
+*/
 ReteNet.prototype.storeNode = function(node){
     this.allReteNodes[node.id] = node;
 
@@ -501,7 +501,7 @@ ReteNet.prototype.storeNode = function(node){
    @param {module:RuleCtors.Rule | Array} rules
    @method
    @return {Object}
- */
+*/
 ReteNet.prototype.convertRulesToComponents = function(rules){
     
     if (!(rules instanceof Array)){
@@ -534,7 +534,7 @@ ReteNet.prototype.convertRulesToComponents = function(rules){
 
 /**
    Clean up
- */
+*/
 ReteNet.prototype.cleanup = function(){
     //retract all wmes
     _.values(this.allWMEs).forEach(d=>this.retractWME(d));
