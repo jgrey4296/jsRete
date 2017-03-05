@@ -365,7 +365,6 @@ class NCCPartnerNode extends ReteNode {
         this.nccNode = null;
         this.numberOfConjuncts = num;
         this.newResultBuffer = [];
-        this.id = nextId;
     }
 }
 
