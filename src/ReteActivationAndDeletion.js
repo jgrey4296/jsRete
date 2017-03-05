@@ -305,7 +305,6 @@ let negativeNodeRightActivation = function(node,wme){
     //getting all tokens stored, comparing to the wme.
     //any that the wme blocks, gets an additional negative Join result
     //any that don't get blocked should already have been activated
-    console.log("Negative node right activation");
     node.items.forEach((currToken) => {
         if (currToken.negJoinResults.length > 0 || currToken.nccResults.length > 0){
             return false;
