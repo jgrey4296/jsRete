@@ -38,12 +38,14 @@ AssertAction.propose = function(token,reteNet){
     let complexFormData = reteNet.utils.objDescToObject(newWMEData);
     
     //To be returned to activateActionNode
-    let proposedAction = new reteNet.ProposedAction(reteNet,"assert", complexFormData, token,
-                                                reteNet.currentTime,
-                                                this.timing,
-                                                this.priority
-                                                );
-
+    let proposedAction = new reteNet.ProposedAction(reteNet,"assert",
+                                                    this.name,
+                                                    complexFormData, token,
+                                                    reteNet.currentTime,
+                                                    this.timing,
+                                                    this.priority
+                                                   );
+    
     return proposedAction;
 };
 

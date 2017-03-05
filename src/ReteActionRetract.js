@@ -52,7 +52,9 @@ RetractAction.propose = function(token,reteNet){
     // });
 
     //Propose the list of all wmes to retract
-    let proposedAction = new RDS.ProposedAction(reteNet,"retract", wmeIds, token,
+    let proposedAction = new RDS.ProposedAction(reteNet,"retract",
+                                                this.name,
+                                                wmeIds, token,
                                                 reteNet.currentTime,
                                                 this.timing);
 

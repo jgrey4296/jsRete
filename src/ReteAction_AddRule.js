@@ -15,7 +15,9 @@ ActionInterface.propose = function(token,reteNet){
     
     //Propose the list of all wmes to retract
     //TODO: Check this
-    let proposedAction = new RDS.ProposedAction(reteNet,"NO-OP", token.wme, token,
+    let proposedAction = new RDS.ProposedAction(reteNet,"NO-OP",
+                                                this.name,
+                                                token.wme, token,
                                                 reteNet.currentTime,
                                                 this.timing);
 
