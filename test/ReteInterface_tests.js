@@ -19,11 +19,9 @@ describe ("RetNet Interface", function() {
         this.reteNet = null;
     });
     
-    describe("existence", function() {
-        it("should exist", function() {
-            should.exist(this.reteNet);
-            this.reteNet.should.be.an.instanceof(ReteNet);
-        });
+    it("should exist", function() {
+        should.exist(this.reteNet);
+        this.reteNet.should.be.an.instanceof(ReteNet);
     });
 
     describe("assertions", function() {
@@ -131,7 +129,7 @@ describe ("RetNet Interface", function() {
             _.keys(components).should.have.length(3);
         });
 
-        it("Should fire when a matching wme is asserted", function(){
+        it("Should Propose an Action  when a matching wme is asserted", function(){
             let aRule = new this.reteNet.Rule(),
                 data = { "first" : 5, "second" : 10 },
                 components;
@@ -168,9 +166,40 @@ describe ("RetNet Interface", function() {
             theProposedAction.actionType.should.equal('assert');
             theProposedAction.payload.should.deep.equal({ "bindings": { "blah" : 5 }, "output" : 10 });
             theProposedAction.token.should.be.an.instanceof(RDS.Token);
-            
-            
         });
+
+        it("Should modify bindings", function(){
+            let aRule = new this.reteNet.Rule(),
+                data = { num: 5, str: "test" };
+
+            aRule.newCondition("positive",{
+                tests : [['num','EQ',5]],
+                bindings : [['myStrBinding','str',[]],
+                            ['myNumBinding','num',[]]]
+            })
+                .newAction("assert","testAction",{
+                    values : [['actNum','${myNumBinding}'],
+                              ['actStr','${myStrBinding}']],
+                    arith : [['actNum','+',5]],
+                    regexs : [['actStr','t','g','T']],
+                    timing : [0,0,0]
+                });
+
+            this.reteNet.addRule(aRule);
+
+            let wmeId = this.reteNet.assertWME(data);
+
+            _.keys(this.reteNet.allWMEs).should.have.length(1);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
+
+            theProposedAction.payload.should.deep.equal({ "bindings" : { "myStrBinding": "test",
+                                                                         "myNumBinding": 5 },
+                                                          "actNum" : 10,
+                                                          "actStr" : "TesT" });
+
+        });
+        
         
     });
     
