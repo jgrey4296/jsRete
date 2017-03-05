@@ -12,6 +12,7 @@ let nextId = 0;
    Describes a queued, but not yet performed, action
    @param reteNet
    @param type
+   @param strId The 'name' of the action, Rule.newAction(type,name...)
    @param payload
    @param token
    @param proposeTime
