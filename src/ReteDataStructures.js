@@ -24,8 +24,9 @@ let nextId = 0;
    assertTime/retractTime relative to when action is enacted
 */
 class ProposedAction{
-    constructor(reteNet,type,payload,token,proposeTime,timingObj,priority,tags){
+    constructor(reteNet,type, strId, payload,token,proposeTime,timingObj,priority,tags){
         this.id = nextId++;
+        this.actionStringIdentifier = strId;
         this.type = "ProposedAction";
         this.reteNet = reteNet;
         this.actionType = type;//ie: "assert","retract","perform"...
