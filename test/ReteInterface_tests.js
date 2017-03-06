@@ -25,6 +25,12 @@ describe ("RetNet Interface:", function() {
         this.reteNet.should.be.an.instanceof(ReteNet);
     });
 
+
+    describe.skip("Listeners", function(){
+
+    });
+
+    
     describe("Assertions:", function() {
         it("Should be able to assert simple facts", function(){
             let data = { testInfo: "blah" };
@@ -47,6 +53,10 @@ describe ("RetNet Interface:", function() {
         });
     });
 
+    describe.skip("Modification:",function(){
+
+    });
+    
     describe("Enacted Actions history:", function() {
         it("Should store actions", function(){
             this.reteNet.enactedActions.should.have.length(0);
@@ -335,6 +345,15 @@ describe ("RetNet Interface:", function() {
             });
             
         });
+
+    });
+
+
+    describe.skip("Custom Action Registration:", function(){
+
+    });
+
+    describe.skip("Cleanup",function(){
 
     });
 
