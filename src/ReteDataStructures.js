@@ -198,7 +198,6 @@ class AlphaMemory {
         //If adding to a node other than a test node,
         if (this.parent && !(this.parent instanceof AlphaNode)){
             //add to children
-            //this.parent.children.unshift(this);
             throw new Error("Adding alpha memory as child of not a test");
         } else if (this.parent && this.parent instanceof AlphaNode && this.parent.outputMemory === undefined){
             //if an alphanode, set the ouputmemory field
