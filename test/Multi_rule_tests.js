@@ -60,6 +60,16 @@ describe ("Multi-Rule Tests:", function() {
             _.keys(this.reteNet.proposedActions).should.have.length(2);
         });
 
+        it("Should fire both rules from different wmes", function(){
+            let data1 = { first: 5 },
+                data2 = { second: 10 };
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.assertWME(data1);
+            this.reteNet.assertWME(data2);
+            _.keys(this.reteNet.proposedActions).should.have.length(2);
+
+        });
+        
         it("Should fire only one rule when wme only matches that rule ", function(){
             let data = { first: 5 };
             _.keys(this.reteNet.proposedActions).should.have.length(0);
@@ -89,6 +99,52 @@ describe ("Multi-Rule Tests:", function() {
         });
         
     });
+
+    describe("Updates from retractions", function() {
+
+        beforeEach(function(){
+            this.rule1 = new this.reteNet.Rule();
+            this.rule2 = new this.reteNet.Rule();
+
+            this.rule1.newCondition('positive',{
+                tests: [['first','EQ',5]],
+            })
+                .newAction('assert','rule1_assertion',{
+                    values: [['result','rule1']]
+                });
+
+            this.rule2.newCondition('positive',{
+                tests: [['second','EQ',10]]
+            })
+                .newAction('assert','rule2_assertion',{
+                    values: [['result','rule2']]
+                });
+
+            this.reteNet.addRule([this.rule1,this.rule2]);
+        });
+
+        afterEach(function(){
+
+        });
+
+        it("Should remove one of the proposed actions when that rule is invalidated", function(){
+            let data1 = { first: 5 },
+                data2 = { second: 10 };
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            let wmeId1 = this.reteNet.assertWME(data1),
+                wmeId2 = this.reteNet.assertWME(data2);
+            _.keys(this.reteNet.proposedActions).should.have.length(2);
+            this.reteNet.retractWME(wmeId1);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            let theRemainingAction = _.values(this.reteNet.proposedActions)[0];
+            theRemainingAction.actionStringIdentifier.should.equal('rule2_assertion');
+            theRemainingAction.payload.result.should.equal('rule2');
+
+        });
+        
+
+    });
+
 
     
 
