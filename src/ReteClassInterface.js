@@ -148,7 +148,7 @@ class ReteNet {
         },this);
         
         
-    };
+    }
 }
 //--------------------
 //METHODS:

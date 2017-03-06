@@ -2,9 +2,8 @@
    Defines Arithmetic Actions that the retenet can perform
    @module
 */
-import _ from 'lodash';
 
-    /** Add two values */
+/** Add two values */
 let plus = function(a,b){
     return a + b;
 },

@@ -6,7 +6,6 @@
    @requires ReteComparisonOperators
 */
 import _ from 'lodash';
-import * as RDS from './ReteDataStructures';
 import * as ReteUtil from './ReteUtilities';
 import { ConstantTestOperators as ReteComparisonOps } from './ReteComparisonOperators';
 

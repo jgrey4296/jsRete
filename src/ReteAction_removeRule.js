@@ -1,6 +1,3 @@
-import _ from 'lodash';
-import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
-import * as ReteUtil from './ReteUtilities';
 import * as RDS from './ReteDataStructures';
 
 let ActionInterface = {

@@ -2,10 +2,6 @@
    Aggregates ReteNet Actions that implement {@link module:ReteActionInterface}
    @module ReteActions
 */
-import _ from 'lodash';
-import { ArithmeticOperators as ArithmeticActions } from './ReteArithmeticActions';
-import * as ReteUtil from './ReteUtilities';
-import * as RDS from './ReteDataStructures';
 import { AssertAction } from './ReteActionAssert';
 import { RetractAction } from './ReteActionRetract';
 import { AddRuleAction } from './ReteAction_addRule';
