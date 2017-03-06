@@ -368,6 +368,37 @@ describe ("RetNet Interface:", function() {
     });
 
 
+    describe("Storing wmes:", function() {
+
+        beforeEach(function(){
+            this.data = { first: 5 };
+            this.wme = new this.reteNet.WME(this.data);
+        });
+        
+        it("Should be able to add a wme", function(){
+            _.keys(this.reteNet.allWMEs).should.have.length(0);
+            this.reteNet.storeWME(this.wme);
+            _.keys(this.reteNet.allWMEs).should.have.length(1);
+        });
+
+        it("Should not assert a stored wme", function(){
+            let aRule = new this.reteNet.Rule();
+            aRule.newCondition('positive',{
+                tests: [['first','EQ',5]]
+            })
+                .newAction('assert','storedAction',{
+                    values: [['result','this is bad if it happens']]
+                });
+            this.reteNet.addRule(aRule);
+            _.keys(this.reteNet.allWMEs).should.have.length(0);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.storeWME(this.wme);
+            _.keys(this.reteNet.allWMEs).should.have.length(1);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);            
+        });
+        
+    });
+
     describe.skip("Custom Action Registration:", function(){
 
     });
