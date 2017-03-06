@@ -399,6 +399,66 @@ describe ("RetNet Interface:", function() {
         
     });
 
+    describe("Proposing and Scheduling:", function() {
+
+        beforeEach(function(){
+            this.anAction = new this.reteNet.ProposedAction(this.reteNet,
+                                                            'assert', 'aTestProposal',
+                                                            { aValue: 'blah' },
+                                                            null,
+                                                            this.reteNet.currentTime,
+                                                            {
+                                                                invalidateOffset: 0,
+                                                                performOffset: 0,
+                                                                unperformOffset: 0
+                                                            },
+                                                            0);
+        });
+
+        afterEach(function(){
+
+        });
+
+        it("Should be able to manually propose an action", function(){
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.proposeAction(this.anAction);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+        });
+
+        it("Should not be able to propose the same action again", function(){
+            this.reteNet.proposeAction(this.anAction);
+            expect(() => { this.reteNet.proposeAction(this.anAction) }).to.throw(Error);
+        });
+
+        it("Should be able to unpropose an action", function(){
+            this.reteNet.proposeAction(this.anAction);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            this.reteNet.unproposeAction(this.anAction.id);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+        });
+
+        it("Should be able to schedule a proposed action", function(){
+            this.reteNet.proposeAction(this.anAction);
+            _.keys(this.reteNet.schedule.assert).should.have.length(0);
+            this.reteNet.scheduleAction(this.anAction.id);
+            this.reteNet.schedule.assert.should.have.length(2);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+        });
+
+        it("Should not be able to schedule an action that hasnt been proposed", function(){
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.schedule.assert.should.have.length(0);
+            expect(() => { this.reteNet.scheduleAction(this.anAction.id) }).to.throw(Error);
+        });
+
+        it("Should be able to automatically group parallel actions");
+
+        it("Should perform a scheduled action upon stepping time");
+
+        
+        
+    });
+
     describe.skip("Custom Action Registration:", function(){
 
     });
