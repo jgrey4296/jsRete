@@ -130,157 +130,212 @@ describe ("RetNet Interface:", function() {
             _.keys(components).should.have.length(3);
         });
 
-        it("Should Propose an Action  when a matching wme is asserted", function(){
-            let aRule = new this.reteNet.Rule(),
-                data = { "first" : 5, "second" : 10 },
-                components;
-
-            aRule.newCondition("positive",{
-                tests : [["first","EQ",5],
-                         ["second","EQ",10]],
-                bindings : [["blah","first",[]]],
-            })
-                .newAction("assert","testAction",{
-                    values : [["output","${blah}"]],
-                    arith : [["output","+",5]],
-                    regexs : [],
-                    timing : [0,0,0],
-                    priority : 0
-                });
-
-            let actionNode = this.reteNet.addRule(aRule)[1];
-            actionNode.should.be.an.instanceof(RDS.ActionNode);
-            
-            _.keys(this.reteNet.proposedActions).should.have.length(0);
-            _.keys(this.reteNet.allWMEs).should.have.length(0);
-
-            let wmeId = this.reteNet.assertWME(data);
-
-            _.keys(this.reteNet.allWMEs).should.have.length(1);
-            this.reteNet.allWMEs[wmeId].should.not.be.undefined;
-            this.reteNet.allWMEs[wmeId].data.should.deep.equal(data);
-
-            _.keys(this.reteNet.proposedActions).should.have.length(1);
-            
-            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
-            theProposedAction.should.be.an.instanceof(RDS.ProposedAction);
-            theProposedAction.actionType.should.equal('assert');
-            theProposedAction.payload.should.deep.equal({ "bindings": { "blah" : 5 }, "output" : 10 });
-            theProposedAction.token.should.be.an.instanceof(RDS.Token);
-            theProposedAction.actionStringIdentifier.should.equal("testAction")
-        });
-
-        it("Should modify bindings", function(){
-            let aRule = new this.reteNet.Rule(),
-                data = { num: 5, str: "test" };
-
-            aRule.newCondition("positive",{
-                tests : [['num','EQ',5]],
-                bindings : [['myStrBinding','str',[]],
-                            ['myNumBinding','num',[]]]
-            })
-                .newAction("assert","modifyAction",{
-                    values : [['actNum','${myNumBinding}'],
-                              ['actStr','${myStrBinding}']],
-                    arith : [['actNum','+',5]],
-                    regexs : [['actStr','t','g','T']],
-                    timing : [0,0,0]
-                });
-
-            this.reteNet.addRule(aRule);
-
-            let wmeId = this.reteNet.assertWME(data);
-
-            _.keys(this.reteNet.allWMEs).should.have.length(1);
-            _.keys(this.reteNet.proposedActions).should.have.length(1);
-            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
-
-            theProposedAction.payload.should.deep.equal({ "bindings" : { "myStrBinding": "test",
-                                                                         "myNumBinding": 5 },
-                                                          "actNum" : 10,
-                                                          "actStr" : "TesT" });
-            theProposedAction.actionStringIdentifier.should.equal("modifyAction");
-
-        });
-
-        it("Should clean up proposed actions when the dependent wme is retracted", function(){
-            let aRule = new this.reteNet.Rule(),
-                data = { "first": 5, "second": 10 };
-
-            
-            aRule.newCondition("positive",{
-                tests : [["first","EQ",5],
-                         ["second","EQ",10]],
-                bindings : [["blah","first",[]]]
-            })
-                .newAction("assert","testAction",{
-                    values : [["output","${blah}"]],
-                    arith : [["output","+",5]],
-                    regexs : [],
-                    timing : [0,0,0],
-                    priority : 0
-                });
-
-            this.reteNet.addRule(aRule);
-            let wmeId = this.reteNet.assertWME(data);
-            _.keys(this.reteNet.proposedActions).should.have.length(1);
-            this.reteNet.retractWME(wmeId);
-            _.keys(this.reteNet.proposedActions).should.have.length(0);
-            _.keys(this.reteNet.allWMEs).should.have.length(0);
-        });
-
-        it("Should be able to handle negative nodes", function(){
-            let aRule1 = new this.reteNet.Rule(),
-                aRule2 = new this.reteNet.Rule(),
-                data = {
-                    'first' : 5,
-                    'second' : 10,
-                    'blah' : 'bloo'
-                };
-            
-            aRule1.newCondition("positive",{
-                tests : [['first','EQ',5],
-                         ['second','EQ',10]],
-                bindings : [['aBinding','first',[]]]
-            })
-                .newAction("assert","testPositiveAction",{
-                    values : [['output','${aBinding}']],
-                    arith : [['output','+',5]],
-                    regexs : [],
-                    timing : [0,0,0],
-                    priority : 0
-                });
-
-            aRule2.newCondition("positive",{
-                tests : [ ['second','EQ',10]],
-                bindings : [['aBinding','first',[]]]
-            })
-                .newCondition("negative",{
-                    tests : [['first','EQ',5]],
-                    bindings : [],
+        describe("Rule Testing:", function() {
+            //Setup a rule to be used for this batch
+            beforeEach(function(){
+                this.aRule = new this.reteNet.Rule();
+                this.aRule.newCondition("positive",{
+                    tests : [["first","EQ",5],
+                             ["second","EQ",10]],
+                    bindings : [["blah","first",[]]],
                 })
-                .newAction("assert","testNegAction",{
-                    values : [['output','${aBinding}']],
-                    arith : [['output','+',5]],
-                    regexs : [],
-                    timing : [0,0,0],
-                    priority : 0
-                });
+                    .newAction("assert","testAction",{
+                        values : [["output","${blah}"]],
+                        arith : [["output","+",5]],
+                        regexs : [],
+                        timing : [0,0,0],
+                        priority : 0
+                    });
+                this.reteNet.addRule(this.aRule);
+            });
+            
+            it("Should Propose an Action  when a matching wme is asserted", function(){
+                let data = { "first" : 5, "second" : 10 };
+                
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+                _.keys(this.reteNet.allWMEs).should.have.length(0);
 
-            this.reteNet.addRule(aRule1);
-            this.reteNet.addRule(aRule2);
+                let wmeId = this.reteNet.assertWME(data);
 
-            let wmeId = this.reteNet.assertWME(data),
-                wme = this.reteNet.allWMEs[wmeId];
-            expect(wme).to.exist;
-            wme.negJoinResults.should.have.length(1);
+                _.keys(this.reteNet.allWMEs).should.have.length(1);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+                
+                let theProposedAction = _.values(this.reteNet.proposedActions)[0];
+                theProposedAction.should.be.an.instanceof(RDS.ProposedAction);
+                theProposedAction.actionType.should.equal('assert');
+                theProposedAction.payload.should.deep.equal({ "bindings": { "blah" : 5 }, "output" : 10 });
+                theProposedAction.token.should.be.an.instanceof(RDS.Token);
+                theProposedAction.actionStringIdentifier.should.equal("testAction")
+            });
 
-            _.keys(this.reteNet.proposedActions).should.have.length(1);
-            let theProposedAction = _.values(this.reteNet.proposedActions)[0];
-            theProposedAction.actionStringIdentifier.should.equal("testPositiveAction");
+            it("Should not propose an action when a non-matching wme is asserted", function(){
+                let data = { "first" : 10, "second" : 5 };
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+                _.keys(this.reteNet.allWMEs).should.have.length(0);
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.allWMEs).should.have.length(1);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+
+            it("Should clean up proposed actions when the dependent wme is retracted", function(){
+                let data = { "first": 5, "second": 10 };
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+                let wmeId = this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+                this.reteNet.retractWME(wmeId);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+                _.keys(this.reteNet.allWMEs).should.have.length(0);
+            });
+            
         });
-        
+
+        describe("Binding modifications:", function(){
+
+            beforeEach(function(){
+                this.aRule = new this.reteNet.Rule();
+                this.aRule.newCondition('positive',{
+                    tests: [['first','EQ',5],
+                            ['second','EQ','blah']],
+                    //PAY ATTENTION TO THE 3-TUPLE
+                    bindings: [['myStr','second', []],
+                               ['myNum','first', []]]
+                });
+            });
+
+            afterEach(function(){
+                this.aRule = null;
+            });
+
+            it("Should modify strings", function(){
+                this.aRule.newAction('assert','simpleStrMod',{
+                    values: [['result','${myStr}']],
+                    regexs: [['result','blah','g','bloo']]
+                });
+                this.reteNet.addRule(this.aRule);
+                
+                let data = { first: 5, second: 'blah'};
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+                let theAction = _.values(this.reteNet.proposedActions)[0];
+                theAction.payload.result.should.equal('bloo');
+                theAction.payload.result.should.not.equal('blah');
+            });
+
+            it("Should modify arithmetic", function(){
+                this.aRule.newAction('assert','simpleArithMod',{
+                    values: [['result','${myNum}']],
+                    arith: [['result','+',5]]
+                });
+                this.reteNet.addRule(this.aRule);
+
+                let data = { first: 5, second: 'blah' };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+                let theAction = _.values(this.reteNet.proposedActions)[0];
+                theAction.payload.result.should.equal(10);
+                theAction.payload.result.should.not.equal(5);
+            });
+            
+        });
+
+        describe("Single Negative Conditions:", function() {
+
+            beforeEach(function(){
+                this.negRule = new this.reteNet.Rule();
+                this.negRule.newCondition('positive',{
+                    tests: [['first','EQ',5]],
+                    bindings: []
+                })
+                    .newCondition('negative',{
+                        tests: [['second','EQ',10]]
+                    })
+                    .newAction('assert','singleNegativeAction', {
+                        values: [['result','second is not 10']]
+                    });
+                this.reteNet.addRule(this.negRule);
+            });
+
+            afterEach(function(){
+
+            });
+
+            it("Should assert if the negative condition is not met", function(){
+                let data = { first: 5, second: 5 };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+            });
+
+            it("Should not assert if the negative condition is met", function(){
+                let data = { first: 5, second: 10 };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+
+            it("Should not assert if the positive condition is not met, while the negative is", function(){
+                let data = { first: 10, second: 10 };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+
+            it("Should not assert if the positive and negative conditions are not met", function(){
+                let data = { first: 10, second: 5};
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+            
+        });
+
+        describe("Conjunctive negation tests:", function() {
+
+            beforeEach(function(){
+                this.conjNegRule = new this.reteNet.Rule()
+                this.conjNegRule.newCondition('positive',{
+                    tests: [['first', 'EQ', 5]],
+                    bindings: []                    
+                })
+                    .newCondition('negative',{
+                        tests: [['second','EQ',10],
+                                ['third','EQ',15]],
+                        bindings: []
+                    })
+                    .newAction('assert','conjNegTest',{
+                        values: [['result','second != 10, third != 15']]
+                    });
+                this.reteNet.addRule(this.conjNegRule);
+            });
+
+            it("Should Assert when neither negative condition is met", function(){
+                let data = {first : 5, second: 5, third: 5 };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+            });
+
+            it("Should not assert if both negative conditions are met", function(){
+                let data = {first: 5, second: 10, third: 15};
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+
+            it("Should assert if only one negative condition is met", function(){
+                let data = {first: 5, second: 5, third: 15};
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(1);
+            });
+
+            it("Should not assert if the positive condition is not met, but the negative conditions are", function(){
+                let data = { first: 10, second: 10, third: 15};
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+
+            it("Should not assert if the positive and negative conditions are not met  ", function(){
+                let data = { first: 10, second: 5, third: 5 };
+                this.reteNet.assertWME(data);
+                _.keys(this.reteNet.proposedActions).should.have.length(0);
+            });
+            
+        });
+
     });
-    
+
 });
- 
