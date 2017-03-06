@@ -122,9 +122,9 @@ class ReteNet {
            @member {Object}
         */
         this.schedule = {
-            assertions : [],
-            retractions : [],
-            modifications: []
+            assert : [],
+            retract : [],
+            modify: []
         };
 
         /**
