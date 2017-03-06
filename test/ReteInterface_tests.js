@@ -9,7 +9,7 @@ import _ from 'lodash';
 let should = chai.should(),
     expect = chai.expect;
 
-describe ("RetNet Interface", function() {
+describe ("RetNet Interface:", function() {
 
     beforeEach(function(){
         this.reteNet = new ReteNet();
@@ -25,7 +25,7 @@ describe ("RetNet Interface", function() {
         this.reteNet.should.be.an.instanceof(ReteNet);
     });
 
-    describe("assertions", function() {
+    describe("Assertions:", function() {
         it("Should be able to assert simple facts", function(){
             let data = { testInfo: "blah" };
             this.reteNet.should.have.property('allWMEs');
@@ -37,7 +37,7 @@ describe ("RetNet Interface", function() {
         });
     });
 
-    describe("retractions", function() {
+    describe("Retraction:", function() {
         it("Should be able to retract simple facts", function(){
             let data = { testInfo: "blah" },
                 wmeId = this.reteNet.assertWME(data);
@@ -47,7 +47,7 @@ describe ("RetNet Interface", function() {
         });
     });
 
-    describe("Enacted Actions history", function() {
+    describe("Enacted Actions history:", function() {
         it("Should store actions", function(){
             this.reteNet.enactedActions.should.have.length(0);
             this.reteNet.enactedActions.push(1);
@@ -65,19 +65,19 @@ describe ("RetNet Interface", function() {
         });
     });
 
-    describe("Proposed Actions", function() {
+    describe("Proposed Actions:", function() {
 
         it("Should be able to store and clear", function(){
             this.reteNet.proposedActions[1] = 1;
             this.reteNet.proposedActions[2] = 2;
             _.keys(this.reteNet.proposedActions).should.have.length(2);
             this.reteNet.clearProposedActions()
-        _.keys(this.reteNet.proposedActions).should.have.length(0);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
         });
         
     });
 
-    describe("Rules", function() {
+    describe("Rules:", function() {
         it("Should be programmatic", function(){
             let aRule = new this.reteNet.Rule(),
                 exampleData = { num : 5, str: "test" };
@@ -99,7 +99,7 @@ describe ("RetNet Interface", function() {
             this.reteNet.rootAlpha.children.should.have.length(0);
             this.reteNet.dummyBetaMemory.children.should.have.length(0);
             this.reteNet.dummyBetaMemory.unlinkedChildren.should.have.length(0);
-
+            
             this.reteNet.addRule(aRule);
 
             _.keys(this.reteNet.actions).should.have.length(1);
