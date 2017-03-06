@@ -84,7 +84,26 @@ describe ("RetNet Interface:", function() {
             this.reteNet.clearProposedActions()
             _.keys(this.reteNet.proposedActions).should.have.length(0);
         });
+
+        it("Should be able to propose actions",function(){
+            let anAction = new this.reteNet.ProposedAction(this.reteNet,
+                                                           'assertion',
+                                                           'testProposal');
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.proposeAction(anAction);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+        });
         
+        it("Should be able to unpropose actions",function(){
+            let anAction = new this.reteNet.ProposedAction(this.reteNet,
+                                                           'assertion',
+                                                           'testProposal');
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+            this.reteNet.proposeAction(anAction);
+            _.keys(this.reteNet.proposedActions).should.have.length(1);
+            this.reteNet.unproposeAction(anAction.id);
+            _.keys(this.reteNet.proposedActions).should.have.length(0);
+        });
     });
 
     describe("Rules:", function() {
