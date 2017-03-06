@@ -9,7 +9,7 @@ except for where Javascript enables easier, or at least different, behaviour.
 
 *** Library Structure
 The Library is structured to provide a single class interface for actual use, while internally operating 
-through a number of interacting modules. All Internal Data Structures (ie: Alpha Nodes, 
+through a number of interacting functional modules. All Internal Data Structures (ie: Alpha Nodes, 
 Beta Nodes, Memories, tokens etc) are located in ReteDataStructures. 
 Externally important objects (the 'Rete Class' itself, and the constructors for rule, condition, 
 and action definition) can be found in ReteClassInterface, and RuleCtors.
