@@ -25,12 +25,14 @@
     "flow-bin": "^0.40.0",
     "jsdoc": "^3.4.3",
     "mocha": "^3.2.0",
+    "mocha-pending": "^1.0.0",
     "webpack": "^2.2.1"
   },
   "scripts": {
     "start": "node_modules/.bin/webpack --config webpack.config.babel.js",
     "flow": "node_modules/.bin/flow",
-    "test": "node_modules/.bin/mocha --require babel-polyfill --compilers js:babel-register",
+      "test": "node_modules/.bin/mocha --check-leaks -c --prof --log-timer-events --require babel-polyfill --compilers js:babel-register",
+      "pending" :  "node_modules/.bin/mocha --require babel-polyfill --compilers js:babel-register -R mocha-pending -c",
     "clean": "rm -r dist; rm -r docs;  exit 0",
     "doc": "node_modules/.bin/jsdoc ./src -r -d ./docs"
   },
