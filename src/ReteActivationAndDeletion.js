@@ -195,7 +195,7 @@ let actionNodeActivation = function(actionNode,token){
     //ie: {action:"assert",payload:wme}
     //see RDS.ProposedAction for details
     newProposedActions.forEach((d) => {
-        d.parallelActions = _.reject(newProposedActionIds,e=>e===d.id);
+        newProposedActionIds.forEach((i) => { d.addParallelAction(i) });
         actionNode.reteNet.proposeAction(d);
     });
 };

@@ -298,6 +298,7 @@ ReteNet.prototype.proposeAction = function(action){
 
 ReteNet.prototype.unproposeAction = function(actionId){
     if (this.proposedActions[actionId] !== undefined){
+        this.proposedActions[actionId].removeFromParentToken();
         delete this.proposedActions[actionId];
     }
 };
@@ -317,7 +318,7 @@ ReteNet.prototype.scheduleAction = function(actionId){
         throw new Error("Invalid action specified: " + actionId);
     }
     let action = this.proposedActions[actionId],
-        parallelActions = action.parallelActions.map(d=>this.proposedActions[d]);
+        parallelActions = action.getParallelActions().map(d=>this.proposedActions[d]);
 
     this.addToSchedule(action);
     parallelActions.forEach(d=>this.addToSchedule(d));
