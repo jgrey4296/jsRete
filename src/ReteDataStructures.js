@@ -47,6 +47,23 @@ class ProposedAction{
             this.token.proposedActions.push(this);
         }
     }
+
+    addParallelAction(anActionId){
+        if ( anActionId !== this.id && this.parallelActions.indexOf(anActionId) === -1){
+            this.parallelActions.add(anActionId);
+        }
+    }
+
+    getParallelActions(){
+        return Array.from(this.parallelActions);
+    }
+
+    removeFromParentToken(){
+        if (this.token !== undefined && this.token !== null){
+            this.token.proposedActions = _.reject(this.token.proposedActions,d=>d.id===this.id);
+        }
+    }
+    
 }
 
 
