@@ -292,6 +292,7 @@ class ActionNode extends ReteNode{
         this.type = "ActionNode";
         this.name = ruleName;
         this.actionDescriptions = actionDescriptions;
+        //All of the effects this action node triggers together:
         this.boundActions = boundActions;
         //reference to retenet, to allow storage of results of firing:
         this.reteNet = reteNet;
