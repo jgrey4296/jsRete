@@ -343,10 +343,8 @@ ReteNet.prototype.addToSchedule = function(action){
         this.schedule[action.actionType][performTime] = [];
     }
     this.schedule[action.actionType][performTime].push(action);
-    //Action is no longer proposed, so remove it from the token
-    action.token.proposedActions = _.reject(action.token.proposedActions,d=>d.id===action.id);
-    //also remove it from retenet's proposed actions:
-    delete this.proposedActions[action.id];
+    //Remove it from retenet's proposed actions:
+    this.unproposeAction(action.id);
 };
 
 /**
@@ -375,8 +373,8 @@ ReteNet.prototype.stepTime = function(){
 
     //cleanup invalidated actions
     _.values(this.proposedActions).forEach(function(d){
-        if (d.timing.invalidateTime === this.currentTime){
-            delete this.proposedActions[d.id];
+        if (d.timing.invalidateTime <= this.currentTime){
+            this.unproposeAction(d.id);
         }
     },this);
     
