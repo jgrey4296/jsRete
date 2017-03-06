@@ -33,13 +33,18 @@ class ProposedAction{
         this.payload = payload; //ie" : {a:3,b:4}...
         this.token = token; //Source Token that spawned this action
         this.timing = {
-            proposeTime : proposeTime,//when PA is created
-            invalidateTime : proposeTime+ (timingObj ? timingObj.invalidateOffset : 0), //when it becomes invalid
-            performOffset : timingObj ? timingObj.performOffset : 0, //PerformTime+pO is when it happens
-            unperformOffset : timingObj ? timingObj.unperformOffset : 0 //PerformTime+uPO when to remove
+            //when PA is created
+            proposeTime : proposeTime || 0,
+            //when it is invalidated and removed from the proposal set
+            invalidateTime : proposeTime + (timingObj ? timingObj.invalidateOffset : 0),
+            //When the happens after it is scheduled (currentTime + pOffset)
+            performOffset : timingObj ? timingObj.performOffset : 0,
+             //When the action is scheduled to reverse( currentTime+pOffset+upOffset)
+            unperformOffset : timingObj ? timingObj.unperformOffset : 0
         };
         this.priority = priority || 0;
         this.tags = tags || {};
+        this.parallelActions = new Set();
         //todo: possibly include metrics for selection of actions?
         //todo: check for circular reference cleanup
         //update Token:
