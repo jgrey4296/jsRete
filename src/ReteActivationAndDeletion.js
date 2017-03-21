@@ -14,9 +14,6 @@ import { ConstantTestOperators } from './ReteComparisonOperators';
 import * as ReteUtil from './ReteUtilities';
 import { performJoinTests } from './ReteTestExecution';
 
-
-
-
 /**
    Stores a wme in an alpha memory,
    Trigger an alpha memory with a new wme to store
@@ -195,7 +192,7 @@ let actionNodeActivation = function(actionNode,token){
     //ie: {action:"assert",payload:wme}
     //see RDS.ProposedAction for details
     newProposedActions.forEach((d) => {
-        newProposedActionIds.forEach((i) => { d.addParallelAction(i) });
+        newProposedActionIds.forEach((i) => { d.addParallelAction(i); });
         actionNode.reteNet.proposeAction(d);
     });
 };
