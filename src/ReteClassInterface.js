@@ -553,4 +553,4 @@ ReteNet.prototype.cleanup = function(){
 };
 
 
-export { ReteNet };
+export default ReteNet;
