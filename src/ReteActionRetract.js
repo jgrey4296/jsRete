@@ -18,7 +18,7 @@ let RetractAction = {
     propose : null,
     perform : null
 };
-export default RetractAction;;
+export default RetractAction;
 
 /**
    Propose the Retraction
