@@ -13,13 +13,13 @@
 
 import _ from "lodash";
 import * as RDS from "./ReteDataStructures";
-import { buildOrShareNetworkForConditions } from "./ReteNetworkBuilding";
+import buildOrShareNetworkForConditions from "./ReteNetworkBuilding";
 import * as ReteActivationsAndDeletion from "./ReteActivationAndDeletion";
 import * as ReteUtil from "./ReteUtilities";
 import { Rule } from "./RuleCtors";
-import { ReteActions } from "./ReteActions";
-import { ComparisonOperators } from "./ReteComparisonOperators";
-import { ArithmeticOperators } from "./ReteArithmeticActions";
+import ReteActions from "./ReteActions";
+import ComparisonOperators from "./ReteComparisonOperators";
+import ArithmeticOperators from "./ReteArithmeticActions";
 
 
 /**

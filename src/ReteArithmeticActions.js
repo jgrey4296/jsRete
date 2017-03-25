@@ -20,11 +20,11 @@ let plus = function(a,b){
         return a / b;
     };
 
-let moduleInterface = {
+let ArithmeticOperators = {
     '+' : plus,
     '-' : minus,
     '*' : mult,
     '/' : div
 };
 
-export { moduleInterface as ArithmeticOperators};
+export default ArithmeticOperators;

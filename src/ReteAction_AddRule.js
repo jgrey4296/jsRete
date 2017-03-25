@@ -1,14 +1,14 @@
-
 import * as RDS from './ReteDataStructures';
 
-let ActionInterface = {
+let AddRule = {
     "name" : "addRule",
     propose : null,
     perform : null
 };
+export default AddRule;
 
 //Token + Action Description -> ProposedAction
-ActionInterface.propose = function(token,reteNet){
+AddRule.propose = function(token,reteNet){
     
     //Propose the list of all wmes to retract
     //TODO: Check this
@@ -22,9 +22,9 @@ ActionInterface.propose = function(token,reteNet){
 };
 
 //ProposedAction -> Performance
-ActionInterface.perform = function(proposedAction,reteNet){
+AddRule.perform = function(proposedAction,reteNet){
     
     console.log("No-op");
 };
 
-export { ActionInterface as AddRuleAction };
+

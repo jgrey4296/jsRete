@@ -10,9 +10,9 @@
 */
 import  _ from 'lodash';
 import * as RDS from './ReteDataStructures';
-import { ConstantTestOperators } from './ReteComparisonOperators';
+import ConstantTestOperators from './ReteComparisonOperators';
 import * as ReteUtil from './ReteUtilities';
-import { performJoinTests } from './ReteTestExecution';
+import performJoinTests from './ReteTestExecution';
 
 /**
    Stores a wme in an alpha memory,

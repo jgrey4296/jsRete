@@ -7,7 +7,7 @@
 */
 import _ from 'lodash';
 import * as ReteUtil from './ReteUtilities';
-import { ConstantTestOperators as ReteComparisonOps } from './ReteComparisonOperators';
+import ReteComparisonOps from './ReteComparisonOperators';
 
 /**
    Compare a token and wme, using defined bindings from a joinNode
@@ -74,7 +74,5 @@ let performJoinTests = function(joinNode,token,wme){
     }
 };
 
+export default performJoinTests;
 
-export {
-    performJoinTests
-};

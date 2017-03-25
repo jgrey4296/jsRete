@@ -1,18 +1,17 @@
 /**
-   Aggregates ReteNet Actions that implement {@link module:ReteActionInterface}
+   Aggregates ReteNet Actions that implement {@link module:ReteAggregateActionDefinitions}
    @module ReteActions
 */
-import { AssertAction } from './ReteActionAssert';
-import { RetractAction } from './ReteActionRetract';
-import { AddRuleAction } from './ReteAction_addRule';
-import { RemoveRuleAction } from './ReteAction_removeRule';
-
-
+import AssertAction  from './ReteActionAssert';
+import RetractAction from './ReteActionRetract';
+import AddRuleAction from './ReteAction_addRule';
+import RemoveRuleAction  from './ReteAction_removeRule';
 
 //Action node possible actions:
 //Stores both performance functions and proposal functions
 //in the form: { name : {name: "", performFunc : func, propseFunc : func } }
-let ActionInterface = {};
+let AggregateActionDefinitions = {};
+export default AggregateActionDefinitions;
 
 //Performance functions take a retenet, and a payload
 //proposal functions are bound to an action description, and take a token and a retenet
@@ -25,15 +24,15 @@ let ActionInterface = {};
 
 
 //** @action assert
-ActionInterface[AssertAction.name] = AssertAction;
+AggregateActionDefinitions[AssertAction.name] = AssertAction;
 //** @action retract
-ActionInterface[RetractAction.name] = RetractAction;
+AggregateActionDefinitions[RetractAction.name] = RetractAction;
 
 //** @action AddRule
-ActionInterface[AddRuleAction.name] = AddRuleAction;
+AggregateActionDefinitions[AddRuleAction.name] = AddRuleAction;
 
 //** @action removeRule
-ActionInterface[RemoveRuleAction.name] = RemoveRuleAction;
+AggregateActionDefinitions[RemoveRuleAction.name] = RemoveRuleAction;
 
-export { ActionInterface  as ReteActions};
+
 

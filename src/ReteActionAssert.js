@@ -17,6 +17,7 @@ let AssertAction = {
     propose : null,
     perform : null
 };
+export default AssertAction;
 
 /**
    Propose the Assertion, will be bound to an action description @alias{RuleCtors:Action}
@@ -76,5 +77,4 @@ AssertAction.perform = function(proposedAction,reteNet){
     };
 };
 
-/** The Assert Action Definition */
-export { AssertAction };
+

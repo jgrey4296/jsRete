@@ -41,5 +41,5 @@ ConstantTestOperators['>='] = ConstantTestOperators.GTE;
 ConstantTestOperators['!=='] = ConstantTestOperators.NE;
 ConstantTestOperators['~='] = ConstantTestOperators.MATCH;
 
+export default ConstantTestOperators;
 
-export { ConstantTestOperators };

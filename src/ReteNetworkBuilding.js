@@ -158,7 +158,7 @@ let buildOrShareBetaMemoryNode = function(parent,reteNet){
    @param alphaMemory
    @param tests
    @param reteNet
-   @function buildOrShareJonNode
+   @function buildOrShareJoinNode
 */
 let buildOrShareJoinNode = function(parent,alphaMemory,tests,reteNet){
     
@@ -329,7 +329,5 @@ let updateNewNodeWithMatchesFromAbove = function(newNode){
 
 
 
-export {
-    buildOrShareNetworkForConditions
-};
+export default buildOrShareNetworkForConditions;
 

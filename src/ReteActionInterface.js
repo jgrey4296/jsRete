@@ -15,6 +15,8 @@ let ActionInterface = {
     propose : null,
     perform : null
 };
+export default ActionInterface;
+
 
 /**
    @param token
@@ -44,4 +46,3 @@ ActionInterface.perform = function(proposedAction,reteNet){
 };
 
 
-export { ActionInterface };

@@ -18,6 +18,7 @@ let RetractAction = {
     propose : null,
     perform : null
 };
+export default RetractAction;;
 
 /**
    Propose the Retraction
@@ -79,5 +80,3 @@ RetractAction.perform = function(proposedAction,reteNet){
     //do anything with the retracted wme(s)?
 };
 
-/** The Retract Action Definition */
-export { RetractAction };
