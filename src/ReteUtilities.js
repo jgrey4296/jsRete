@@ -152,7 +152,7 @@ let compareConstantNodeToTest = function(node,constantTestSpec){
    @param secondTestSet
    @function compareJoinTests
 */
-let CompareJoinTests = function(firstTestSet,secondTestSet){
+let compareJoinTests = function(firstTestSet,secondTestSet){
     try {
         //compare lengths
         if (firstTestSet.length !== secondTestSet.length) { throw "unequal lengths"; }
@@ -385,7 +385,7 @@ export {
     ifEmptyBetaMemoryUnlink,
     ifEmptyNegNodeUnlink,
     relinkToBetaMemory,
-    CompareJoinTests,
+    compareJoinTests,
     compareConstantNodeToTest,
     findNearestAncestorWithAlphaMemory,
     retrieveWMEValueFromDotString,
