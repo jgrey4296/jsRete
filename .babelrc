@@ -1,7 +1,7 @@
 {
     "sourceMaps": true,
-    "presets": [ "env" ],
+    "presets": [ "@babel/preset-env" ],
     "plugins": [
-        "transform-flow-comments"
+        //"transform-flow-comments"
     ]
 }
