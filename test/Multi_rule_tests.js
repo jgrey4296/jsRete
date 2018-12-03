@@ -1,10 +1,10 @@
 //To be used with mocha --require babel-polyfill --compilers js:babel-register
 //Import * as aModule from '../src/aModule';
-import { ReteNet } from '../src/ReteClassInterface';
-import * as RDS from '../src/ReteDataStructures';
-import { Rule } from '../src/RuleCtors';
-import * as chai from 'chai';
-import _ from 'lodash';
+import  ReteNet  from "../src/ReteClassInterface";
+import * as RDS from "../src/ReteDataStructures";
+import { Rule } from "../src/RuleCtors";
+import * as chai from "chai";
+import _ from "lodash";
 
 let should = chai.should(),
     expect = chai.expect;
