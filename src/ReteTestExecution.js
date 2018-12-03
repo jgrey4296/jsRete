@@ -33,7 +33,7 @@ let performJoinTests = function(joinNode,token,wme){
         joinNode.tests.forEach((test) => {
             let newValue = null;
             //retrieve the value
-            if (/^[#\$]id$/.test(test[1][0])){
+            if (/^[#$]id$/.test(test[1][0])){
                 newValue = wme.id;
             } else {
                 newValue = ReteUtil.retrieveWMEValueFromDotString(wme,test[1][0]);
