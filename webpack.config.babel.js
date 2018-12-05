@@ -9,7 +9,8 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         filename: 'rete.js',
         library: "Rete",
-        libraryTarget: "umd"        
+        libraryTarget: "umd",
+        globalObject: 'typeof self !== \'undefined\' ? self : this',
     },
     
     externals: {
